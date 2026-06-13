@@ -33,6 +33,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 /* ========== SPLASH ========== */
 #splash{justify-content:center;align-items:center;background:var(--orange);z-index:100}
 #splash .logo{font-size:72px;font-weight:900;color:#fff;animation:popIn .5s ease}
+#splash .logo img{width:168px;height:auto;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
 #splash .slogan{color:rgba(255,255,255,.85);font-size:15px;margin-top:8px;animation:fadeUp .6s ease .2s both}
 @keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
 @keyframes fadeUp{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
@@ -50,6 +51,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .member-btn.mom .avatar{background:#CCE5FF}
 .member-btn.yuna .avatar{background:#FFD6E8}
 .member-btn.gunwoo .avatar{background:#D4F5D4}
+.member-btn .avatar img,.my-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
 
 /* ========== FEED (Main) ========== */
 #feed{padding:0}
@@ -64,6 +66,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ping-card .photo-area img{width:100%;height:100%;object-fit:cover}
 .ping-card .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--gray300);gap:8px}
 .ping-card .placeholder svg{width:48px;height:48px;opacity:.4}
+.ping-card .placeholder img.ph-av{width:54px;height:54px;border-radius:50%;object-fit:cover;opacity:.45;filter:grayscale(.25)}
 .ping-card .placeholder span{font-size:12px}
 .ping-card .card-info{padding:10px 12px}
 .ping-card .card-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px}
@@ -161,7 +164,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 
   <!-- SPLASH -->
   <div id="splash" class="screen active">
-    <div class="logo">핑</div>
+    <div class="logo"><img src="./logo-ping.png" alt="핑" onerror="this.parentElement.textContent='핑'"></div>
     <div class="slogan">오늘도 살아있음을 핑!</div>
   </div>
 
@@ -171,16 +174,16 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <p>가족 구성원을 선택해주세요</p>
     <div class="member-select">
       <button class="member-btn dad" onclick="selectMember('아빠')">
-        <div class="avatar">👨</div><span>아빠</span>
+        <div class="avatar"><img src="./avatar-dad.png" alt="아빠" onerror="this.parentElement.textContent='👨'"></div><span>아빠</span>
       </button>
       <button class="member-btn mom" onclick="selectMember('엄마')">
-        <div class="avatar">👩</div><span>엄마</span>
+        <div class="avatar"><img src="./avatar-mom.png" alt="엄마" onerror="this.parentElement.textContent='👩'"></div><span>엄마</span>
       </button>
       <button class="member-btn yuna" onclick="selectMember('윤아')">
-        <div class="avatar">👧</div><span>윤아</span>
+        <div class="avatar"><img src="./avatar-yuna.png" alt="윤아" onerror="this.parentElement.textContent='👧'"></div><span>윤아</span>
       </button>
       <button class="member-btn gunwoo" onclick="selectMember('건우')">
-        <div class="avatar">👦</div><span>건우</span>
+        <div class="avatar"><img src="./avatar-gunwoo.png" alt="건우" onerror="this.parentElement.textContent='👦'"></div><span>건우</span>
       </button>
     </div>
   </div>
@@ -345,10 +348,10 @@ try {
 // ========== STATE ==========
 const FAMILY_ID = 'kimfamily';
 const MEMBERS = [
-  { id: '아빠', emoji: '👨', color: '#FFE0CC' },
-  { id: '엄마', emoji: '👩', color: '#CCE5FF' },
-  { id: '윤아', emoji: '👧', color: '#FFD6E8' },
-  { id: '건우', emoji: '👦', color: '#D4F5D4' }
+  { id: '아빠', emoji: '👨', color: '#FFE0CC', avatar: './avatar-dad.png' },
+  { id: '엄마', emoji: '👩', color: '#CCE5FF', avatar: './avatar-mom.png' },
+  { id: '윤아', emoji: '👧', color: '#FFD6E8', avatar: './avatar-yuna.png' },
+  { id: '건우', emoji: '👦', color: '#D4F5D4', avatar: './avatar-gunwoo.png' }
 ];
 
 const QUESTIONS = [
@@ -604,7 +607,7 @@ function renderFeed() {
       card.innerHTML = `
         <div class="photo-area">
           <div class="placeholder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+            <img class="ph-av" src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
             <span>아직 핑 안 옴</span>
           </div>
         </div>
@@ -629,8 +632,9 @@ function renderFeed() {
 function renderMyPage() {
   const m = getMember(currentMember);
   if (!m) return;
-  document.getElementById('myAvatar').textContent = m.emoji;
-  document.getElementById('myAvatar').style.background = m.color;
+  const myAv = document.getElementById('myAvatar');
+  myAv.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.parentElement.textContent='${m.emoji}'">`;
+  myAv.style.background = m.color;
   document.getElementById('myName').textContent = m.id;
 
   streaks = loadLocal('streaks', {});
@@ -815,46 +819,4 @@ function scheduleSurvivalTimer() {
   const delay = alarm - now;
   setTimeout(() => {
     if (!todayPings[currentMember]) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('핑', { body: '핑 보내세요! 오늘의 생존신고가 아직이에요 📸', icon: '📸' });
-      }
-      showToast('⏰ 핑 보내세요!');
-    }
-  }, delay);
-}
-
-// ========== INIT ==========
-async function init() {
-  // Request notification permission
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    try { await navigator.serviceWorker.register('./sw.js'); } catch(e) {}
-  }
-
-  // Splash screen
-  setTimeout(async () => {
-    currentMember = loadLocal('member', null);
-
-    if (currentMember) {
-      await loadTodayPings();
-      showScreen('feed');
-      startListening();
-      scheduleSurvivalTimer();
-    } else {
-      showScreen('onboarding');
-    }
-  }, 1200);
-}
-
-// Expose to global for onclick handlers
-window.showScreen = showScreen;
-window.openCamera = openCamera;
-
-init();
-</script>
-</body>
-</html>
+      if ('Notification' in window && Notification.permission === 'g
