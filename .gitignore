@@ -1,0 +1,11 @@
+# 개발 메모 — 공개 사이트에는 불필요
+HANDOFF.md
+ROADMAP.md
+
+# 보안 규칙은 Firebase 콘솔에 이미 게시됨 (참고용 로컬 파일)
+firestore.rules
+storage.rules
+
+# 시스템 파일
+.DS_Store
+Thumbs.db

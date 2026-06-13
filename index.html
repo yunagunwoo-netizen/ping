@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FF6B35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>핑 - 가족 생존신고</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --orange:#FF6B35;--orange-light:#FF8F5E;--navy:#004E89;--cream:#FFF8F0;
+  --gray100:#F5F0EB;--gray200:#E8E0D8;--gray300:#C4B8AC;--gray400:#9E9189;
+  --gray500:#6B6159;--shadow:0 2px 12px rgba(0,0,0,.08);
+  --radius:16px;--radius-sm:10px;
+}
+html,body{height:100%;font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:#2D2017;overflow:hidden}
+button{font-family:inherit;border:none;cursor:pointer;background:none}
+input,textarea{font-family:inherit;border:none;outline:none}
+
+/* ========== APP SHELL ========== */
+#app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
+.screen{display:none;flex-direction:column;height:100%;position:absolute;inset:0;background:var(--cream);z-index:1}
+.screen.active{display:flex;z-index:2}
+
+/* ========== SPLASH ========== */
+#splash{justify-content:center;align-items:center;background:var(--orange);z-index:100}
+#splash .logo{font-size:72px;font-weight:900;color:#fff;animation:popIn .5s ease}
+#splash .slogan{color:rgba(255,255,255,.85);font-size:15px;margin-top:8px;animation:fadeUp .6s ease .2s both}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes fadeUp{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+/* ========== ONBOARDING (Member Select) ========== */
+#onboarding{justify-content:center;align-items:center;padding:32px}
+#onboarding h2{font-size:22px;font-weight:700;margin-bottom:8px}
+#onboarding p{color:var(--gray400);font-size:14px;margin-bottom:32px}
+.member-select{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:320px}
+.member-btn{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 16px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);transition:all .2s}
+.member-btn:active{transform:scale(.96)}
+.member-btn .avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px}
+.member-btn span{font-weight:600;font-size:15px}
+.member-btn.dad .avatar{background:#FFE0CC}
+.member-btn.mom .avatar{background:#CCE5FF}
+.member-btn.yuna .avatar{background:#FFD6E8}
+.member-btn.gunwoo .avatar{background:#D4F5D4}
+
+/* ========== FEED (Main) ========== */
+#feed{padding:0}
+.feed-header{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center}
+.feed-header .date{font-size:20px;font-weight:700}
+.feed-header .streak-badge{display:flex;align-items:center;gap:4px;background:var(--orange);color:#fff;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600}
+.feed-subtitle{padding:4px 20px 16px;font-size:13px;color:var(--gray400)}
+.feed-grid{flex:1;overflow-y:auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+.ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
+.ping-card:active{transform:scale(.98)}
+.ping-card .photo-area{position:relative;width:100%;aspect-ratio:1;background:var(--gray100);overflow:hidden}
+.ping-card .photo-area img{width:100%;height:100%;object-fit:cover}
+.ping-card .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--gray300);gap:8px}
+.ping-card .placeholder svg{width:48px;height:48px;opacity:.4}
+.ping-card .placeholder span{font-size:12px}
+.ping-card .card-info{padding:10px 12px}
+.ping-card .card-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px}
+.ping-card .card-name .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.ping-card .card-comment{font-size:12px;color:var(--gray400);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ping-card .card-time{font-size:11px;color:var(--gray300);margin-top:4px}
+.ping-card .reactions-row{display:flex;gap:2px;padding:0 12px 10px;flex-wrap:wrap}
+.reaction-chip{font-size:16px;padding:2px 6px;background:var(--gray100);border-radius:12px;transition:all .15s}
+.reaction-chip.mine{background:#FFE8DC}
+.reaction-chip:active{transform:scale(1.2)}
+.poke-btn{display:flex;align-items:center;justify-content:center;gap:4px;margin:0 12px 10px;padding:6px;background:var(--gray100);border-radius:8px;font-size:12px;color:var(--gray400)}
+.poke-btn:active{background:var(--gray200)}
+
+/* ========== FAB (Camera Button) ========== */
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,107,53,.4);z-index:50;transition:all .2s}
+.fab:active{transform:translateX(-50%) scale(.92)}
+.fab.disabled{background:var(--gray300);box-shadow:none;pointer-events:none}
+.fab svg{width:28px;height:28px}
+
+/* ========== NAV BAR ========== */
+.nav-bar{display:flex;justify-content:space-around;padding:8px 0;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--gray100);position:relative;z-index:40}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 12px;color:var(--gray300);font-size:10px;transition:color .2s}
+.nav-item.active{color:var(--orange)}
+.nav-item svg{width:22px;height:22px}
+
+/* ========== CAMERA ========== */
+#camera{background:#000;z-index:60}
+.camera-top{position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.camera-top button{color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3);backdrop-filter:blur(8px)}
+#videoPreview{width:100%;height:100%;object-fit:cover}
+.camera-bottom{position:absolute;bottom:0;left:0;right:0;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;z-index:2}
+.shutter-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);transition:all .15s}
+.shutter-btn:active{transform:scale(.9);background:#ddd}
+
+/* ========== PREVIEW (after capture) ========== */
+#preview{background:#000;z-index:70}
+.preview-img{width:100%;flex:1;object-fit:contain;background:#000}
+.preview-bottom{background:var(--cream);border-radius:var(--radius) var(--radius) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.preview-bottom .question-box{background:var(--gray100);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px;color:var(--gray500)}
+.preview-bottom .question-box strong{color:var(--orange);display:block;margin-bottom:4px;font-size:12px}
+.comment-input{width:100%;padding:12px 16px;background:#fff;border-radius:var(--radius-sm);font-size:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.comment-input::placeholder{color:var(--gray300)}
+.preview-actions{display:flex;gap:10px}
+.preview-actions button{flex:1;padding:14px;border-radius:var(--radius-sm);font-size:15px;font-weight:700;transition:all .15s}
+.preview-actions button:active{transform:scale(.97)}
+.btn-cancel{background:var(--gray200);color:var(--gray500)}
+.btn-ping{background:var(--orange);color:#fff}
+
+/* ========== MYPAGE ========== */
+#mypage{padding:20px;overflow-y:auto;padding-bottom:80px}
+#mypage h2{font-size:22px;font-weight:700;margin-bottom:20px}
+.my-profile-card{display:flex;align-items:center;gap:16px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
+.my-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--gray100)}
+.my-info h3{font-size:18px;font-weight:700}
+.my-info p{font-size:13px;color:var(--gray400);margin-top:2px}
+.settings-section{margin-bottom:20px}
+.settings-section h4{font-size:14px;font-weight:700;color:var(--gray400);margin-bottom:10px;padding-left:4px}
+.setting-item{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:16px;border-radius:var(--radius-sm);margin-bottom:8px;box-shadow:var(--shadow)}
+.setting-item label{font-size:14px;font-weight:600}
+.setting-item input[type="time"]{padding:4px 8px;border-radius:6px;background:var(--gray100);font-size:14px}
+.setting-item select{padding:4px 8px;border-radius:6px;background:var(--gray100);font-size:14px}
+.streak-card{background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
+.streak-card h3{font-size:14px;opacity:.85;margin-bottom:8px}
+.streak-card .streak-num{font-size:48px;font-weight:900;line-height:1}
+.streak-card .streak-label{font-size:13px;opacity:.75;margin-top:4px}
+.streak-card .streak-best{margin-top:12px;font-size:12px;opacity:.7}
+.reset-btn{width:100%;padding:14px;background:#fff;border:2px solid #F44;color:#F44;border-radius:var(--radius-sm);font-size:14px;font-weight:700;margin-top:20px}
+
+/* ========== TOAST ========== */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:200;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ========== REACTION PICKER ========== */
+.reaction-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:80;display:none;align-items:flex-end;justify-content:center}
+.reaction-overlay.show{display:flex}
+.reaction-picker{background:#fff;border-radius:var(--radius) var(--radius) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;text-align:center}
+.reaction-picker h4{font-size:14px;color:var(--gray400);margin-bottom:16px}
+.reaction-options{display:flex;justify-content:center;gap:12px}
+.reaction-options button{font-size:32px;padding:8px;border-radius:12px;transition:all .15s}
+.reaction-options button:active{transform:scale(1.3)}
+
+/* ========== LOADING ========== */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,248,240,.9);display:none;align-items:center;justify-content:center;z-index:90;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--gray200);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay span{font-size:14px;color:var(--gray500);font-weight:600}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="splash" class="screen active">
+    <div class="logo">핑</div>
+    <div class="slogan">오늘도 살아있음을 핑!</div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="onboarding" class="screen">
+    <h2>누구세요?</h2>
+    <p>가족 구성원을 선택해주세요</p>
+    <div class="member-select">
+      <button class="member-btn dad" onclick="selectMember('아빠')">
+        <div class="avatar">👨</div><span>아빠</span>
+      </button>
+      <button class="member-btn mom" onclick="selectMember('엄마')">
+        <div class="avatar">👩</div><span>엄마</span>
+      </button>
+      <button class="member-btn yuna" onclick="selectMember('윤아')">
+        <div class="avatar">👧</div><span>윤아</span>
+      </button>
+      <button class="member-btn gunwoo" onclick="selectMember('건우')">
+        <div class="avatar">👦</div><span>건우</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="feed" class="screen">
+    <div class="feed-header">
+      <div class="date" id="feedDate"></div>
+      <div class="streak-badge" id="familyStreak">🔥 0일째</div>
+    </div>
+    <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 생존신고</div>
+    <div class="feed-grid" id="feedGrid"></div>
+    <div class="nav-bar">
+      <button class="nav-item active" onclick="showScreen('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>홈</span>
+      </button>
+      <button class="nav-item" onclick="showScreen('mypage')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span>마이</span>
+      </button>
+    </div>
+    <button class="fab" id="fabBtn" onclick="openCamera()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </button>
+  </div>
+
+  <!-- CAMERA -->
+  <div id="camera" class="screen">
+    <video id="videoPreview" autoplay playsinline></video>
+    <div class="camera-top">
+      <button onclick="closeCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <button onclick="flipCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+      </button>
+    </div>
+    <div class="camera-bottom">
+      <button class="shutter-btn" onclick="capturePhoto()"></button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview" class="screen">
+    <img class="preview-img" id="previewImg" src="">
+    <div class="preview-bottom">
+      <div class="question-box" id="questionBox" style="display:none">
+        <strong>오늘의 질문</strong>
+        <span id="questionText"></span>
+      </div>
+      <input class="comment-input" id="commentInput" type="text" maxlength="50" placeholder="한줄 코멘트 (선택)">
+      <div class="preview-actions">
+        <button class="btn-cancel" onclick="cancelPreview()">다시 찍기</button>
+        <button class="btn-ping" onclick="submitPing()">핑!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MYPAGE -->
+  <div id="mypage" class="screen">
+    <h2>마이페이지</h2>
+    <div class="my-profile-card">
+      <div class="my-avatar" id="myAvatar">👤</div>
+      <div class="my-info">
+        <h3 id="myName">-</h3>
+        <p id="myEmail">김씨네 가족</p>
+      </div>
+    </div>
+    <div class="streak-card">
+      <h3>나의 연속 핑</h3>
+      <div class="streak-num" id="myStreakNum">0</div>
+      <div class="streak-label">일 연속</div>
+      <div class="streak-best">최고 기록: <span id="myStreakBest">0</span>일</div>
+    </div>
+    <div class="settings-section">
+      <h4>설정</h4>
+      <div class="setting-item">
+        <label>알림 시간</label>
+        <input type="time" id="alarmTime" value="22:00" onchange="saveSettings()">
+      </div>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-item" onclick="showScreen('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>홈</span>
+      </button>
+      <button class="nav-item active" onclick="showScreen('mypage')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span>마이</span>
+      </button>
+    </div>
+    <button class="reset-btn" onclick="resetApp()">로그아웃 (구성원 재선택)</button>
+  </div>
+
+  <!-- REACTION OVERLAY -->
+  <div class="reaction-overlay" id="reactionOverlay" onclick="closeReactionPicker(event)">
+    <div class="reaction-picker">
+      <h4 id="reactionTarget">리액션 보내기</h4>
+      <div class="reaction-options">
+        <button onclick="sendReaction('❤️')">❤️</button>
+        <button onclick="sendReaction('😂')">😂</button>
+        <button onclick="sendReaction('👍')">👍</button>
+        <button onclick="sendReaction('🔥')">🔥</button>
+        <button onclick="sendReaction('😢')">😢</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <span>핑 전송 중...</span>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<canvas id="captureCanvas" style="display:none"></canvas>
+
+<script type="module">
+// ========== FIREBASE SETUP ==========
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
+
+// 🔧 Firebase 설정 — 본인의 Firebase 프로젝트 정보로 교체하세요
+const firebaseConfig = {
+  apiKey: "AIzaSyBsdwetovnP6RrgMAxcWZc7tmAQHVHNuLM",
+  authDomain: "ping-family.firebaseapp.com",
+  projectId: "ping-family",
+  storageBucket: "ping-family.firebasestorage.app",
+  messagingSenderId: "1076131335477",
+  appId: "1:1076131335477:web:45bc309dcbdfe315cd507c"
+};
+
+let db, storage, auth, firebaseReady = false;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  storage = getStorage(app);
+  if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    auth = getAuth(app);
+    // 익명 로그인 — 보안 규칙(인증된 사용자만)을 통과하기 위해 필요
+    signInAnonymously(auth).then(async () => {
+      firebaseReady = true;
+      console.log('Firebase 익명 로그인 성공');
+      // 로그인 완료 시점이 화면 진입보다 늦을 수 있으므로 데이터 다시 로드
+      if (currentMember) {
+        await loadTodayPings();
+        renderFeed();
+        startListening();
+      }
+    }).catch(e => console.warn('익명 로그인 실패 — 로컬 모드로 실행합니다.', e));
+  }
+} catch(e) {
+  console.warn('Firebase 초기화 실패 — 로컬 모드로 실행합니다.', e);
+}
+
+// ========== STATE ==========
+const FAMILY_ID = 'kimfamily';
+const MEMBERS = [
+  { id: '아빠', emoji: '👨', color: '#FFE0CC' },
+  { id: '엄마', emoji: '👩', color: '#CCE5FF' },
+  { id: '윤아', emoji: '👧', color: '#FFD6E8' },
+  { id: '건우', emoji: '👦', color: '#D4F5D4' }
+];
+
+const QUESTIONS = [
+  "오늘 가장 맛있었던 것은?","지금 기분을 날씨로 표현하면?","오늘 가장 웃긴 순간은?",
+  "지금 듣고 싶은 노래는?","오늘 가장 힘들었던 순간은?","내일 가장 기대되는 것은?",
+  "지금 먹고 싶은 간식은?","오늘 새로 알게 된 것은?","지금 창밖 풍경을 한 단어로?",
+  "오늘 가장 고마웠던 사람은?","지금 가고 싶은 곳은?","오늘 나에게 점수를 준다면?",
+  "가장 최근에 웃은 이유는?","지금 하고 싶은 것 하나만?","오늘 점심 뭐 먹었어?",
+  "가장 기억에 남는 꿈은?","지금 가장 보고 싶은 사람은?","오늘 가장 많이 한 행동은?",
+  "지금 신고 있는 양말 색깔은?","올해 꼭 하고 싶은 것 하나는?","오늘 들은 가장 좋은 말은?",
+  "지금 주머니에 뭐가 있어?","오늘 가장 오래 본 것은?","나를 동물로 표현하면?",
+  "오늘 가장 맛없었던 것은?","지금 옆에 있는 물건 하나는?","이번 주말에 하고 싶은 것은?",
+  "오늘 가장 예뻤던 것은?","최근에 빠진 취미가 있다면?","지금 배고파? 1~10점으로!",
+  "오늘 가장 집중한 것은?","가족에게 하고 싶은 한마디는?","오늘 가장 피곤한 신체 부위는?",
+  "지금 마시고 싶은 음료는?","오늘 본 가장 귀여운 것은?","내가 요리한다면 뭘 만들까?",
+  "지금 기분을 색깔로 표현하면?","오늘 가장 바빴던 시간은?","최근에 감동받은 것은?",
+  "지금 자신감 레벨 1~10은?","오늘 가장 맘에 든 내 모습은?","가족 여행 간다면 어디로?",
+  "지금 떠오르는 단어 세 개는?","오늘 아침에 가장 먼저 한 것은?","10년 후 나는 뭘 하고 있을까?",
+  "지금 가장 갖고 싶은 것은?","오늘 하루를 이모지 하나로?","가족 중 오늘 가장 보고 싶은 사람은?",
+  "지금 눈앞에 보이는 글자는?","오늘 하루 수고한 나에게 한마디!"
+];
+
+let currentMember = null;
+let currentStream = null;
+let facingMode = 'environment';
+let capturedBlob = null;
+let reactionTargetMember = null;
+let todayPings = {}; // { memberId: { photoURL, comment, reactions, createdAt } }
+let streaks = {}; // { memberId: { current, best, lastPingDate } }
+let unsubscribe = null;
+
+// ========== HELPERS ==========
+function getToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getTodayKR() {
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+}
+
+function getDailyQuestion() {
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  return QUESTIONS[dayOfYear % QUESTIONS.length];
+}
+
+function getMember(id) { return MEMBERS.find(m => m.id === id); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'feed') renderFeed();
+  if (id === 'mypage') renderMyPage();
+}
+
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('show', show);
+}
+
+// ========== LOCAL STORAGE ==========
+function saveLocal(key, val) { localStorage.setItem(`ping_${key}`, JSON.stringify(val)); }
+function loadLocal(key, def) { try { return JSON.parse(localStorage.getItem(`ping_${key}`)) || def; } catch { return def; } }
+
+// ========== ONBOARDING ==========
+window.selectMember = function(id) {
+  currentMember = id;
+  saveLocal('member', id);
+  showScreen('feed');
+  startListening();
+  scheduleSurvivalTimer();
+};
+
+// ========== FIREBASE / LOCAL DATA ==========
+async function loadTodayPings() {
+  const today = getToday();
+  if (firebaseReady) {
+    try {
+      for (const m of MEMBERS) {
+        const docId = `${today}_${m.id}`;
+        const snap = await getDoc(doc(db, 'pings', docId));
+        if (snap.exists()) todayPings[m.id] = snap.data();
+      }
+    } catch(e) { console.warn('Firestore 읽기 실패', e); }
+  }
+  // Merge local data
+  const localPings = loadLocal(`pings_${today}`, {});
+  for (const [k, v] of Object.entries(localPings)) {
+    if (!todayPings[k]) todayPings[k] = v;
+  }
+}
+
+let listening = false;
+function startListening() {
+  if (!firebaseReady || listening) return;
+  listening = true;
+  const today = getToday();
+  try {
+    // Listen for changes to today's pings
+    for (const m of MEMBERS) {
+      const docId = `${today}_${m.id}`;
+      onSnapshot(doc(db, 'pings', docId), (snap) => {
+        if (snap.exists()) {
+          todayPings[m.id] = snap.data();
+          renderFeed();
+        }
+      });
+    }
+  } catch(e) { console.warn('Firestore listener 실패', e); }
+}
+
+async function savePing(memberId, photoDataURL, comment) {
+  const today = getToday();
+  const pingData = {
+    familyId: FAMILY_ID,
+    memberId,
+    photoURL: photoDataURL,
+    comment: comment || '',
+    reactions: {},
+    question: getDailyQuestion(),
+    createdAt: new Date().toISOString()
+  };
+
+  // Save locally first
+  todayPings[memberId] = pingData;
+  const localPings = loadLocal(`pings_${today}`, {});
+  localPings[memberId] = pingData;
+  saveLocal(`pings_${today}`, localPings);
+
+  // Update streak
+  updateStreak(memberId);
+
+  // Try Firebase
+  if (firebaseReady) {
+    try {
+      const docId = `${today}_${memberId}`;
+      // Upload photo to Storage
+      if (capturedBlob) {
+        const photoRef = storageRef(storage, `families/${FAMILY_ID}/pings/${today}/${memberId}.jpg`);
+        await uploadBytes(photoRef, capturedBlob);
+        const url = await getDownloadURL(photoRef);
+        pingData.photoURL = url;
+      }
+      await setDoc(doc(db, 'pings', docId), pingData);
+    } catch(e) { console.warn('Firebase 저장 실패 — 로컬에 저장됨', e); }
+  }
+}
+
+async function saveReaction(targetMember, emoji) {
+  const today = getToday();
+  if (!todayPings[targetMember]) return;
+
+  if (!todayPings[targetMember].reactions) todayPings[targetMember].reactions = {};
+  todayPings[targetMember].reactions[currentMember] = emoji;
+
+  // Save locally
+  const localPings = loadLocal(`pings_${today}`, {});
+  localPings[targetMember] = todayPings[targetMember];
+  saveLocal(`pings_${today}`, localPings);
+
+  // Try Firebase
+  if (firebaseReady) {
+    try {
+      const docId = `${today}_${targetMember}`;
+      // setDoc + merge: 문서가 아직 없어도 에러 없이 리액션 저장됨 (이슈 10 수정)
+      await setDoc(doc(db, 'pings', docId), {
+        reactions: { [currentMember]: emoji }
+      }, { merge: true });
+    } catch(e) { console.warn('리액션 저장 실패', e); }
+  }
+}
+
+function updateStreak(memberId) {
+  const today = getToday();
+  streaks = loadLocal('streaks', {});
+  if (!streaks[memberId]) streaks[memberId] = { current: 0, best: 0, lastPingDate: null };
+
+  const s = streaks[memberId];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+  if (s.lastPingDate === today) return; // Already pinged today
+  if (s.lastPingDate === yesterdayStr) {
+    s.current += 1;
+  } else {
+    s.current = 1;
+  }
+  s.lastPingDate = today;
+  if (s.current > s.best) s.best = s.current;
+  saveLocal('streaks', streaks);
+}
+
+function getFamilyStreak() {
+  streaks = loadLocal('streaks', {});
+  let min = Infinity;
+  for (const m of MEMBERS) {
+    const s = streaks[m.id];
+    if (!s || s.lastPingDate !== getToday()) return 0;
+    min = Math.min(min, s.current);
+  }
+  return min === Infinity ? 0 : min;
+}
+
+// ========== RENDER FEED ==========
+function renderFeed() {
+  document.getElementById('feedDate').textContent = getTodayKR();
+
+  const familyStreak = getFamilyStreak();
+  document.getElementById('familyStreak').innerHTML = `🔥 ${familyStreak}일째`;
+
+  const uploadedCount = MEMBERS.filter(m => todayPings[m.id]).length;
+  document.getElementById('feedSubtitle').textContent =
+    uploadedCount === 4 ? '오늘 가족 모두 생존 확인! ✨' :
+    `${uploadedCount}/4명 생존 확인`;
+
+  const grid = document.getElementById('feedGrid');
+  grid.innerHTML = '';
+
+  for (const m of MEMBERS) {
+    const ping = todayPings[m.id];
+    const card = document.createElement('div');
+    card.className = 'ping-card';
+
+    if (ping) {
+      const reactions = ping.reactions || {};
+      const reactionHTML = Object.values(reactions).map((emoji, i) => {
+        const reactor = Object.keys(reactions)[i];
+        return `<span class="reaction-chip ${reactor === currentMember ? 'mine' : ''}">${emoji}</span>`;
+      }).join('');
+
+      const timeStr = ping.createdAt ? new Date(ping.createdAt).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'}) : '';
+
+      card.innerHTML = `
+        <div class="photo-area"><img src="${ping.photoURL}" alt="${m.id}의 핑"></div>
+        <div class="card-info">
+          <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
+          ${ping.comment ? `<div class="card-comment">${ping.comment}</div>` : ''}
+          <div class="card-time">${timeStr}</div>
+        </div>
+        <div class="reactions-row">${reactionHTML}
+          ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="photo-area">
+          <div class="placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+            <span>아직 핑 안 옴</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
+        </div>
+        ${m.id !== currentMember ? `<button class="poke-btn" onclick="pokeMember('${m.id}')">👈 찌르기</button>` : ''}`;
+    }
+    grid.appendChild(card);
+  }
+
+  // Update FAB
+  const fab = document.getElementById('fabBtn');
+  if (todayPings[currentMember]) {
+    fab.classList.add('disabled');
+  } else {
+    fab.classList.remove('disabled');
+  }
+}
+
+// ========== RENDER MYPAGE ==========
+function renderMyPage() {
+  const m = getMember(currentMember);
+  if (!m) return;
+  document.getElementById('myAvatar').textContent = m.emoji;
+  document.getElementById('myAvatar').style.background = m.color;
+  document.getElementById('myName').textContent = m.id;
+
+  streaks = loadLocal('streaks', {});
+  const s = streaks[currentMember] || { current: 0, best: 0 };
+  document.getElementById('myStreakNum').textContent = s.current;
+  document.getElementById('myStreakBest').textContent = s.best;
+
+  const settings = loadLocal('settings', {});
+  if (settings.alarmTime) document.getElementById('alarmTime').value = settings.alarmTime;
+}
+
+// ========== CAMERA ==========
+window.openCamera = async function() {
+  if (todayPings[currentMember]) {
+    showToast('오늘은 이미 핑을 보냈어요!');
+    return;
+  }
+  showScreen('camera');
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    document.getElementById('videoPreview').srcObject = currentStream;
+  } catch(e) {
+    showToast('카메라를 사용할 수 없습니다');
+    closeCamera();
+  }
+};
+
+window.closeCamera = function() {
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+    currentStream = null;
+  }
+  showScreen('feed');
+};
+
+window.flipCamera = async function() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+  }
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    document.getElementById('videoPreview').srcObject = currentStream;
+  } catch(e) {
+    showToast('카메라 전환 실패');
+  }
+};
+
+window.capturePhoto = function() {
+  const video = document.getElementById('videoPreview');
+  const canvas = document.getElementById('captureCanvas');
+
+  // Resize to max 1080px
+  const size = Math.min(video.videoWidth, video.videoHeight, 1080);
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext('2d');
+  // Center crop to square
+  const sx = (video.videoWidth - size) / 2;
+  const sy = (video.videoHeight - size) / 2;
+
+  // Mirror if front camera
+  if (facingMode === 'user') {
+    ctx.translate(size, 0);
+    ctx.scale(-1, 1);
+  }
+
+  ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+
+  canvas.toBlob(blob => {
+    capturedBlob = blob;
+    const url = URL.createObjectURL(blob);
+    document.getElementById('previewImg').src = url;
+
+    // Show question
+    const q = getDailyQuestion();
+    document.getElementById('questionText').textContent = q;
+    document.getElementById('questionBox').style.display = 'block';
+    document.getElementById('commentInput').value = '';
+
+    if (currentStream) {
+      currentStream.getTracks().forEach(t => t.stop());
+      currentStream = null;
+    }
+    showScreen('preview');
+  }, 'image/jpeg', 0.7);
+};
+
+window.cancelPreview = function() {
+  capturedBlob = null;
+  openCamera();
+};
+
+window.submitPing = async function() {
+  const comment = document.getElementById('commentInput').value.trim();
+  showLoading(true);
+
+  try {
+    // Convert blob to data URL for local storage
+    const reader = new FileReader();
+    const dataURL = await new Promise((resolve) => {
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(capturedBlob);
+    });
+
+    await savePing(currentMember, dataURL, comment);
+    showLoading(false);
+    showToast('핑! 전송 완료 📸');
+    capturedBlob = null;
+    showScreen('feed');
+  } catch(e) {
+    showLoading(false);
+    showToast('전송 실패 — 다시 시도해주세요');
+    console.error(e);
+  }
+};
+
+// ========== REACTIONS ==========
+window.openReactionPicker = function(targetId) {
+  reactionTargetMember = targetId;
+  const m = getMember(targetId);
+  document.getElementById('reactionTarget').textContent = `${m.emoji} ${m.id}에게 리액션`;
+  document.getElementById('reactionOverlay').classList.add('show');
+};
+
+window.closeReactionPicker = function(e) {
+  if (e.target === document.getElementById('reactionOverlay')) {
+    document.getElementById('reactionOverlay').classList.remove('show');
+  }
+};
+
+window.sendReaction = async function(emoji) {
+  if (!reactionTargetMember) return;
+  await saveReaction(reactionTargetMember, emoji);
+  document.getElementById('reactionOverlay').classList.remove('show');
+  renderFeed();
+  showToast(`${emoji} 리액션 전송!`);
+};
+
+// ========== POKE ==========
+window.pokeMember = function(targetId) {
+  const m = getMember(targetId);
+  showToast(`${m.id}에게 찌르기 전송! 👈`);
+  // In 2차 개발: FCM push notification
+};
+
+// ========== SETTINGS ==========
+window.saveSettings = function() {
+  const alarmTime = document.getElementById('alarmTime').value;
+  saveLocal('settings', { alarmTime });
+  scheduleSurvivalTimer();
+  showToast('설정 저장 완료');
+};
+
+window.resetApp = function() {
+  if (confirm('정말 로그아웃하시겠습니까?')) {
+    localStorage.removeItem('ping_member');
+    currentMember = null;
+    showScreen('onboarding');
+  }
+};
+
+// ========== SURVIVAL TIMER (F5) ==========
+function scheduleSurvivalTimer() {
+  const settings = loadLocal('settings', {});
+  const alarmTime = settings.alarmTime || '22:00';
+  const [h, m] = alarmTime.split(':').map(Number);
+
+  const now = new Date();
+  const alarm = new Date();
+  alarm.setHours(h, m, 0, 0);
+
+  if (alarm <= now) return; // Already past alarm time
+
+  const delay = alarm - now;
+  setTimeout(() => {
+    if (!todayPings[currentMember]) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('핑', { body: '핑 보내세요! 오늘의 생존신고가 아직이에요 📸', icon: '📸' });
+      }
+      showToast('⏰ 핑 보내세요!');
+    }
+  }, delay);
+}
+
+// ========== INIT ==========
+async function init() {
+  // Request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    try { await navigator.serviceWorker.register('./sw.js'); } catch(e) {}
+  }
+
+  // Splash screen
+  setTimeout(async () => {
+    currentMember = loadLocal('member', null);
+
+    if (currentMember) {
+      await loadTodayPings();
+      showScreen('feed');
+      startListening();
+      scheduleSurvivalTimer();
+    } else {
+      showScreen('onboarding');
+    }
+  }, 1200);
+}
+
+// Expose to global for onclick handlers
+window.showScreen = showScreen;
+window.openCamera = openCamera;
+
+init();
+</script>
+</body>
+</html>

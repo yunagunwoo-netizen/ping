@@ -1,0 +1,24 @@
+{
+  "name": "핑 - 가족 생존신고",
+  "short_name": "핑",
+  "description": "매일 사진 한 장으로 가족의 안부를 확인하는 생존신고 앱",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
