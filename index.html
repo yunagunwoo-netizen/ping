@@ -35,6 +35,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 #splash .logo{font-size:72px;font-weight:900;color:#fff;animation:popIn .5s ease}
 #splash .logo img{width:168px;height:auto;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
 #splash .slogan{color:rgba(255,255,255,.85);font-size:15px;margin-top:8px;animation:fadeUp .6s ease .2s both}
+#splash .family-pic{width:min(80%,340px);margin-top:26px;border-radius:18px;border:3px solid #fff;box-shadow:0 10px 28px rgba(0,0,0,.22);animation:fadeUp .6s ease .35s both}
 @keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
 @keyframes fadeUp{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
 
@@ -166,6 +167,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div id="splash" class="screen active">
     <div class="logo"><img src="./logo-ping.png" alt="핑" onerror="this.parentElement.textContent='핑'"></div>
     <div class="slogan">오늘도 살아있음을 핑!</div>
+    <img class="family-pic" src="./family-portrait.png" alt="우리 가족" onerror="this.style.display='none'">
   </div>
 
   <!-- ONBOARDING -->
@@ -819,4 +821,46 @@ function scheduleSurvivalTimer() {
   const delay = alarm - now;
   setTimeout(() => {
     if (!todayPings[currentMember]) {
-      if ('Notification' in window && Notification.permission === 'g
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('핑', { body: '핑 보내세요! 오늘의 생존신고가 아직이에요 📸', icon: '📸' });
+      }
+      showToast('⏰ 핑 보내세요!');
+    }
+  }, delay);
+}
+
+// ========== INIT ==========
+async function init() {
+  // Request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    try { await navigator.serviceWorker.register('./sw.js'); } catch(e) {}
+  }
+
+  // Splash screen
+  setTimeout(async () => {
+    currentMember = loadLocal('member', null);
+
+    if (currentMember) {
+      await loadTodayPings();
+      showScreen('feed');
+      startListening();
+      scheduleSurvivalTimer();
+    } else {
+      showScreen('onboarding');
+    }
+  }, 1200);
+}
+
+// Expose to global for onclick handlers
+window.showScreen = showScreen;
+window.openCamera = openCamera;
+
+init();
+</script>
+</body>
+</html>
