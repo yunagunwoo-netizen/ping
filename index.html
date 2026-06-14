@@ -296,6 +296,35 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .album-cell .album-badge{position:absolute;top:3px;right:4px;font-size:12px}
 .album-empty{grid-column:1/-1;text-align:center;color:var(--gray400);padding:40px 0;font-size:13px}
 
+/* ========== 가족 (초대) ========== */
+.fam-invite{display:flex;align-items:center;gap:12px;margin:6px 16px 18px;background:#FFF7E6;border-radius:16px;padding:14px}
+.fam-invite .fi-icon{width:44px;height:44px;border-radius:50%;background:#FDE68A;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.fam-invite .fi-text{flex:1;min-width:0}
+.fam-invite .fi-title{font-size:14px;font-weight:800;color:var(--gray500)}
+.fam-invite .fi-link{font-size:11px;color:var(--gray400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fam-invite .fi-share{width:40px;height:40px;border-radius:12px;background:var(--orange);color:#fff;font-size:18px;flex-shrink:0}
+.fam-namebar{display:flex;align-items:center;gap:8px;padding:0 20px 14px;border-bottom:1px solid var(--gray100);margin:0 0 8px}
+.fam-namebar .fam-name{font-size:20px;font-weight:800;color:var(--gray500)}
+.fam-namebar .fam-count{font-size:14px;color:var(--gray400);font-weight:700}
+.fam-namebar .fam-edit{margin-left:auto;width:34px;height:34px;border-radius:10px;background:var(--gray100);font-size:15px}
+.fam-list{padding:0 16px 24px;display:flex;flex-direction:column}
+.fam-row{display:flex;align-items:center;gap:14px;padding:12px 4px}
+.fam-row img{width:52px;height:52px;border-radius:50%;object-fit:cover}
+.fam-row .fr-name{font-size:16px;font-weight:700;color:var(--gray500)}
+.fam-row .fr-me{font-size:11px;color:var(--gray400);margin-top:2px}
+
+/* ========== 알림 피드 ========== */
+.notif-list{padding:4px 16px 24px;display:flex;flex-direction:column}
+.notif-row{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--gray100)}
+.notif-row .nr-avatar{position:relative;flex-shrink:0}
+.notif-row .nr-avatar img{width:46px;height:46px;border-radius:50%;object-fit:cover}
+.notif-row .nr-emoji{position:absolute;bottom:-2px;right:-4px;font-size:16px}
+.notif-row .nr-body{flex:1;min-width:0}
+.notif-row .nr-text{font-size:14px;color:var(--gray500);font-weight:600}
+.notif-row .nr-sub{font-size:12px;color:var(--gray400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notif-row .nr-time{font-size:11px;color:var(--gray300);flex-shrink:0}
+.notif-empty{text-align:center;color:var(--gray400);padding:48px 0;font-size:13px}
+
 /* ========== LOADING ========== */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,248,240,.9);display:none;align-items:center;justify-content:center;z-index:90;flex-direction:column;gap:12px}
 .loading-overlay.show{display:flex}
@@ -345,6 +374,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <div class="streak-badge" id="familyStreak">🔥 0일째</div>
         <button class="menu-btn" id="menuBtn" onclick="toggleHeaderMenu(event)">⋯</button>
         <div class="header-menu" id="headerMenu">
+          <button onclick="menuGo('notif')">🔔 알림</button>
+          <button onclick="menuGo('family')">👨‍👩‍👧‍👦 가족 · 초대</button>
           <button onclick="menuGo('album')">📔 가족 앨범</button>
           <button onclick="menuGo('lb')">🏆 가족 리더보드</button>
           <button onclick="menuGo('cal')">📅 추억 캘린더</button>
@@ -486,6 +517,39 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="lb-crown" id="lbCrown"></div>
     <div class="lb-list" id="lbList"></div>
     <div class="lb-hof" id="lbHof"></div>
+  </div>
+
+  <!-- NOTIFICATIONS (알림) -->
+  <div id="notif" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>알림</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </div>
+
+  <!-- FAMILY (가족 · 초대) -->
+  <div id="family" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>가족</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="fam-invite">
+      <div class="fi-icon">✉️</div>
+      <div class="fi-text">
+        <div class="fi-title">핑에 가족 초대하기</div>
+        <div class="fi-link" id="famLink">https://yunagunwoo-netizen.github.io/ping/</div>
+      </div>
+      <button class="fi-share" onclick="shareInvite()">⤴</button>
+    </div>
+    <div class="fam-namebar">
+      <span class="fam-name" id="famName">우리가족 ✌️</span>
+      <span class="fam-count" id="famCount">4</span>
+      <button class="fam-edit" onclick="editFamilyName()">✏️</button>
+    </div>
+    <div class="fam-list" id="famList"></div>
   </div>
 
   <!-- ALBUM (가족 앨범) -->
@@ -1208,6 +1272,98 @@ window.menuGo = function(which){
   else if (which === 'lb') openLeaderboard();
   else if (which === 'cal') openCalendar();
   else if (which === 'dex') showDubiDex();
+  else if (which === 'family') openFamily();
+  else if (which === 'notif') openNotifications();
+};
+
+// ========== 알림 피드 ==========
+function timeAgo(ts){
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '방금';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}분 전`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}시간 전`;
+  return `${Math.floor(diff/86400000)}일 전`;
+}
+window.openNotifications = function(){ showScreen('notif'); renderNotifications(); };
+async function renderNotifications(){
+  const list = document.getElementById('notifList');
+  list.innerHTML = '<div class="notif-empty">불러오는 중...</div>';
+  const now = new Date();
+  const m1 = await loadMonth(now.getFullYear(), now.getMonth());
+  const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const m2 = await loadMonth(pm.getFullYear(), pm.getMonth());
+  const data = { ...m2, ...m1 };
+  const items = [];
+  for (const date in data){
+    const dp = data[date];
+    for (const mid in dp){
+      const ping = dp[mid];
+      const baseTs = ping.createdAt ? new Date(ping.createdAt).getTime() : new Date(date + 'T12:00:00').getTime();
+      if (mid !== currentMember){
+        items.push({ who: mid, ts: baseTs, text: `${mid}님이 오늘의 핑을 올렸어요`, sub: ping.comment || '', emoji: '' });
+      }
+    }
+    const myPing = dp[currentMember];
+    if (myPing && myPing.reactions){
+      for (const reactor in myPing.reactions){
+        if (reactor === currentMember) continue;
+        const baseTs = myPing.createdAt ? new Date(myPing.createdAt).getTime() : new Date(date + 'T12:00:00').getTime();
+        items.push({ who: reactor, ts: baseTs + 1, text: `${reactor}님이 내 생존신고에 리액션했어요`, sub: '', emoji: myPing.reactions[reactor] });
+      }
+    }
+  }
+  items.sort((a, b) => b.ts - a.ts);
+  list.innerHTML = '';
+  if (!items.length){ list.innerHTML = '<div class="notif-empty">아직 알림이 없어요 🔔</div>'; return; }
+  for (const it of items.slice(0, 50)){
+    const mem = getMember(it.who);
+    const av = mem ? mem.avatar : '';
+    const row = document.createElement('div'); row.className = 'notif-row';
+    row.innerHTML = `<div class="nr-avatar"><img src="${av}" alt="${it.who}" onerror="this.style.display='none'">${it.emoji ? `<span class="nr-emoji">${it.emoji}</span>` : ''}</div>
+      <div class="nr-body"><div class="nr-text">${it.text}</div>${it.sub ? `<div class="nr-sub">${it.sub}</div>` : ''}</div>
+      <div class="nr-time">${timeAgo(it.ts)}</div>`;
+    list.appendChild(row);
+  }
+}
+
+// ========== 가족 · 초대 ==========
+function getFamilyName(){ return loadLocal('familyName', '우리가족 ✌️'); }
+function getInviteLink(){ return location.origin + location.pathname; }
+window.openFamily = function(){
+  showScreen('family');
+  renderFamily();
+};
+function renderFamily(){
+  document.getElementById('famLink').textContent = getInviteLink();
+  document.getElementById('famName').textContent = getFamilyName();
+  document.getElementById('famCount').textContent = MEMBERS.length;
+  const list = document.getElementById('famList');
+  list.innerHTML = '';
+  for (const m of MEMBERS){
+    const row = document.createElement('div'); row.className = 'fam-row';
+    row.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
+      <div><div class="fr-name">${m.id}</div>${m.id === currentMember ? '<div class="fr-me">나</div>' : ''}</div>`;
+    list.appendChild(row);
+  }
+}
+window.shareInvite = async function(){
+  const url = getInviteLink();
+  const data = { title: '핑 - 가족 생존신고', text: getFamilyName() + ' 핑에 초대합니다!', url };
+  try {
+    if (navigator.share) { await navigator.share(data); }
+    else { await navigator.clipboard.writeText(url); showToast('초대 링크 복사됨 📋'); }
+  } catch(e){
+    try { await navigator.clipboard.writeText(url); showToast('초대 링크 복사됨 📋'); } catch(e2){}
+  }
+};
+window.editFamilyName = function(){
+  const cur = getFamilyName();
+  const next = prompt('가족 방 이름을 입력하세요', cur);
+  if (next && next.trim()){
+    saveLocal('familyName', next.trim());
+    renderFamily();
+    showToast('가족 이름 변경 완료');
+  }
 };
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('headerMenu');
