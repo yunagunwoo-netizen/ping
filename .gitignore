@@ -11,6 +11,13 @@ storage.rules
 KakaoTalk_*.jpg
 *_원본.jpg
 
+# Cloud Functions 의존성/로그 (배포 시 자동 생성)
+functions/node_modules/
+functions/package-lock.json
+firebase-debug.log
+*.log
+FCM_SETUP.md
+
 # 시스템 파일
 .DS_Store
 Thumbs.db

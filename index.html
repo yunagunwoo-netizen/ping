@@ -653,6 +653,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebas
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
+import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js';
 
 // 🔧 Firebase 설정 — 본인의 Firebase 프로젝트 정보로 교체하세요
 const firebaseConfig = {
@@ -664,7 +665,10 @@ const firebaseConfig = {
   appId: "1:1076131335477:web:45bc309dcbdfe315cd507c"
 };
 
-let db, storage, auth, firebaseReady = false;
+// 🔔 FCM 웹푸시 공개키(VAPID) — Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 구성에서 생성해 붙여넣기
+const FCM_VAPID_KEY = "BCgnrgbnGqkRgx00n2oMw10kA617cNSzJHQh6j_7HC9fQJX4OzlUPwv51_xdBRdKeI898AzNvbpWsY80jzYNEkw";
+
+let db, storage, auth, messaging, firebaseReady = false;
 try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
@@ -672,6 +676,7 @@ try {
   if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
     auth = getAuth(app);
     // 익명 로그인 — 보안 규칙(인증된 사용자만)을 통과하기 위해 필요
+    try { messaging = getMessaging(app); } catch(e) { console.warn('FCM 미지원 브라우저', e); }
     signInAnonymously(auth).then(async () => {
       firebaseReady = true;
       console.log('Firebase 익명 로그인 성공');
@@ -681,10 +686,43 @@ try {
         renderFeed();
         startListening();
       }
+      registerPush();
     }).catch(e => console.warn('익명 로그인 실패 — 로컬 모드로 실행합니다.', e));
   }
 } catch(e) {
   console.warn('Firebase 초기화 실패 — 로컬 모드로 실행합니다.', e);
+}
+
+// 포그라운드(앱 켜져 있을 때) 푸시 수신 → 토스트
+function initForegroundPush(){
+  if (!messaging) return;
+  try {
+    onMessage(messaging, (payload) => {
+      const n = payload.notification || {};
+      showToast(`${n.title || '핑'} · ${n.body || ''}`);
+    });
+  } catch(e){}
+}
+
+// FCM 토큰 등록 (알림 권한 + 토큰을 Firestore에 저장)
+let pushRegistered = false;
+async function registerPush(){
+  if (pushRegistered) return;
+  if (!messaging || !firebaseReady || !currentMember) return;
+  if (!FCM_VAPID_KEY || FCM_VAPID_KEY.startsWith('여기에')) return; // VAPID 키 미설정 시 건너뜀
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  try {
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+    if (token){
+      await setDoc(doc(db, 'fcmTokens', currentMember), { token, member: currentMember, updatedAt: new Date().toISOString() });
+      pushRegistered = true;
+      console.log('FCM 토큰 등록 완료');
+    }
+  } catch(e){ console.warn('FCM 등록 실패', e); }
 }
 
 // ========== STATE ==========
@@ -992,6 +1030,7 @@ function renderFeed() {
   }
 
   startCountdown();
+  registerPush();
 }
 
 // ========== RENDER MYPAGE ==========
@@ -1164,10 +1203,17 @@ window.sendReaction = async function(emoji) {
 };
 
 // ========== POKE ==========
-window.pokeMember = function(targetId) {
+window.pokeMember = async function(targetId) {
   const m = getMember(targetId);
   showToast(`${m.id}에게 찌르기 전송! 👈`);
-  // In 2차 개발: FCM push notification
+  // Firestore에 찌르기 기록 → Cloud Function이 FCM 푸시 발송
+  if (firebaseReady && currentMember) {
+    try {
+      await setDoc(doc(db, 'pokes', `${Date.now()}_${currentMember}_${targetId}`), {
+        from: currentMember, target: targetId, createdAt: new Date().toISOString()
+      });
+    } catch(e){ console.warn('찌르기 기록 실패', e); }
+  }
 };
 
 // ========== 오늘의 가족사진 (전원 핑 완료 시) ==========
@@ -1727,6 +1773,8 @@ function scheduleSurvivalTimer() {
 
 // ========== INIT ==========
 async function init() {
+  // 포그라운드 푸시 수신 핸들러
+  initForegroundPush();
   // Request notification permission
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
