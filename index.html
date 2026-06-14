@@ -115,6 +115,20 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .preview-actions button:active{transform:scale(.97)}
 .btn-cancel{background:var(--gray200);color:var(--gray500)}
 .btn-ping{background:var(--orange);color:#fff}
+.together-box{margin-bottom:12px}
+.together-label{font-size:12px;font-weight:700;color:var(--gray500);margin-bottom:8px}
+.together-label span{color:var(--orange);font-weight:600}
+.together-chips{display:flex;gap:8px;flex-wrap:wrap}
+.together-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:#fff;box-shadow:var(--shadow);font-size:13px;font-weight:600;color:var(--gray500);transition:all .15s}
+.together-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.together-chip.on{background:var(--orange);color:#fff}
+.together-chip:active{transform:scale(.95)}
+/* 이달 점수 카드 */
+.score-card{background:linear-gradient(135deg,#A78BFA,#F0ABFC);color:#fff;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.score-card .sc-l h3{font-size:14px;opacity:.9;margin-bottom:6px}
+.score-card .sc-l .sc-num{font-size:34px;font-weight:900;line-height:1}
+.score-card .sc-l .sc-unit{font-size:14px;font-weight:700}
+.score-card .sc-r{font-size:34px}
 
 /* ========== MYPAGE ========== */
 #mypage{padding:20px;overflow-y:auto;padding-bottom:80px}
@@ -328,6 +342,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <strong>오늘의 질문</strong>
         <span id="questionText"></span>
       </div>
+      <div class="together-box">
+        <div class="together-label">📸 같이 찍은 가족 <span>(1명당 +10점)</span></div>
+        <div class="together-chips" id="togetherChips"></div>
+      </div>
       <input class="comment-input" id="commentInput" type="text" maxlength="50" placeholder="한줄 코멘트 (선택)">
       <div class="preview-actions">
         <button class="btn-cancel" onclick="cancelPreview()">다시 찍기</button>
@@ -345,6 +363,13 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <h3 id="myName">-</h3>
         <p id="myEmail">김씨네 가족</p>
       </div>
+    </div>
+    <div class="score-card">
+      <div class="sc-l">
+        <h3>이번 달 내 점수</h3>
+        <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
+      </div>
+      <div class="sc-r" id="myScoreRank">🏅</div>
     </div>
     <div class="streak-card">
       <h3>나의 연속 핑</h3>
@@ -554,6 +579,7 @@ let reactionTargetMember = null;
 let todayPings = {}; // { memberId: { photoURL, comment, reactions, createdAt } }
 let streaks = {}; // { memberId: { current, best, lastPingDate } }
 let unsubscribe = null;
+let togetherSelected = new Set(); // 이번 사진에 함께 찍은 가족
 
 // ========== HELPERS ==========
 function getToday() {
@@ -643,13 +669,14 @@ function startListening() {
   } catch(e) { console.warn('Firestore listener 실패', e); }
 }
 
-async function savePing(memberId, photoDataURL, comment) {
+async function savePing(memberId, photoDataURL, comment, withMembers) {
   const today = getToday();
   const pingData = {
     familyId: FAMILY_ID,
     memberId,
     photoURL: photoDataURL,
     comment: comment || '',
+    withMembers: withMembers || [],
     reactions: {},
     question: getDailyQuestion(),
     createdAt: new Date().toISOString()
@@ -836,6 +863,17 @@ function renderMyPage() {
 
   const settings = loadLocal('settings', {});
   if (settings.alarmTime) document.getElementById('alarmTime').value = settings.alarmTime;
+
+  // 이번 달 점수 + 순위
+  const now = new Date();
+  computeMonthScores(now.getFullYear(), now.getMonth()).then(scores => {
+    document.getElementById('myMonthScore').textContent = scores[currentMember] || 0;
+    const ranked = MEMBERS.map(mm => mm.id).sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
+    const rank = ranked.indexOf(currentMember) + 1;
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '🏅' };
+    const myScore = scores[currentMember] || 0;
+    document.getElementById('myScoreRank').textContent = (myScore > 0 && rank === 1) ? '👑' : (medals[rank] || '🏅');
+  }).catch(() => {});
 }
 
 // ========== CAMERA ==========
@@ -918,6 +956,8 @@ window.capturePhoto = function() {
       currentStream.getTracks().forEach(t => t.stop());
       currentStream = null;
     }
+    togetherSelected = new Set();
+    buildTogetherChips();
     showScreen('preview');
   }, 'image/jpeg', 0.7);
 };
@@ -939,10 +979,13 @@ window.submitPing = async function() {
       reader.readAsDataURL(capturedBlob);
     });
 
-    await savePing(currentMember, dataURL, comment);
+    const withMembers = [...togetherSelected];
+    await savePing(currentMember, dataURL, comment, withMembers);
     showLoading(false);
-    showToast('핑! 전송 완료 📸');
+    const pts = 10 + withMembers.length * 10;
+    showToast(withMembers.length ? `핑! +${pts}점 (함께찍기 보너스!) 🎉` : '핑! +10점 📸');
     capturedBlob = null;
+    togetherSelected = new Set();
     showScreen('feed');
   } catch(e) {
     showLoading(false);
@@ -1187,6 +1230,42 @@ window.closeDayDetail = function(e, force){
     document.getElementById('dayOverlay').classList.remove('show');
   }
 };
+
+// ========== 가족 점수 + 함께찍기 ==========
+function buildTogetherChips(){
+  const wrap = document.getElementById('togetherChips');
+  wrap.innerHTML = '';
+  for (const m of MEMBERS){
+    if (m.id === currentMember) continue;
+    const chip = document.createElement('button');
+    chip.className = 'together-chip' + (togetherSelected.has(m.id) ? ' on' : '');
+    chip.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">${m.id}`;
+    chip.onclick = () => toggleTogether(m.id, chip);
+    wrap.appendChild(chip);
+  }
+}
+function toggleTogether(id, chip){
+  if (togetherSelected.has(id)) { togetherSelected.delete(id); chip.classList.remove('on'); }
+  else { togetherSelected.add(id); chip.classList.add('on'); }
+}
+
+// 점수 규칙: 핑 +10, 함께찍기 1명당 +10, (전원 핑한 날) 모두 +5
+function pingPoints(ping){
+  let p = 10;
+  if (ping && ping.withMembers && ping.withMembers.length) p += 10 * ping.withMembers.length;
+  return p;
+}
+async function computeMonthScores(y, m){
+  const data = await loadMonth(y, m);
+  const scores = {}; MEMBERS.forEach(mm => scores[mm.id] = 0);
+  for (const date in data){
+    const dayPings = data[date];
+    const ids = Object.keys(dayPings);
+    for (const id of ids){ if (scores[id] !== undefined) scores[id] += pingPoints(dayPings[id]); }
+    if (ids.length >= 4){ MEMBERS.forEach(mm => { scores[mm.id] += 5; }); }
+  }
+  return scores;
+}
 
 // ========== SETTINGS ==========
 window.saveSettings = function() {
