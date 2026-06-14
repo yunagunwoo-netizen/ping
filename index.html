@@ -186,6 +186,14 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .feed-header-right{display:flex;align-items:center;gap:8px}
 .dex-btn{display:flex;align-items:center;gap:4px;background:#FFF3C4;color:#C58A00;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700}
 .dex-btn:active{transform:scale(.95)}
+.feed-header-right{position:relative}
+.menu-btn{width:42px;height:32px;border-radius:16px;background:var(--gray100);color:var(--gray500);font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:1px}
+.menu-btn:active{transform:scale(.95)}
+.header-menu{position:absolute;top:42px;right:0;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;display:none;flex-direction:column;gap:2px;z-index:60;min-width:180px}
+.header-menu.show{display:flex}
+.header-menu button{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--gray500);text-align:left;white-space:nowrap}
+.header-menu button:active{background:var(--gray100)}
+.header-menu .hm-count{margin-left:auto;color:var(--gray300);font-weight:700}
 .dex-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:18px}
 .dex-overlay.show{display:flex}
 .dex-modal{background:#fff;border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
@@ -330,11 +338,14 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="feed-header">
       <div class="date" id="feedDate"></div>
       <div class="feed-header-right">
-        <button class="dex-btn" id="albumBtn" onclick="openAlbum()" style="background:#FCE7F3;color:#DB2777">📔</button>
-        <button class="dex-btn" id="lbBtn" onclick="openLeaderboard()" style="background:#FEF3C7;color:#B45309">🏆</button>
-        <button class="dex-btn" id="calBtn" onclick="openCalendar()" style="background:#E0EEFF;color:#2563EB">📅</button>
-        <button class="dex-btn" id="dexBtn" onclick="showDubiDex()">🐶 <span id="dexCount">0</span>/11</button>
         <div class="streak-badge" id="familyStreak">🔥 0일째</div>
+        <button class="menu-btn" id="menuBtn" onclick="toggleHeaderMenu(event)">⋯</button>
+        <div class="header-menu" id="headerMenu">
+          <button onclick="menuGo('album')">📔 가족 앨범</button>
+          <button onclick="menuGo('lb')">🏆 가족 리더보드</button>
+          <button onclick="menuGo('cal')">📅 추억 캘린더</button>
+          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/11</span></button>
+        </div>
       </div>
     </div>
     <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 생존신고</div>
@@ -1178,6 +1189,26 @@ window.closeDubiDex = function(e, force){
     document.getElementById('dubiDexOverlay').classList.remove('show');
   }
 };
+
+// ========== 헤더 더보기 메뉴 ==========
+window.toggleHeaderMenu = function(e){
+  if (e) e.stopPropagation();
+  document.getElementById('headerMenu').classList.toggle('show');
+};
+window.menuGo = function(which){
+  document.getElementById('headerMenu').classList.remove('show');
+  if (which === 'album') openAlbum();
+  else if (which === 'lb') openLeaderboard();
+  else if (which === 'cal') openCalendar();
+  else if (which === 'dex') showDubiDex();
+};
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('headerMenu');
+  const btn = document.getElementById('menuBtn');
+  if (menu && menu.classList.contains('show') && !menu.contains(e.target) && e.target !== btn){
+    menu.classList.remove('show');
+  }
+});
 
 // ========== 추억 캘린더 ==========
 let calYear, calMonth;
