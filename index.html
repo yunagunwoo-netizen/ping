@@ -149,6 +149,57 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .reaction-options button{font-size:32px;padding:8px;border-radius:12px;transition:all .15s}
 .reaction-options button:active{transform:scale(1.3)}
 
+/* ========== 오늘의 가족사진 ========== */
+.family-photo-btn{display:block;width:100%;margin:0 0 14px;padding:13px;background:var(--orange);color:#fff;border-radius:14px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(255,107,53,.35);animation:fadeUp .4s ease}
+.fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
+.fp-overlay.show{display:flex}
+.fp-card{background:#fff;border-radius:20px;padding:16px 16px 14px;width:100%;max-width:360px;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .4s ease}
+.fp-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.fp-head .fp-title{font-size:17px;font-weight:800;color:var(--gray500)}
+.fp-head .fp-date{font-size:12px;color:var(--gray400);font-weight:600}
+.fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fp-cell{position:relative;border-radius:12px;overflow:hidden;background:var(--gray100);aspect-ratio:1/1}
+.fp-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.fp-cell .fp-name{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.fp-dubi{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:8px;background:#FFF8E1;border-radius:12px}
+.fp-dubi img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.fp-dubi span{font-size:13px;font-weight:700;color:#C58A00}
+.fp-foot{text-align:center;font-size:13px;font-weight:700;color:var(--orange);margin-top:12px}
+.fp-hint{text-align:center;font-size:11px;color:var(--gray400);margin-top:8px}
+.fp-close{display:block;width:100%;margin-top:12px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
+
+/* ========== 뚜비 도감 ========== */
+.feed-header-right{display:flex;align-items:center;gap:8px}
+.dex-btn{display:flex;align-items:center;gap:4px;background:#FFF3C4;color:#C58A00;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700}
+.dex-btn:active{transform:scale(.95)}
+.dex-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:18px}
+.dex-overlay.show{display:flex}
+.dex-modal{background:#fff;border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
+.dex-modal-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.dex-modal-head h3{font-size:18px;font-weight:800;color:var(--gray500)}
+.dex-modal-head .dex-prog{font-size:13px;color:var(--orange);font-weight:700}
+.dex-sub{font-size:12px;color:var(--gray400);margin-bottom:14px}
+.dex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dex-item{text-align:center}
+.dex-thumb{width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--gray100);display:flex;align-items:center;justify-content:center}
+.dex-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dex-thumb.locked{font-size:26px;color:var(--gray300)}
+.dex-label{font-size:11px;font-weight:600;color:var(--gray300);margin-top:4px}
+.dex-label.owned{color:var(--gray500)}
+.dex-close{display:block;width:100%;margin-top:16px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
+/* 카드 획득 축하 */
+.cu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:130;display:none;align-items:center;justify-content:center;padding:24px}
+.cu-overlay.show{display:flex}
+.cu-card{background:#fff;border-radius:22px;padding:24px;text-align:center;max-width:300px;width:100%;animation:popIn .45s ease}
+.cu-card .cu-title{font-size:16px;font-weight:800;color:var(--orange);margin-bottom:14px}
+.cu-card .cu-img{width:180px;height:180px;border-radius:16px;object-fit:cover;margin:0 auto;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+.cu-card .cu-name{font-size:18px;font-weight:800;color:var(--gray500);margin-top:14px}
+.cu-card .cu-sub{font-size:12px;color:var(--gray400);margin-top:4px}
+.cu-btns{display:flex;gap:8px;margin-top:18px}
+.cu-btns button{flex:1;padding:11px;border-radius:12px;font-size:14px;font-weight:700}
+.cu-btns .cu-dex{background:var(--orange);color:#fff}
+.cu-btns .cu-ok{background:var(--gray100);color:var(--gray500)}
+
 /* ========== LOADING ========== */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,248,240,.9);display:none;align-items:center;justify-content:center;z-index:90;flex-direction:column;gap:12px}
 .loading-overlay.show{display:flex}
@@ -194,9 +245,13 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div id="feed" class="screen">
     <div class="feed-header">
       <div class="date" id="feedDate"></div>
-      <div class="streak-badge" id="familyStreak">🔥 0일째</div>
+      <div class="feed-header-right">
+        <button class="dex-btn" id="dexBtn" onclick="showDubiDex()">🐶 <span id="dexCount">0</span>/11</button>
+        <div class="streak-badge" id="familyStreak">🔥 0일째</div>
+      </div>
     </div>
     <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 생존신고</div>
+    <button class="family-photo-btn" id="familyPhotoBtn" style="display:none" onclick="showFamilyPhoto()">📸 오늘의 가족사진 보기</button>
     <div class="feed-grid" id="feedGrid"></div>
     <div class="nav-bar">
       <button class="nav-item active" onclick="showScreen('feed')">
@@ -291,6 +346,51 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <button onclick="sendReaction('👍')">👍</button>
         <button onclick="sendReaction('🔥')">🔥</button>
         <button onclick="sendReaction('😢')">😢</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오늘의 가족사진 -->
+  <div class="fp-overlay" id="familyPhotoOverlay" onclick="closeFamilyPhoto(event)">
+    <div class="fp-card">
+      <div class="fp-head">
+        <span class="fp-title">우리가족 ✌️</span>
+        <span class="fp-date" id="fpDate"></span>
+      </div>
+      <div class="fp-grid" id="fpGrid"></div>
+      <div class="fp-dubi">
+        <img id="fpDubi" src="./dubi-card-happy.png" alt="뚜비" onerror="this.style.display='none'">
+        <span>뚜비도 함께 🐾</span>
+      </div>
+      <div class="fp-foot">오늘 가족 모두 생존 확인! 📸</div>
+      <div class="fp-hint">화면을 캡처해서 저장하세요 📷</div>
+      <button class="fp-close" onclick="closeFamilyPhoto(event, true)">닫기</button>
+    </div>
+  </div>
+
+  <!-- 뚜비 도감 -->
+  <div class="dex-overlay" id="dubiDexOverlay" onclick="closeDubiDex(event)">
+    <div class="dex-modal">
+      <div class="dex-modal-head">
+        <h3>🐶 뚜비 도감</h3>
+        <span class="dex-prog"><span id="dexProgNum">0</span>/11</span>
+      </div>
+      <div class="dex-sub">가족 모두가 핑한 날, 뚜비 카드를 한 장씩 모아요!</div>
+      <div class="dex-grid" id="dexGrid"></div>
+      <button class="dex-close" onclick="closeDubiDex(event, true)">닫기</button>
+    </div>
+  </div>
+
+  <!-- 뚜비 카드 획득 축하 -->
+  <div class="cu-overlay" id="cardUnlockOverlay" onclick="closeCardUnlock(event)">
+    <div class="cu-card">
+      <div class="cu-title">🎉 새 뚜비 카드 획득!</div>
+      <img class="cu-img" id="cuImg" src="" alt="뚜비 카드">
+      <div class="cu-name" id="cuName">뚜비</div>
+      <div class="cu-sub">가족 모두가 오늘 생존 확인했어요!</div>
+      <div class="cu-btns">
+        <button class="cu-dex" onclick="closeCardUnlock(event, true); showDubiDex();">도감 보기</button>
+        <button class="cu-ok" onclick="closeCardUnlock(event, true)">확인</button>
       </div>
     </div>
   </div>
@@ -578,6 +678,26 @@ function renderFeed() {
     uploadedCount === 4 ? '오늘 가족 모두 생존 확인! ✨' :
     `${uploadedCount}/4명 생존 확인`;
 
+  // 뚜비 도감 버튼 카운트 갱신
+  updateDexButton();
+
+  // 전원 완료 시: 가족사진 버튼 + 하루 한 번 뚜비 카드 보상
+  const fpBtn = document.getElementById('familyPhotoBtn');
+  if (uploadedCount === 4) {
+    fpBtn.style.display = 'block';
+    if (loadLocal('familyPhotoSeen', '') !== getToday()) {
+      saveLocal('familyPhotoSeen', getToday());
+      const newCard = unlockDubiCard();
+      updateDexButton();
+      setTimeout(() => {
+        if (newCard) showCardUnlock(newCard);
+        else showFamilyPhoto();
+      }, 600);
+    }
+  } else {
+    fpBtn.style.display = 'none';
+  }
+
   const grid = document.getElementById('feedGrid');
   grid.innerHTML = '';
 
@@ -788,6 +908,97 @@ window.pokeMember = function(targetId) {
   const m = getMember(targetId);
   showToast(`${m.id}에게 찌르기 전송! 👈`);
   // In 2차 개발: FCM push notification
+};
+
+// ========== 오늘의 가족사진 (전원 핑 완료 시) ==========
+window.showFamilyPhoto = function() {
+  if (MEMBERS.filter(m => todayPings[m.id]).length < 4) {
+    showToast('아직 가족 모두 핑하지 않았어요!');
+    return;
+  }
+  document.getElementById('fpDate').textContent = getTodayKR();
+  // 뚜비 기분 카드: 날짜에 따라 3종 순환
+  const dubiCards = ['./dubi-card-happy.png', './dubi-card-play.png', './dubi-card-sleepy.png'];
+  const d = new Date();
+  const dayOfYear = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  document.getElementById('fpDubi').src = dubiCards[dayOfYear % 3];
+  const grid = document.getElementById('fpGrid');
+  grid.innerHTML = '';
+  for (const m of MEMBERS) {
+    const ping = todayPings[m.id];
+    const cell = document.createElement('div');
+    cell.className = 'fp-cell';
+    cell.innerHTML = `<img src="${ping.photoURL}" alt="${m.id}"><span class="fp-name">${m.id}</span>`;
+    grid.appendChild(cell);
+  }
+  document.getElementById('familyPhotoOverlay').classList.add('show');
+};
+
+window.closeFamilyPhoto = function(e, force) {
+  if (force || (e && e.target === document.getElementById('familyPhotoOverlay'))) {
+    document.getElementById('familyPhotoOverlay').classList.remove('show');
+  }
+};
+
+// ========== 뚜비 카드 도감 (일일 보상) ==========
+const DUBI_CARDS = [
+  { id:'happy', name:'행복뚜비' }, { id:'play', name:'장난뚜비' }, { id:'sleepy', name:'졸린뚜비' },
+  { id:'love', name:'사랑뚜비' }, { id:'excited', name:'신난뚜비' }, { id:'snack', name:'간식뚜비' },
+  { id:'birthday', name:'생일뚜비' }, { id:'winter', name:'겨울뚜비' }, { id:'flower', name:'꽃뚜비' },
+  { id:'curious', name:'궁금뚜비' }, { id:'cheer', name:'응원뚜비' }
+];
+function dubiName(id){ const c = DUBI_CARDS.find(x => x.id === id); return c ? c.name : '뚜비'; }
+
+function unlockDubiCard(){
+  const owned = loadLocal('dubiCards', []);
+  if (owned.some(c => c.date === getToday())) return null; // 오늘 이미 획득
+  const ownedSet = new Set(owned.map(c => c.card));
+  const remaining = DUBI_CARDS.filter(c => !ownedSet.has(c.id));
+  if (remaining.length === 0) return null; // 도감 완성
+  const pick = remaining[Math.floor(Math.random() * remaining.length)];
+  owned.push({ card: pick.id, date: getToday() });
+  saveLocal('dubiCards', owned);
+  return pick.id;
+}
+
+function updateDexButton(){
+  const ownedSet = new Set(loadLocal('dubiCards', []).map(c => c.card));
+  const n = DUBI_CARDS.filter(c => ownedSet.has(c.id)).length;
+  const el = document.getElementById('dexCount');
+  if (el) el.textContent = n;
+}
+
+window.showCardUnlock = function(cardId){
+  document.getElementById('cuImg').src = `./dubi-card-${cardId}.png`;
+  document.getElementById('cuName').textContent = dubiName(cardId);
+  document.getElementById('cardUnlockOverlay').classList.add('show');
+};
+window.closeCardUnlock = function(e, force){
+  if (force || (e && e.target === document.getElementById('cardUnlockOverlay'))) {
+    document.getElementById('cardUnlockOverlay').classList.remove('show');
+  }
+};
+
+window.showDubiDex = function(){
+  const ownedSet = new Set(loadLocal('dubiCards', []).map(c => c.card));
+  const n = DUBI_CARDS.filter(c => ownedSet.has(c.id)).length;
+  document.getElementById('dexProgNum').textContent = n;
+  const grid = document.getElementById('dexGrid');
+  grid.innerHTML = '';
+  for (const c of DUBI_CARDS) {
+    const item = document.createElement('div');
+    item.className = 'dex-item';
+    item.innerHTML = ownedSet.has(c.id)
+      ? `<div class="dex-thumb"><img src="./dubi-card-${c.id}.png" alt="${c.name}"></div><div class="dex-label owned">${c.name}</div>`
+      : `<div class="dex-thumb locked">🔒</div><div class="dex-label">???</div>`;
+    grid.appendChild(item);
+  }
+  document.getElementById('dubiDexOverlay').classList.add('show');
+};
+window.closeDubiDex = function(e, force){
+  if (force || (e && e.target === document.getElementById('dubiDexOverlay'))) {
+    document.getElementById('dubiDexOverlay').classList.remove('show');
+  }
 };
 
 // ========== SETTINGS ==========

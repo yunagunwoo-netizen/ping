@@ -7,4 +7,10 @@ UI_ASSETS.md
 firestore.rules
 storage.rules
 
-# 원본 가족사진 — 아바타 생
+# 원본 가족사진 — 아바타 생성용 참고 이미지 (공개 배포 제외)
+KakaoTalk_*.jpg
+*_원본.jpg
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
