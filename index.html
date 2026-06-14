@@ -249,6 +249,29 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .day-item .di-cmt{font-size:11px;color:var(--gray400);padding:0 8px 7px}
 .day-close{display:block;width:100%;margin-top:14px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
 
+/* ========== 리더보드 / 권한 ========== */
+.lb-month{text-align:center;font-size:14px;color:var(--gray400);font-weight:700;margin:4px 0 12px}
+.lb-crown{margin:0 16px 16px;background:linear-gradient(135deg,#FDE68A,#FCA5A5);border-radius:20px;padding:18px}
+.lbc-title{font-size:14px;font-weight:800;color:#92400E;margin-bottom:12px}
+.lbc-member{display:flex;align-items:center;gap:14px}
+.lbc-member img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fff}
+.lbc-name{font-size:20px;font-weight:800;color:#7C2D12}
+.lbc-priv{font-size:12px;font-weight:700;color:#9A3412;margin-top:3px}
+.lbc-empty{font-size:13px;color:#92400E;font-weight:600;text-align:center}
+.lb-list{margin:0 16px 20px;display:flex;flex-direction:column;gap:8px}
+.lb-row{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.lb-row.lead{background:#FFF7E6;outline:2px solid #FBBF24;outline-offset:-2px}
+.lb-rank{font-size:18px;width:28px;text-align:center}
+.lb-av{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.lb-name{flex:1;font-size:15px;font-weight:700;color:var(--gray500)}
+.lb-score{font-size:15px;font-weight:800;color:var(--orange)}
+.lb-hof{margin:0 16px 28px;background:var(--gray100);border-radius:16px;padding:16px}
+.lb-hof-title{font-size:13px;font-weight:800;color:var(--gray500);margin-bottom:10px}
+.lb-hof-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray500)}
+.lb-hof-row img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.lb-hof-empty{font-size:12px;color:var(--gray400)}
+.score-card{cursor:pointer}
+
 /* ========== LOADING ========== */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,248,240,.9);display:none;align-items:center;justify-content:center;z-index:90;flex-direction:column;gap:12px}
 .loading-overlay.show{display:flex}
@@ -295,6 +318,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="feed-header">
       <div class="date" id="feedDate"></div>
       <div class="feed-header-right">
+        <button class="dex-btn" id="lbBtn" onclick="openLeaderboard()" style="background:#FEF3C7;color:#B45309">🏆</button>
         <button class="dex-btn" id="calBtn" onclick="openCalendar()" style="background:#E0EEFF;color:#2563EB">📅</button>
         <button class="dex-btn" id="dexBtn" onclick="showDubiDex()">🐶 <span id="dexCount">0</span>/11</button>
         <div class="streak-badge" id="familyStreak">🔥 0일째</div>
@@ -364,7 +388,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <p id="myEmail">김씨네 가족</p>
       </div>
     </div>
-    <div class="score-card">
+    <div class="score-card" onclick="openLeaderboard()">
       <div class="sc-l">
         <h3>이번 달 내 점수</h3>
         <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
@@ -420,6 +444,19 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
     </div>
     <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- LEADERBOARD (가족 리더보드 / 권한) -->
+  <div id="leaderboard" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>가족 리더보드</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="lb-month" id="lbMonth">이번 달</div>
+    <div class="lb-crown" id="lbCrown"></div>
+    <div class="lb-list" id="lbList"></div>
+    <div class="lb-hof" id="lbHof"></div>
   </div>
 
   <!-- 날짜 상세 -->
@@ -1265,6 +1302,56 @@ async function computeMonthScores(y, m){
     if (ids.length >= 4){ MEMBERS.forEach(mm => { scores[mm.id] += 5; }); }
   }
   return scores;
+}
+
+// ========== 리더보드 / 권한 ==========
+window.openLeaderboard = function(){
+  showScreen('leaderboard');
+  renderLeaderboard();
+};
+async function renderLeaderboard(){
+  const now = new Date();
+  document.getElementById('lbMonth').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월`;
+  // 로딩 표시
+  document.getElementById('lbList').innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:13px">불러오는 중...</div>';
+  document.getElementById('lbCrown').innerHTML = '';
+  document.getElementById('lbHof').innerHTML = '';
+
+  const scores = await computeMonthScores(now.getFullYear(), now.getMonth());
+  const ranked = MEMBERS.slice().sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
+  const top = ranked[0], topScore = scores[top.id] || 0;
+
+  // 이번 달 결정권자
+  const crown = document.getElementById('lbCrown');
+  if (topScore > 0){
+    crown.innerHTML = `<div class="lbc-title">👑 이번 달 결정권자</div>
+      <div class="lbc-member"><img src="${top.avatar}" alt="${top.id}" onerror="this.style.display='none'">
+        <div><div class="lbc-name">${top.id}</div><div class="lbc-priv">여행지 · 외식 장소 결정권 획득! 🗺️🍽️</div></div></div>`;
+  } else {
+    crown.innerHTML = `<div class="lbc-empty">이번 달 첫 핑을 올려 점수를 쌓아보세요!</div>`;
+  }
+
+  // 순위 리스트
+  const list = document.getElementById('lbList'); list.innerHTML = '';
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+  ranked.forEach((m, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (i === 0 && topScore > 0 ? ' lead' : '');
+    row.innerHTML = `<span class="lb-rank">${medals[i] || (i+1)}</span>
+      <img class="lb-av" src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
+      <span class="lb-name">${m.id}</span><span class="lb-score">${scores[m.id] || 0}점</span>`;
+    list.appendChild(row);
+  });
+
+  // 지난달 명예의 전당
+  const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastScores = await computeMonthScores(pm.getFullYear(), pm.getMonth());
+  const lastRanked = MEMBERS.slice().sort((a, b) => (lastScores[b.id] || 0) - (lastScores[a.id] || 0));
+  const lastTop = lastRanked[0], lastTopScore = lastScores[lastTop.id] || 0;
+  const hof = document.getElementById('lbHof');
+  hof.innerHTML = `<div class="lb-hof-title">🏆 지난달 명예의 전당</div>` + (lastTopScore > 0
+    ? `<div class="lb-hof-row"><img src="${lastTop.avatar}" alt="${lastTop.id}" onerror="this.style.display='none'"><span>${pm.getMonth()+1}월 1등 — <b>${lastTop.id}</b> (${lastTopScore}점)</span></div>`
+    : `<div class="lb-hof-empty">아직 기록이 없어요</div>`);
 }
 
 // ========== SETTINGS ==========
