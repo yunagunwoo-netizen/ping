@@ -74,6 +74,15 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .install-banner .ib-sub{font-size:11px;color:var(--gray400);margin-top:2px;line-height:1.3}
 .install-banner .ib-btn{background:var(--orange);color:#fff;font-weight:700;font-size:13px;padding:10px 15px;border-radius:12px;flex-shrink:0}
 .install-banner .ib-close{width:26px;height:26px;color:var(--gray300);font-size:14px;flex-shrink:0}
+/* 설치 방법 가이드 모달 */
+.ig-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:160;display:none;align-items:center;justify-content:center;padding:16px}
+.ig-overlay.show{display:flex}
+.ig-card{background:#fff;border-radius:20px;width:100%;max-width:420px;max-height:88vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
+.ig-img{width:100%;display:block;border-radius:20px 20px 0 0}
+.ig-actions{display:flex;gap:8px;padding:14px}
+.ig-actions button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700}
+.ig-install{background:var(--orange);color:#fff}
+.ig-close{background:var(--gray100);color:var(--gray500)}
 .feed-grid{flex:1;overflow-y:auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
 .ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
 .ping-card:active{transform:scale(.98)}
@@ -658,11 +667,22 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div class="install-banner" id="installBanner">
     <img class="ib-icon" src="./icon-192.png" alt="핑">
     <div class="ib-text">
-      <div class="ib-title">핑을 홈 화면에 추가</div>
-      <div class="ib-sub" id="ibSub">설치하면 푸시 알림도 받고 앱처럼 빨라요</div>
+      <div class="ib-title">핑을 홈 화면에 설치하세요</div>
+      <div class="ib-sub" id="ibSub">설치해야 알림도 받고 앱처럼 빨라요</div>
     </div>
-    <button class="ib-btn" id="ibBtn" onclick="installApp()">설치</button>
+    <button class="ib-btn" id="ibBtn" onclick="openInstallGuide()">설치 방법</button>
     <button class="ib-close" onclick="dismissInstall()">✕</button>
+  </div>
+
+  <!-- 설치 방법 그림 가이드 -->
+  <div class="ig-overlay" id="installGuide" onclick="closeInstallGuide(event)">
+    <div class="ig-card">
+      <img class="ig-img" id="igImg" src="./install-ios.png" alt="설치 방법">
+      <div class="ig-actions">
+        <button class="ig-install" id="igInstallBtn" style="display:none" onclick="installApp()">지금 설치</button>
+        <button class="ig-close" onclick="closeInstallGuide(event, true)">닫기</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1794,23 +1814,23 @@ function scheduleSurvivalTimer() {
 
 // ========== 홈 화면 설치 안내 ==========
 let deferredInstallPrompt = null;
+let installBannerDismissed = false; // 이번 방문에서만 숨김 (다음에 또 뜸 → 설치할 때까지)
 function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
 function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function installDismissedRecently(){ return (Date.now() - (loadLocal('installDismissed', 0) || 0)) < 3 * 24 * 3600 * 1000; }
+function isInAppBrowser(){ return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|wadiz/i.test(navigator.userAgent); }
+function guideImageFor(){
+  if (isInAppBrowser()) return './install-inapp.png';
+  if (isIOS()) return './install-ios.png';
+  return './install-android.png';
+}
 function maybeShowInstall(){
-  if (isStandalone() || installDismissedRecently()) return;
+  if (isStandalone() || installBannerDismissed) return; // 설치 완료면 안 뜸
   const banner = document.getElementById('installBanner');
-  const btn = document.getElementById('ibBtn');
   const sub = document.getElementById('ibSub');
-  if (isIOS()){
-    btn.style.display = 'none';
-    sub.textContent = "공유 버튼 → '홈 화면에 추가'를 누르세요";
-    banner.classList.add('show');
-  } else if (deferredInstallPrompt){
-    btn.style.display = '';
-    sub.textContent = '설치하면 푸시 알림도 받고 앱처럼 빨라요';
-    banner.classList.add('show');
-  }
+  if (isInAppBrowser()) sub.textContent = '카톡 안에서는 설치가 안 돼요 → 방법 보기';
+  else if (isIOS()) sub.textContent = "공유 → '홈 화면에 추가' (방법 보기)";
+  else sub.textContent = '설치해야 알림도 받고 앱처럼 빨라요';
+  banner.classList.add('show');
 }
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -1819,18 +1839,32 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 window.addEventListener('appinstalled', () => {
   const b = document.getElementById('installBanner'); if (b) b.classList.remove('show');
+  closeInstallGuide(null, true);
   deferredInstallPrompt = null;
 });
+window.openInstallGuide = function(){
+  document.getElementById('igImg').src = guideImageFor();
+  // 안드로이드에서 즉시 설치 가능하면 '지금 설치' 버튼 노출
+  document.getElementById('igInstallBtn').style.display = deferredInstallPrompt ? '' : 'none';
+  document.getElementById('installGuide').classList.add('show');
+};
+window.closeInstallGuide = function(e, force){
+  if (force || (e && e.target === document.getElementById('installGuide'))) {
+    document.getElementById('installGuide').classList.remove('show');
+  }
+};
 window.installApp = async function(){
   if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
   try { await deferredInstallPrompt.userChoice; } catch(e){}
   deferredInstallPrompt = null;
+  document.getElementById('igInstallBtn').style.display = 'none';
+  document.getElementById('installGuide').classList.remove('show');
   document.getElementById('installBanner').classList.remove('show');
 };
 window.dismissInstall = function(){
+  installBannerDismissed = true;
   document.getElementById('installBanner').classList.remove('show');
-  saveLocal('installDismissed', Date.now());
 };
 
 // ========== INIT ==========
