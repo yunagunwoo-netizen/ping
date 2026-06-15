@@ -408,6 +408,16 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .rw-name{font-size:19px;font-weight:900;color:var(--gray500);margin:4px 0 12px}
 .rw-detail{font-size:13.5px;line-height:1.7;color:var(--gray400);text-align:left;background:var(--cream);border-radius:14px;padding:13px 15px}
 .rw-role{margin-top:10px;font-size:13px;font-weight:800;color:#fff;background:var(--orange);border-radius:12px;padding:10px 12px;line-height:1.55}
+/* 커스텀 다이얼로그 (PWA에서 prompt/confirm 대체) */
+.dlg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:30px}
+.dlg-overlay.show{display:flex}
+.dlg-card{background:#fff;border-radius:20px;max-width:320px;width:100%;padding:22px 20px 18px;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .3s ease}
+.dlg-msg{font-size:15px;font-weight:700;color:var(--gray500);line-height:1.5;text-align:center;white-space:pre-line}
+.dlg-input{width:100%;margin-top:14px;padding:11px 12px;border:1.5px solid var(--gray200);border-radius:12px;font-size:15px;box-sizing:border-box}
+.dlg-btns{display:flex;gap:8px;margin-top:16px}
+.dlg-btns button{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:800;border:none;cursor:pointer}
+.dlg-cancel{background:var(--gray100);color:var(--gray500)}
+.dlg-ok{background:var(--orange);color:#fff}
 .bonus-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--gray500);padding:8px 4px;cursor:pointer}
 .bonus-toggle input{width:18px;height:18px;accent-color:var(--orange);flex:none}
 .bonus-toggle span{color:var(--orange);font-weight:600;font-size:12px}
@@ -826,6 +836,18 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
   </div>
 
+  <!-- 커스텀 다이얼로그 -->
+  <div class="dlg-overlay" id="dlgOverlay">
+    <div class="dlg-card">
+      <div class="dlg-msg" id="dlgMsg"></div>
+      <input class="dlg-input" id="dlgInput" type="text">
+      <div class="dlg-btns">
+        <button class="dlg-cancel" id="dlgCancel">취소</button>
+        <button class="dlg-ok" id="dlgOk">확인</button>
+      </div>
+    </div>
+  </div>
+
   <!-- LOADING -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
@@ -1019,7 +1041,7 @@ function showScreen(id) {
 
 // ===== 폰(안드로이드) 뒤로가기 버튼 처리 =====
 // 우선순위: 열린 모달 닫기 → 하위 화면이면 피드로 → 피드에서 한 번 더 누르면 종료
-const OVERLAY_IDS = ['commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','rewardModal','dayOverlay','installGuide','coachOverlay'];
+const OVERLAY_IDS = ['dlgOverlay','commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','rewardModal','dayOverlay','installGuide','coachOverlay'];
 function _openOverlay(){
   for (const oid of OVERLAY_IDS){ const el = document.getElementById(oid); if (el && el.classList.contains('show')) return el; }
   const hm = document.getElementById('headerMenu'); if (hm && hm.classList.contains('show')) return hm;
@@ -1030,7 +1052,7 @@ function _armBack(){ try { history.pushState({ ping:1 }, ''); } catch(e){} }
 window.addEventListener('popstate', function(){
   // 1) 열린 모달/메뉴가 있으면 닫기
   const ov = _openOverlay();
-  if (ov){ ov.classList.remove('show'); _armBack(); return; }
+  if (ov){ if (ov.id === 'dlgOverlay'){ _dlgFinish(null); } else { ov.classList.remove('show'); } _armBack(); return; }
   // 2) 피드/온보딩이 아니면 피드로
   if (currentScreen && currentScreen !== 'feed' && currentScreen !== 'onboarding'){ showScreen('feed'); _armBack(); return; }
   // 3) 피드/온보딩에서: 한 번 더 누르면 종료
@@ -1043,6 +1065,33 @@ window.addEventListener('popstate', function(){
   }
   history.back(); // 실제 종료(뒤로)
 });
+
+// ===== 커스텀 다이얼로그 (standalone PWA에서 prompt/confirm 미작동 대체) =====
+let _dlgResolve = null;
+function uiDialog(opts){
+  opts = opts || {};
+  return new Promise(resolve => {
+    _dlgResolve = resolve;
+    document.getElementById('dlgMsg').textContent = opts.message || '';
+    const inp = document.getElementById('dlgInput');
+    if (opts.input){ inp.style.display = ''; inp.value = opts.defaultVal || ''; } else { inp.style.display = 'none'; }
+    document.getElementById('dlgOk').textContent = opts.okText || '확인';
+    document.getElementById('dlgCancel').textContent = opts.cancelText || '취소';
+    document.getElementById('dlgOverlay').classList.add('show');
+    if (opts.input) setTimeout(() => { try { inp.focus(); } catch(e){} }, 80);
+  });
+}
+function _dlgFinish(val){
+  document.getElementById('dlgOverlay').classList.remove('show');
+  const r = _dlgResolve; _dlgResolve = null; if (r) r(val);
+}
+(function(){
+  const ok = document.getElementById('dlgOk'), cancel = document.getElementById('dlgCancel'), ov = document.getElementById('dlgOverlay'), inp = document.getElementById('dlgInput');
+  if (ok) ok.onclick = () => { _dlgFinish(inp.style.display === 'none' ? true : inp.value); };
+  if (cancel) cancel.onclick = () => _dlgFinish(null);
+  if (ov) ov.onclick = (e) => { if (e.target === ov) _dlgFinish(null); };
+  if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') _dlgFinish(inp.value); });
+})();
 
 function showLoading(show) {
   document.getElementById('loadingOverlay').classList.toggle('show', show);
@@ -1803,9 +1852,8 @@ window.shareInvite = async function(){
     try { await navigator.clipboard.writeText(url); showToast('초대 링크 복사됨 📋'); } catch(e2){}
   }
 };
-window.editFamilyName = function(){
-  const cur = getFamilyName();
-  const next = prompt('가족 방 이름을 입력하세요', cur);
+window.editFamilyName = async function(){
+  const next = await uiDialog({ message: '가족 방 이름을 입력하세요', input: true, defaultVal: getFamilyName() });
   if (next && next.trim()){
     saveLocal('familyName', next.trim());
     renderFamily();
@@ -2259,7 +2307,7 @@ async function renderDubiGoal(){
 }
 // 미용 완료 → 새 미용 주기 시작 (점수 0부터)
 window.confirmGroomReset = async function(){
-  if (!confirm('뚜비 미용 완료! 🎉\n점수를 0으로 리셋하고 새 미용 주기를 시작할까요?')) return;
+  if (!(await uiDialog({ message: '뚜비 미용 완료! 🎉\n점수를 0으로 리셋하고\n새 미용 주기를 시작할까요?', okText: '완료!' }))) return;
   await startNewCycle();
   await renderDubiGoal();
   try {
@@ -2372,8 +2420,8 @@ window.saveSettings = function() {
   showToast('설정 저장 완료');
 };
 
-window.resetApp = function() {
-  if (confirm('정말 로그아웃하시겠습니까?')) {
+window.resetApp = async function() {
+  if (await uiDialog({ message: '정말 로그아웃하시겠습니까?', okText: '로그아웃' })) {
     localStorage.removeItem('ping_member');
     currentMember = null;
     showScreen('onboarding');
