@@ -352,6 +352,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .day-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
 .day-item .di-name{font-size:11px;font-weight:700;color:var(--gray500);padding:5px 8px}
 .day-item .di-cmt{font-size:11px;color:var(--gray400);padding:0 8px 7px}
+.day-item .di-actions{display:flex;gap:6px;padding:0 8px 8px}
+.day-item .di-actions button{flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:8px;border:none;cursor:pointer}
+.day-item .di-edit{background:var(--gray100);color:var(--gray500)}
+.day-item .di-del{background:#FCEBEB;color:#D8412F}
 .day-close{display:block;width:100%;margin-top:14px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
 
 /* ========== 리더보드 / 권한 ========== */
@@ -894,7 +898,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 <script type="module">
 // ========== FIREBASE SETUP ==========
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId, arrayUnion, runTransaction } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, where, onSnapshot, documentId, arrayUnion, runTransaction } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js';
@@ -2011,7 +2015,9 @@ window.showDayDetail = function(date, dayPings){
   for (const mem of MEMBERS){
     const p = dayPings[mem.id]; if (!p) continue;
     const item = document.createElement('div'); item.className = 'day-item';
-    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}`;
+    const mine = mem.id === currentMember;
+    const actions = mine ? `<div class="di-actions"><button class="di-edit" onclick="editPhotoCaption('${date}','${mem.id}')">✏️ 수정</button><button class="di-del" onclick="deletePhoto('${date}','${mem.id}')">🗑 삭제</button></div>` : '';
+    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}${actions}`;
     grid.appendChild(item);
   }
   document.getElementById('dayOverlay').classList.add('show');
@@ -2020,6 +2026,37 @@ window.closeDayDetail = function(e, force){
   if (force || (e && e.target === document.getElementById('dayOverlay'))) {
     document.getElementById('dayOverlay').classList.remove('show');
   }
+};
+// 내 사진 삭제 (본인 것만)
+window.deletePhoto = async function(date, member){
+  if (member !== currentMember) return;
+  if (!(await uiDialog({ message: '이 사진을 삭제할까요?\n삭제하면 되돌릴 수 없어요.', okText: '삭제' }))) return;
+  const lp = loadLocal(`pings_${date}`, {}); delete lp[member]; saveLocal(`pings_${date}`, lp);
+  if (date === getToday()) delete todayPings[member];
+  if (albumCache && albumCache[date]) delete albumCache[date][member];
+  if (firebaseReady){ try { await deleteDoc(doc(db, 'pings', `${date}_${member}`)); } catch(e){ console.warn('삭제 실패', e); } }
+  document.getElementById('dayOverlay').classList.remove('show');
+  showToast('사진을 삭제했어요');
+  if (currentScreen === 'album') renderAlbum();
+  if (date === getToday()) renderFeed();
+};
+// 내 사진 설명 수정 (본인 것만)
+window.editPhotoCaption = async function(date, member){
+  if (member !== currentMember) return;
+  const lp = loadLocal(`pings_${date}`, {});
+  const cur = (lp[member] && lp[member].comment) || '';
+  const next = await uiDialog({ message: '사진 설명(한 줄, 20자)을 수정하세요', input: true, defaultVal: cur });
+  if (next === null) return;
+  const txt = next.trim().slice(0, 20);
+  if (lp[member]){ lp[member].comment = txt; saveLocal(`pings_${date}`, lp); }
+  if (date === getToday() && todayPings[member]) todayPings[member].comment = txt;
+  if (albumCache && albumCache[date] && albumCache[date][member]) albumCache[date][member].comment = txt;
+  if (firebaseReady){ try { await setDoc(doc(db, 'pings', `${date}_${member}`), { comment: txt }, { merge: true }); } catch(e){} }
+  showToast('설명을 수정했어요');
+  const dayData = (albumCache && albumCache[date]) ? albumCache[date] : loadLocal(`pings_${date}`, {});
+  showDayDetail(date, dayData);
+  if (currentScreen === 'album') renderAlbum();
+  if (date === getToday()) renderFeed();
 };
 
 // ========== 가족 점수 ==========
