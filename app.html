@@ -188,7 +188,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .together-chip:active{transform:scale(.95)}
 /* 이달 점수 카드 */
 .score-card{background:linear-gradient(135deg,#A78BFA,#F0ABFC);color:#fff;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.score-card .sc-l h3{font-size:14px;opacity:.9;margin-bottom:6px}
+.score-card .sc-l{flex:1;min-width:0}
+.score-card .sc-l h3{font-size:14px;opacity:.9;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .score-card .sc-l .sc-num{font-size:34px;font-weight:900;line-height:1}
 .score-card .sc-l .sc-unit{font-size:14px;font-weight:700}
 .score-card .sc-r{font-size:34px}
@@ -590,7 +591,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
     <div class="score-card" onclick="openDubiGoal()">
       <div class="sc-l">
-        <h3>이번 미용 주기 내가 모은 점수 · 뚜비 목표 보기</h3>
+        <h3>이번 주기 내 점수 · 뚜비 목표 ›</h3>
         <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
       </div>
       <div class="sc-r" id="myScoreRank">🏅</div>
@@ -2119,7 +2120,7 @@ window.openDubiGoal = function(){
 async function renderDubiGoal(){
   const cyc = await getCycle();
   const season = { key: 'cycle' + cyc.n }; // 주기별 키 (담당자·축하 스냅샷용)
-  document.getElementById('dgMonth').textContent = `미용 주기 #${cyc.n} · ${cyc.startDate}부터 · 가족이 함께 모은 점수`;
+  document.getElementById('dgMonth').textContent = `미용 주기 #${cyc.n} · 가족이 함께 모은 점수`;
   document.getElementById('dgTiers').innerHTML = '<div style="text-align:center;color:#aaa;padding:14px;font-size:13px">불러오는 중...</div>';
 
   const scores = await computeSeasonScores();
