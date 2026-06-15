@@ -273,6 +273,17 @@ input,textarea{font-family:inherit;border:none;outline:none}
 /* 카드 획득 축하 */
 .cu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:130;display:none;align-items:center;justify-content:center;padding:24px}
 .cu-overlay.show{display:flex}
+/* 뚜비 코칭 팝업 */
+.coach-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:175;display:none;align-items:center;justify-content:center;padding:24px}
+.coach-overlay.show{display:flex;animation:fadeUp .3s ease}
+.coach-card{background:#fff;border-radius:24px;max-width:330px;width:100%;padding:18px 20px 20px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.3);position:relative;animation:popIn .4s ease}
+.coach-dubi{width:124px;height:auto;margin:-66px auto 4px;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.15));animation:coachBob 2.4s ease-in-out infinite}
+@keyframes coachBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.coach-bubble{background:#FFF6E9;border:1px solid #FBE2BC;border-radius:16px;padding:14px 16px;margin:6px 0 16px}
+.coach-title{font-weight:800;font-size:16px;color:var(--gray500);margin-bottom:6px;line-height:1.4}
+.coach-body{font-size:13.5px;line-height:1.65;color:var(--gray400)}
+.coach-body b{color:var(--orange)}
+.coach-ok{width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:14px;border:none}
 .cu-card{background:#fff;border-radius:22px;padding:24px;text-align:center;max-width:300px;width:100%;animation:popIn .45s ease}
 .cu-card .cu-title{font-size:16px;font-weight:800;color:var(--orange);margin-bottom:14px}
 .cu-card .cu-img{width:180px;height:180px;border-radius:16px;object-fit:cover;margin:0 auto;box-shadow:0 6px 18px rgba(0,0,0,.15)}
@@ -516,7 +527,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <span id="questionText"></span>
       </div>
       <div class="together-box">
-        <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> 🐶 뚜비랑 같이 찍었어요 <span>(주 1회 +30점)</span></label>
+        <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> 🚶 뚜비랑 산책하며 찍었어요 <span>(주 1회 +50점)</span></label>
         <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> 👨‍👩‍👧‍👦 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
       </div>
       <div class="comment-row">
@@ -748,6 +759,18 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <button class="cu-dex" onclick="closeCardUnlock(event, true); showDubiDex();">도감 보기</button>
         <button class="cu-ok" onclick="closeCardUnlock(event, true)">확인</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 뚜비 코칭 팝업 -->
+  <div class="coach-overlay" id="coachOverlay" onclick="closeCoach(event)">
+    <div class="coach-card">
+      <img class="coach-dubi" id="coachDubi" src="./dubi-coach.png" alt="뚜비" onerror="this.src='./dubi-card-happy.png'">
+      <div class="coach-bubble">
+        <div class="coach-title" id="coachTitle"></div>
+        <div class="coach-body" id="coachBody"></div>
+      </div>
+      <button class="coach-ok" onclick="closeCoach(event, true)">좋아, 해볼게! 🐾</button>
     </div>
   </div>
 
@@ -1381,7 +1404,7 @@ window.submitPing = async function() {
     await savePing(currentMember, dataURL, comment, withDubi, gather);
     showLoading(false);
     const tags = [];
-    if (withDubi) tags.push('🐶 뚜비와 함께');
+    if (withDubi) tags.push('🚶 뚜비랑 산책');
     if (gather) tags.push('👨‍👩‍👧‍👦 가족 모임');
     showToast(tags.length ? `핑! 📸 ${tags.join(' · ')} (보너스는 주 1회 반영돼요!)` : '핑! +10점 📸');
     capturedBlob = null;
@@ -1789,10 +1812,10 @@ window.closeDayDetail = function(e, force){
 // 점수 규칙
 //  · 핑 1장 +10
 //  · 하루 4명 전원 핑한 날 모두 +5
-//  · 뚜비와 함께 찍기 : 주 1회 +30 (개인)
+//  · 뚜비 산책하며 찍기 : 주 1회 +50 (개인) — '함께 찍기' 보너스는 폐지, 산책 특별보너스로 대체
 //  · 온 가족 모임 사진(뚜비 제외) : 주 1회 +50 (가족 전체)
 //  · 연속 핑 마일스톤(개인, 시즌 중 각 구간 1회) : 3일 +15 / 7일 +40 / 14일 +80 / 30일 +150
-const DUBI_TOGETHER_BONUS = 30;
+const DUBI_WALK_BONUS = 50;
 const GATHER_BONUS = 50;
 const STREAK_TIERS = [ {days:3, pt:15}, {days:7, pt:40}, {days:14, pt:80}, {days:30, pt:150} ];
 function weekKey(dateStr){
@@ -1839,7 +1862,7 @@ async function computeSeasonScores(){
     for (const id of ids){ if (scores[id] !== undefined) scores[id] += 10; }
     if (ids.length >= 4){ MEMBERS.forEach(m => { scores[m.id] += 5; }); }
   }
-  // 주간 보너스 — 뚜비와 함께(개인 주1회), 온가족 모임(전원 주1회)
+  // 주간 보너스 — 뚜비 산책(개인 주1회), 온가족 모임(전원 주1회)
   const dubiWeeks = {}; MEMBERS.forEach(m => dubiWeeks[m.id] = new Set());
   const gatherWeeks = new Set();
   for (const date in all){
@@ -1849,7 +1872,7 @@ async function computeSeasonScores(){
       const ping = dayPings[id];
       if (!ping) continue;
       if (ping.withDubi && scores[id] !== undefined && !dubiWeeks[id].has(wk)){
-        dubiWeeks[id].add(wk); scores[id] += DUBI_TOGETHER_BONUS;
+        dubiWeeks[id].add(wk); scores[id] += DUBI_WALK_BONUS;
       }
       if (ping.familyGathering && !gatherWeeks.has(wk)){
         gatherWeeks.add(wk); MEMBERS.forEach(m => { scores[m.id] += GATHER_BONUS; });
@@ -2010,12 +2033,12 @@ async function renderAlbum(){
   document.getElementById('albumCount').textContent = items.length;
   grid.innerHTML = '';
   if (!items.length){
-    grid.innerHTML = `<div class="album-empty">${albumTogetherOnly ? '아직 함께 찍은 사진이 없어요 📸' : '아직 사진이 없어요'}</div>`;
+    grid.innerHTML = `<div class="album-empty">${albumTogetherOnly ? '아직 뚜비 산책·가족 모임 사진이 없어요 📸' : '아직 사진이 없어요'}</div>`;
     return;
   }
   for (const it of items){
     const cell = document.createElement('div'); cell.className = 'album-cell';
-    const badge = it.ping.withDubi ? '<span class="album-badge">🐶</span>' : (it.ping.familyGathering ? '<span class="album-badge">👨‍👩‍👧‍👦</span>' : '');
+    const badge = it.ping.withDubi ? '<span class="album-badge">🚶</span>' : (it.ping.familyGathering ? '<span class="album-badge">👨‍👩‍👧‍👦</span>' : '');
     cell.innerHTML = `<img src="${it.ping.photoURL}" alt=""><span class="album-day">${it.member}·${it.date.slice(5)}</span>${badge}`;
     cell.onclick = () => showDayDetail(it.date, map[it.date]);
     grid.appendChild(cell);
@@ -2119,6 +2142,87 @@ window.dismissInstall = function(){
   document.getElementById('installBanner').classList.remove('show');
 };
 
+// ========== 뚜비 코칭 (보너스 기회 안내) ==========
+// 이번 주(월~일) 내 산책 여부 / 가족 모임 여부
+async function getWeekCoachStatus(memberId){
+  const wk = weekKey(getToday());
+  const now = new Date();
+  let walked = false, gathered = false;
+  try {
+    const months = [[now.getFullYear(), now.getMonth()]];
+    const pm = new Date(now.getFullYear(), now.getMonth(), 1); pm.setDate(0); // 지난달(주가 달을 걸칠 때 대비)
+    months.push([pm.getFullYear(), pm.getMonth()]);
+    const all = {};
+    for (const [yy, mm] of months){ const d = await loadMonth(yy, mm); for (const dt in d) all[dt] = Object.assign(all[dt] || {}, d[dt]); }
+    for (const dt in all){
+      if (weekKey(dt) !== wk) continue;
+      const day = all[dt];
+      for (const id in day){ const p = day[id]; if (!p) continue; if (id === memberId && p.withDubi) walked = true; if (p.familyGathering) gathered = true; }
+    }
+  } catch(e){}
+  return { walked, gathered };
+}
+function coachStreakInfo(memberId){
+  const today = getToday();
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yStr = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+  const st = loadLocal('streaks', {});
+  const s = st[memberId] || { current: 0, lastPingDate: null };
+  const pingedToday = s.lastPingDate === today;
+  const alive = pingedToday ? s.current : (s.lastPingDate === yStr ? s.current : 0);
+  const afterToday = pingedToday ? s.current : alive + 1; // 오늘 핑하면 도달할 연속일수
+  let tier = null;
+  for (const t of STREAK_TIERS){ if (t.days >= afterToday){ tier = t; break; } }
+  const daysMore = tier ? (tier.days - afterToday) : null; // 오늘 이후 추가로 더 필요한 날
+  return { pingedToday, alive, afterToday, tier, daysMore };
+}
+async function computeCoachTip(memberId){
+  const si = coachStreakInfo(memberId);
+  const ws = await getWeekCoachStatus(memberId);
+  // 1) 마일스톤 임박 (오늘 포함 2일 내 달성)
+  if (si.tier && si.daysMore !== null && si.daysMore <= 1){
+    if (!si.pingedToday){
+      return { title:`🔥 ${si.afterToday - 1}일 연속 중이에요!`, body:`오늘 핑하면 <b>${si.afterToday}일 연속</b>! ${si.daysMore > 0 ? `딱 ${si.daysMore}일만 더 하면 ` : ''}<b>${si.tier.days}일 보너스 +${si.tier.pt}점</b>이 코앞이에요 🐾` };
+    }
+    return { title:`🔥 ${si.alive}일 연속 달리는 중!`, body:`${si.daysMore === 0 ? '오늘이면 ' : `${si.daysMore}일만 더 핑하면 `}<b>${si.tier.days}일 보너스 +${si.tier.pt}점</b>! 조금만 더 힘내요 🐾` };
+  }
+  // 2) 이번 주 산책 아직
+  if (!ws.walked){
+    return { title:`🚶 오늘 뚜비랑 산책 어때요?`, body:`산책하며 한 장 찍어 올리면 이번 주 <b>+50점</b>! 뚜비가 신나서 기다려요 🐾` };
+  }
+  // 3) 오늘 핑 아직
+  if (!si.pingedToday){
+    const extra = si.tier ? ` <b>${si.afterToday}일 연속</b>도 이어가요!` : '';
+    return { title:`📸 오늘 핑 아직이에요!`, body:`한 장이면 <b>+10점</b>.${extra} 가족이 기다리고 있어요 🐾` };
+  }
+  // 4) 이번 주 가족 모임 아직
+  if (!ws.gathered){
+    return { title:`👨‍👩‍👧‍👦 이번 주 가족 모임 사진!`, body:`온 가족이 모여 한 장 찍으면 <b>전원 +50점</b>! 뚜비도 끼워줘요 🐾` };
+  }
+  // 5) 오늘 할 일 끝 — 다음 목표 안내
+  if (si.tier){
+    return { title:`🎉 오늘도 완벽해요!`, body:`다음 목표는 <b>${si.tier.days}일 연속 +${si.tier.pt}점</b>! 뚜비가 응원해요 🐾` };
+  }
+  return null;
+}
+async function maybeShowCoach(){
+  if (!currentMember) return;
+  const today = getToday();
+  if (loadLocal('coachSeen_' + today, 0)) return; // 하루 1회
+  let tip = null;
+  try { tip = await computeCoachTip(currentMember); } catch(e){ return; }
+  if (!tip) return;
+  document.getElementById('coachTitle').textContent = tip.title;
+  document.getElementById('coachBody').innerHTML = tip.body;
+  document.getElementById('coachOverlay').classList.add('show');
+  saveLocal('coachSeen_' + today, 1);
+}
+window.closeCoach = function(e, force){
+  if (force || (e && e.target === document.getElementById('coachOverlay'))){
+    document.getElementById('coachOverlay').classList.remove('show');
+  }
+};
+
 // ========== INIT ==========
 async function init() {
   // 스플래시 가족 이미지: 계절에 맞게 자동 선택
@@ -2154,6 +2258,7 @@ async function init() {
       showScreen('feed');
       startListening();
       scheduleSurvivalTimer();
+      setTimeout(() => { maybeShowCoach(); }, 1800); // 뚜비 코칭 팝업 (하루 1회)
     } else {
       showScreen('onboarding');
     }
