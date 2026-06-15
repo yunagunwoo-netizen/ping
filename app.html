@@ -62,6 +62,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .feed-header .date{font-size:20px;font-weight:700}
 .feed-header .streak-badge{display:flex;align-items:center;gap:4px;background:var(--orange);color:#fff;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600}
 .feed-subtitle{padding:4px 20px 16px;font-size:13px;color:var(--gray400)}
+.week-card-banner{margin:0 16px 12px;background:#FFF6E9;border:1px solid #FBE2BC;border-radius:12px;padding:9px 12px;font-size:12.5px;color:var(--gray500);font-weight:600;text-align:center;cursor:pointer}
+.week-card-banner b{color:var(--orange)}
 .countdown{margin:12px 16px 2px;background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border-radius:16px;padding:14px 16px;text-align:center;box-shadow:var(--shadow)}
 .countdown .cd-time{font-size:30px;font-weight:900;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1.1}
 .countdown .cd-sub{font-size:11px;opacity:.85;margin-top:5px;font-weight:600}
@@ -270,6 +272,28 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .dex-label{font-size:11px;font-weight:600;color:var(--gray300);margin-top:4px}
 .dex-label.owned{color:var(--gray500)}
 .dex-close{display:block;width:100%;margin-top:16px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
+/* 365일 달력형 도감 */
+.dex-cal-head{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 8px}
+.dex-cal-head button{border:none;background:var(--gray100);width:30px;height:30px;border-radius:8px;font-size:16px;color:var(--gray500);cursor:pointer}
+.dex-cal-head button:disabled{opacity:.3}
+.dex-cal-head span{font-weight:800;color:var(--gray500);font-size:15px;min-width:86px;text-align:center}
+.dex-week-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.dexw{position:relative;border-radius:12px;background:var(--gray100);padding:8px 3px;text-align:center;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.dexw .dexw-wk{font-size:10px;font-weight:800;color:var(--gray500);line-height:1.15}
+.dexw .dexw-rng{font-size:9px;color:var(--gray400)}
+.dexw .dexw-st{font-size:10px;font-weight:700}
+.dexw .dexw-ic{font-size:20px;line-height:1}
+.dexw.got{background:#FFF6E9;cursor:pointer}
+.dexw.got img{width:46px;height:46px;object-fit:cover;border-radius:9px}
+.dexw.got .dexw-st{color:var(--orange);font-weight:800}
+.dexw.locked{background:#E5DFD8}
+.dexw.locked .dexw-ic{opacity:.5}
+.dexw.locked .dexw-st{color:var(--gray400)}
+.dexw.current{outline:2px solid var(--orange);outline-offset:-2px;background:#fff}
+.dexw.current .dexw-st{color:var(--orange);font-weight:800}
+.dexw.future{opacity:.5}
+.dex-monthstat{text-align:center;font-size:12px;color:var(--gray400);margin-top:12px}
+.dex-monthstat b{color:var(--orange)}
 /* 카드 획득 축하 */
 .cu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:130;display:none;align-items:center;justify-content:center;padding:24px}
 .cu-overlay.show{display:flex}
@@ -491,13 +515,14 @@ input,textarea{font-family:inherit;border:none;outline:none}
           <button onclick="menuGo('album')">📔 가족 앨범</button>
           <button onclick="menuGo('lb')">🎯 뚜비 목표</button>
           <button onclick="menuGo('cal')">📅 추억 캘린더</button>
-          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/17</span></button>
+          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/53</span></button>
         </div>
       </div>
     </div>
     <div class="countdown" id="countdown"></div>
     <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 생존신고</div>
     <button class="family-photo-btn" id="familyPhotoBtn" style="display:none" onclick="showFamilyPhoto()">📸 오늘의 가족사진 보기</button>
+    <div class="week-card-banner" id="weekCardBanner" style="display:none" onclick="showDubiDex()"></div>
     <div class="feed-grid" id="feedGrid"></div>
     <div class="nav-bar">
       <button class="nav-item active" onclick="showScreen('feed')">
@@ -752,10 +777,12 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dex-modal">
       <div class="dex-modal-head">
         <h3>🐶 뚜비 도감</h3>
-        <span class="dex-prog"><span id="dexProgNum">0</span>/17</span>
+        <span class="dex-prog">올해 <span id="dexProgNum">0</span>/53</span>
       </div>
-      <div class="dex-sub">가족 모두가 핑한 날, 뚜비 카드를 한 장씩 모아요!</div>
-      <div class="dex-grid" id="dexGrid"></div>
+      <div class="dex-sub">한 주(7일) 동안 가족 모두 하루도 안 빠지고 올핑하면 그 주 카드 1장! 1년 53장, 놓친 주는 영영 잠겨요 🔒</div>
+      <div class="dex-cal-head"><span id="dexMonthLabel">2026년</span></div>
+      <div class="dex-week-grid" id="dexWeekGrid"></div>
+      <div class="dex-monthstat" id="dexMonthStat"></div>
       <button class="dex-close" onclick="closeDubiDex(event, true)">닫기</button>
     </div>
   </div>
@@ -766,7 +793,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <div class="cu-title">🎉 새 뚜비 카드 획득!</div>
       <img class="cu-img" id="cuImg" src="" alt="뚜비 카드">
       <div class="cu-name" id="cuName">뚜비</div>
-      <div class="cu-sub">가족 모두가 오늘 생존 확인했어요!</div>
+      <div class="cu-sub">일주일 내내 온 가족이 핑했어요! 🎉</div>
       <div class="cu-btns">
         <button class="cu-dex" onclick="closeCardUnlock(event, true); showDubiDex();">도감 보기</button>
         <button class="cu-ok" onclick="closeCardUnlock(event, true)">확인</button>
@@ -1222,6 +1249,7 @@ function renderFeed() {
 
   // 뚜비 도감 버튼 카운트 갱신
   updateDexButton();
+  updateWeekCardBanner();
 
   // 전원 완료 시: 가족사진 버튼 + 하루 한 번 뚜비 카드 보상
   const fpBtn = document.getElementById('familyPhotoBtn');
@@ -1229,12 +1257,7 @@ function renderFeed() {
     fpBtn.style.display = 'block';
     if (loadLocal('familyPhotoSeen', '') !== getToday()) {
       saveLocal('familyPhotoSeen', getToday());
-      const newCard = unlockDubiCard();
-      updateDexButton();
-      setTimeout(() => {
-        if (newCard) showCardUnlock(newCard);
-        else showFamilyPhoto();
-      }, 600);
+      maybeAwardWeekCard().then(awarded => { if (!awarded) setTimeout(() => { showFamilyPhoto(); }, 600); });
     }
   } else {
     fpBtn.style.display = 'none';
@@ -1507,39 +1530,39 @@ window.closeFamilyPhoto = function(e, force) {
   }
 };
 
-// ========== 뚜비 카드 도감 (일일 보상) ==========
-const DUBI_CARDS = [
-  { id:'happy', name:'행복뚜비' }, { id:'play', name:'장난뚜비' }, { id:'sleepy', name:'졸린뚜비' },
-  { id:'love', name:'사랑뚜비' }, { id:'excited', name:'신난뚜비' }, { id:'snack', name:'간식뚜비' },
-  { id:'birthday', name:'생일뚜비' }, { id:'winter', name:'겨울뚜비' }, { id:'flower', name:'꽃뚜비' },
-  { id:'curious', name:'궁금뚜비' }, { id:'cheer', name:'응원뚜비' },
-  { id:'rain', name:'우산뚜비' }, { id:'book', name:'책벌레뚜비' }, { id:'chef', name:'요리사뚜비' },
-  { id:'music', name:'음악뚜비' }, { id:'beach', name:'바다뚜비' }, { id:'gift', name:'선물뚜비' }
+// ========== 뚜비 카드 도감 (365일 달력형) ==========
+// 가족 모두가 핑한 날 = 그날 '계절(월)' 뚜비 카드 획득. 놓친 과거 날은 영영 잠금.
+const MONTH_CARD_NAMES = ['눈송이뚜비','매화뚜비','새싹뚜비','벚꽃뚜비','소풍뚜비','우산뚜비','바다뚜비','수박뚜비','보름달뚜비','단풍뚜비','낙엽뚜비','산타뚜비'];
+function monthCardSrc(month){ return `./dubi-month-${month}.png`; } // month 1~12
+function monthCardName(month){ return MONTH_CARD_NAMES[month - 1] || '뚜비'; }
+// ===== 53장 카드 풀 (17 기존 + 12 월별 + 24 특정일) → 연중 주차별 배정 =====
+const SPECIAL_NAMES = ['복주머니뚜비','설빔뚜비','대보름뚜비','발렌타인뚜비','졸업뚜비','화이트데이뚜비','봄비뚜비','부활절뚜비','어린이날뚜비','카네이션뚜비','튜브뚜비','장마뚜비','더위뚜비','캠핑뚜비','광복절뚜비','운동회뚜비','한가위뚜비','핼러윈뚜비','빼빼로뚜비','수능뚜비','첫눈뚜비','크리스마스뚜비','동지뚜비','불꽃뚜비'];
+function _M(n){ return { img:`./dubi-month-${n}.png`, name: MONTH_CARD_NAMES[n-1] }; }
+function _S(n){ return { img:`./dubi-special-${n}.png`, name: SPECIAL_NAMES[n-1] }; }
+function _G(id, name){ return { img:`./dubi-card-${id}.png`, name }; }
+// 1주차(1/1~)부터 53주차까지 계절·기념일에 맞춰 배정 (각 카드 1회씩, 총 53장)
+const WEEK_CARDS = [
+  _S(1), _M(1), _G('winter','겨울뚜비'), _S(2), _S(3), _G('curious','궁금뚜비'), _S(4), _M(2), _S(5), _G('music','음악뚜비'),
+  _S(6), _M(3), _S(7), _G('flower','꽃뚜비'), _M(4), _S(8), _G('play','장난뚜비'), _S(9), _S(10), _M(5),
+  _G('excited','신난뚜비'), _G('happy','행복뚜비'), _M(6), _S(12), _G('book','책벌레뚜비'), _S(11), _M(7), _S(13), _G('beach','바다뚜비'), _S(14),
+  _M(8), _G('snack','간식뚜비'), _S(15), _G('chef','요리사뚜비'), _G('sleepy','졸린뚜비'), _M(9), _S(17), _G('love','사랑뚜비'), _S(16), _G('cheer','응원뚜비'),
+  _M(10), _G('rain','우산뚜비'), _G('birthday','생일뚜비'), _S(18), _S(19), _S(20), _M(11), _S(21), _G('gift','선물뚜비'), _M(12),
+  _S(23), _S(22), _S(24)
 ];
-function dubiName(id){ const c = DUBI_CARDS.find(x => x.id === id); return c ? c.name : '뚜비'; }
-
-function unlockDubiCard(){
-  const owned = loadLocal('dubiCards', []);
-  if (owned.some(c => c.date === getToday())) return null; // 오늘 이미 획득
-  const ownedSet = new Set(owned.map(c => c.card));
-  const remaining = DUBI_CARDS.filter(c => !ownedSet.has(c.id));
-  if (remaining.length === 0) return null; // 도감 완성
-  const pick = remaining[Math.floor(Math.random() * remaining.length)];
-  owned.push({ card: pick.id, date: getToday() });
-  saveLocal('dubiCards', owned);
-  return pick.id;
-}
+// 날짜 → 올해 주차(0~52): 1월1일부터 7일씩 블록
+function _doy(date){ const [y,m,d]=date.split('-').map(Number); return Math.floor((Date.UTC(y,m-1,d)-Date.UTC(y,0,1))/86400000)+1; }
+function weekIndexOf(date){ return Math.min(52, Math.floor((_doy(date)-1)/7)); }
+function weekDates(y, w){ const out=[]; for(let i=0;i<7;i++){ const dt=new Date(Date.UTC(y,0,1)); dt.setUTCDate(w*7+1+i); if(dt.getUTCFullYear()===y) out.push(dt.toISOString().slice(0,10)); } return out; }
+function weekAllPing(allData, y, w){ const ds=weekDates(y,w); if(!ds.length) return false; for(const date of ds){ const dp=allData[date]; if(!(dp&&Object.keys(dp).length>=4)) return false; } return true; }
 
 function updateDexButton(){
-  const ownedSet = new Set(loadLocal('dubiCards', []).map(c => c.card));
-  const n = DUBI_CARDS.filter(c => ownedSet.has(c.id)).length;
-  const el = document.getElementById('dexCount');
-  if (el) el.textContent = n;
+  const yr=String(new Date().getFullYear());
+  const n=loadLocal('weekCards',[]).filter(k=>k.startsWith(yr+':')).length;
+  const el=document.getElementById('dexCount'); if(el) el.textContent=n;
 }
-
-window.showCardUnlock = function(cardId){
-  document.getElementById('cuImg').src = `./dubi-card-${cardId}.png`;
-  document.getElementById('cuName').textContent = dubiName(cardId);
+window.showCardUnlock = function(card){
+  document.getElementById('cuImg').src = card.img;
+  document.getElementById('cuName').textContent = card.name;
   document.getElementById('cardUnlockOverlay').classList.add('show');
 };
 window.closeCardUnlock = function(e, force){
@@ -1547,23 +1570,108 @@ window.closeCardUnlock = function(e, force){
     document.getElementById('cardUnlockOverlay').classList.remove('show');
   }
 };
+// 올핑 시: 이번 주(7일) 개근이 완성되면 그 주 카드 획득 축하. 획득 여부 반환.
+async function maybeAwardWeekCard(){
+  const t=getToday(); const y=parseInt(t.slice(0,4),10);
+  const w=weekIndexOf(t);
+  const ds=weekDates(y,w); if(!ds.length){ updateDexButton(); return false; }
+  const months=[...new Set(ds.map(d=>d.slice(0,7)))];
+  const allData={};
+  for(const ym of months){ const [yy,mm]=ym.split('-').map(Number); Object.assign(allData, await loadMonth(yy,mm-1)); }
+  if(!weekAllPing(allData,y,w)){ updateDexButton(); return false; }
+  const wkKey=`${y}:${w}`;
+  const earned=loadLocal('weekCards',[]); if(!earned.includes(wkKey)){ earned.push(wkKey); saveLocal('weekCards',earned); }
+  updateDexButton();
+  const seen=loadLocal('weekCardSeen',[]); if(seen.includes(wkKey)) return false;
+  seen.push(wkKey); saveLocal('weekCardSeen',seen);
+  setTimeout(()=>{ showCardUnlock(WEEK_CARDS[w]); }, 600);
+  return true;
+}
 
-window.showDubiDex = function(){
-  const ownedSet = new Set(loadLocal('dubiCards', []).map(c => c.card));
-  const n = DUBI_CARDS.filter(c => ownedSet.has(c.id)).length;
-  document.getElementById('dexProgNum').textContent = n;
-  const grid = document.getElementById('dexGrid');
-  grid.innerHTML = '';
-  for (const c of DUBI_CARDS) {
-    const item = document.createElement('div');
-    item.className = 'dex-item';
-    item.innerHTML = ownedSet.has(c.id)
-      ? `<div class="dex-thumb"><img src="./dubi-card-${c.id}.png" alt="${c.name}"></div><div class="dex-label owned">${c.name}</div>`
-      : `<div class="dex-thumb locked">🔒</div><div class="dex-label">???</div>`;
-    grid.appendChild(item);
+// 연간 도감 (53주 앨범)
+let _dexYearData=null, _dexYearLoaded=null;
+window.showDubiDex = function(){ document.getElementById('dubiDexOverlay').classList.add('show'); renderDexCal(); };
+async function loadYearData(y){
+  if(_dexYearLoaded===y && _dexYearData) return _dexYearData;
+  const all={};
+  for(let mm=0;mm<12;mm++){ Object.assign(all, await loadMonth(y,mm)); }
+  _dexYearData=all; _dexYearLoaded=y; return all;
+}
+async function renderDexCal(){
+  const now=new Date(); const y=now.getFullYear();
+  document.getElementById('dexMonthLabel').textContent=`${y}년`;
+  const grid=document.getElementById('dexWeekGrid');
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;font-size:13px">불러오는 중...</div>';
+  const allData=await loadYearData(y);
+  const todayStr=getToday();
+  const earned=loadLocal('weekCards',[]);
+  let got=0;
+  grid.innerHTML='';
+  for(let w=0; w<53; w++){
+    const ds=weekDates(y,w); if(!ds.length) continue;
+    const startDate=ds[0], endDate=ds[ds.length-1];
+    const card=WEEK_CARDS[w];
+    const allAll=weekAllPing(allData,y,w);
+    const ended=endDate<todayStr;
+    const isCurrent=startDate<=todayStr && todayStr<=endDate;
+    const wkKey=`${y}:${w}`;
+    const label=`${parseInt(startDate.slice(5,7),10)}/${parseInt(startDate.slice(8,10),10)}~${parseInt(endDate.slice(8,10),10)}`;
+    const cell=document.createElement('div'); cell.className='dexw';
+    if(allAll){
+      cell.classList.add('got'); got++;
+      if(!earned.includes(wkKey)) earned.push(wkKey);
+      cell.innerHTML=`<img src="${card.img}" alt=""><div class="dexw-wk">${card.name}</div><div class="dexw-rng">${label}</div>`;
+      cell.onclick=()=>openWeekZoom(w, label);
+    } else if(ended){
+      cell.classList.add('locked');
+      cell.innerHTML=`<div class="dexw-ic">🔒</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
+    } else if(isCurrent){
+      let cnt=0; for(const date of ds){ const dp=allData[date]; if(dp&&Object.keys(dp).length>=4) cnt++; }
+      cell.classList.add('current');
+      cell.innerHTML=`<div class="dexw-ic">🔥</div><div class="dexw-wk">이번 주</div><div class="dexw-rng">개근 ${cnt}/7</div>`;
+    } else {
+      cell.classList.add('future');
+      cell.innerHTML=`<div class="dexw-ic">🎁</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
+    }
+    grid.appendChild(cell);
   }
-  document.getElementById('dubiDexOverlay').classList.add('show');
-};
+  saveLocal('weekCards',earned);
+  document.getElementById('dexProgNum').textContent=earned.filter(k=>k.startsWith(y+':')).length;
+  document.getElementById('dexMonthStat').innerHTML=`올해 <b>${got}</b> / 53주 수집`;
+  updateDexButton();
+}
+// 카드 크게 보기 (보상 모달 재사용)
+function openWeekZoom(w, label){
+  const card=WEEK_CARDS[w];
+  const img=document.getElementById('rwImg');
+  img.style.display=''; img.onerror=function(){ this.style.display='none'; };
+  img.src=card.img;
+  document.getElementById('rwPt').textContent=`${w+1}주차 · ${label}`;
+  document.getElementById('rwName').textContent=card.name;
+  document.getElementById('rwDetail').textContent='가족 모두가 일주일(7일) 내내 빠짐없이 핑한 주에 얻은 카드예요! 🐾';
+  document.getElementById('rwRole').innerHTML='';
+  document.getElementById('rewardModal').classList.add('show');
+}
+// 피드 상단 '이번 주 개근 진행' 배너
+async function updateWeekCardBanner(){
+  const el = document.getElementById('weekCardBanner'); if (!el) return;
+  try {
+    const t = getToday(); const y = parseInt(t.slice(0,4),10); const w = weekIndexOf(t);
+    const ds = weekDates(y, w); if (!ds.length){ el.style.display='none'; return; }
+    const months = [...new Set(ds.map(d => d.slice(0,7)))];
+    const allData = {};
+    for (const ym of months){ const [yy,mm] = ym.split('-').map(Number); Object.assign(allData, await loadMonth(yy, mm-1)); }
+    let cnt = 0; for (const date of ds){ if (date > t) continue; const dp = allData[date]; if (dp && Object.keys(dp).length >= 4) cnt++; }
+    const card = WEEK_CARDS[w];
+    const done = loadLocal('weekCards', []).includes(`${y}:${w}`) || cnt >= 7;
+    if (done){
+      el.innerHTML = `🎉 이번 주 개근 완성! <b>${card.name}</b> 카드 획득 — 도감 보기`;
+    } else {
+      el.innerHTML = `🐶 이번 주 개근 <b>${cnt}/7</b> · 남은 날 모두 핑하면 <b>${card.name}</b> 카드!`;
+    }
+    el.style.display = '';
+  } catch(e){ el.style.display='none'; }
+}
 window.closeDubiDex = function(e, force){
   if (force || (e && e.target === document.getElementById('dubiDexOverlay'))) {
     document.getElementById('dubiDexOverlay').classList.remove('show');
@@ -2357,9 +2465,23 @@ function coachStreakInfo(memberId){
   const daysMore = tier ? (tier.days - afterToday) : null; // 오늘 이후 추가로 더 필요한 날
   return { pingedToday, alive, afterToday, tier, daysMore };
 }
+// 이번 주(도감 주차) 개근 진행 + 카드
+async function getWeekCardProgress(){
+  try {
+    const t = getToday(); const y = parseInt(t.slice(0,4),10); const w = weekIndexOf(t);
+    const ds = weekDates(y, w); if (!ds.length) return null;
+    const months = [...new Set(ds.map(d => d.slice(0,7)))];
+    const allData = {};
+    for (const ym of months){ const [yy,mm] = ym.split('-').map(Number); Object.assign(allData, await loadMonth(yy, mm-1)); }
+    let cnt = 0; for (const date of ds){ if (date > t) continue; const dp = allData[date]; if (dp && Object.keys(dp).length >= 4) cnt++; }
+    const already = loadLocal('weekCards', []).includes(`${y}:${w}`);
+    return { cnt, left: 7 - cnt, card: WEEK_CARDS[w], already };
+  } catch(e){ return null; }
+}
 async function computeCoachTip(memberId){
   const si = coachStreakInfo(memberId);
   const ws = await getWeekCoachStatus(memberId);
+  const wc = await getWeekCardProgress();
   // 1) 마일스톤 임박 (오늘 포함 2일 내 달성)
   if (si.tier && si.daysMore !== null && si.daysMore <= 1){
     if (!si.pingedToday){
@@ -2367,7 +2489,11 @@ async function computeCoachTip(memberId){
     }
     return { title:`🔥 ${si.alive}일 연속 달리는 중!`, body:`${si.daysMore === 0 ? '오늘이면 ' : `${si.daysMore}일만 더 핑하면 `}<b>${si.tier.days}일 보너스 +${si.tier.pt}점</b>! 조금만 더 힘내요 🐾` };
   }
-  // 2) 이번 주 산책 아직
+  // 2) 이번 주 개근 카드 임박 (3일 이상 채웠고 아직 미완성)
+  if (wc && !wc.already && wc.cnt >= 3 && wc.left > 0){
+    return { title:`🐶 이번 주 개근 ${wc.cnt}/7!`, body:`남은 <b>${wc.left}일</b> 가족 모두 빠짐없이 핑하면 이번 주 <b>${wc.card.name}</b> 카드를 얻어요! 🐾` };
+  }
+  // 3) 이번 주 산책 아직
   if (!ws.walked){
     return { title:`🚶 오늘 뚜비랑 산책 어때요?`, body:`산책하며 한 장 찍어 올리면 이번 주 <b>+50점</b>! 뚜비가 신나서 기다려요 🐾` };
   }
