@@ -1056,7 +1056,11 @@ function _openOverlay(){
   return null;
 }
 let _backExitArmed = false;
-function _armBack(){ try { history.pushState({ ping:1 }, ''); } catch(e){} }
+function _armBack(){ try { history.pushState({ ping: Date.now() }, '', location.href); } catch(e){} }
+// 트랩 보강: 로드·첫 터치(제스처)·복귀 시 항목 추가 (일부 안드로이드는 제스처 이후 항목만 뒤로가기로 인정)
+window.addEventListener('load', function(){ setTimeout(_armBack, 0); });
+window.addEventListener('pageshow', function(){ _armBack(); });
+window.addEventListener('pointerdown', function _g(){ _armBack(); window.removeEventListener('pointerdown', _g); }, { once: true });
 window.addEventListener('popstate', function(){
   // 1) 열린 모달/메뉴가 있으면 닫기
   const ov = _openOverlay();
