@@ -21,6 +21,18 @@ FCM_SETUP.md
 # 임시 미리보기 이미지 (배포 제외)
 _*.png
 
+# v2 / 서비스화 프로젝트 — 라이브 앱과 분리, 공개 배포 제외
+ping-service/
+*-v2.html
+lib-ping-v2.js
+*.rules.v2
+onboarding-prototype.html
+데이터구조_설계.md
+핑_서비스기획서.docx
+
+# 매뉴얼 원본 백업 (로컬 보관)
+*_원본백업.png
+
 # 시스템 파일
 .DS_Store
 Thumbs.db

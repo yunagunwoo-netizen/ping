@@ -552,6 +552,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <div class="streak-num" id="myStreakNum">0</div>
       <div class="streak-label">일 연속</div>
       <div class="streak-best">최고 기록: <span id="myStreakBest">0</span>일</div>
+      <div class="streak-bonus" style="margin-top:10px;font-size:11px;opacity:.85;line-height:1.6;border-top:1px solid rgba(255,255,255,.25);padding-top:8px">🎁 연속 보너스 · 3일 +15 · 7일 +40 · 14일 +80 · 30일 +150</div>
     </div>
     <div class="settings-section">
       <h4>설정</h4>
@@ -1790,8 +1791,10 @@ window.closeDayDetail = function(e, force){
 //  · 하루 4명 전원 핑한 날 모두 +5
 //  · 뚜비와 함께 찍기 : 주 1회 +30 (개인)
 //  · 온 가족 모임 사진(뚜비 제외) : 주 1회 +50 (가족 전체)
+//  · 연속 핑 마일스톤(개인, 시즌 중 각 구간 1회) : 3일 +15 / 7일 +40 / 14일 +80 / 30일 +150
 const DUBI_TOGETHER_BONUS = 30;
 const GATHER_BONUS = 50;
+const STREAK_TIERS = [ {days:3, pt:15}, {days:7, pt:40}, {days:14, pt:80}, {days:30, pt:150} ];
 function weekKey(dateStr){
   const d = new Date(dateStr + 'T00:00:00');
   const off = (d.getDay() + 6) % 7; // 월요일 시작
@@ -1853,7 +1856,30 @@ async function computeSeasonScores(){
       }
     }
   }
+  // 연속 핑 마일스톤 보너스 (개인, 시즌 중 각 구간 1회)
+  const memberDates = {}; MEMBERS.forEach(m => memberDates[m.id] = []);
+  for (const date in all){
+    for (const id in all[date]){ if (all[date][id] && memberDates[id]) memberDates[id].push(date); }
+  }
+  for (const m of MEMBERS){
+    const ms = maxConsecutiveDays(memberDates[m.id]);
+    for (const t of STREAK_TIERS){ if (ms >= t.days) scores[m.id] += t.pt; }
+  }
   return scores;
+}
+// 연속 일수 계산: 정렬 후 하루(+1) 간격으로 이어진 최대 연속 길이
+function maxConsecutiveDays(dates){
+  const ds = [...new Set(dates)].sort();
+  if (!ds.length) return 0;
+  let best = 1, cur = 1;
+  for (let i = 1; i < ds.length; i++){
+    const prev = new Date(ds[i-1] + 'T00:00:00');
+    const curd = new Date(ds[i] + 'T00:00:00');
+    const diff = Math.round((curd - prev) / 86400000);
+    if (diff === 1){ cur++; if (cur > best) best = cur; }
+    else if (diff > 1){ cur = 1; }
+  }
+  return best;
 }
 function dubiMascotFor(ratio){
   if (ratio >= 1) return 5;      // 최고 행복
