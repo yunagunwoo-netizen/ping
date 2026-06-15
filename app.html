@@ -560,12 +560,12 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <div class="my-avatar" id="myAvatar">👤</div>
       <div class="my-info">
         <h3 id="myName">-</h3>
-        <p id="myEmail">김씨네 가족</p>
+        <p id="myEmail">뚜비네 가족</p>
       </div>
     </div>
     <div class="score-card" onclick="openDubiGoal()">
       <div class="sc-l">
-        <h3>이번 시즌 내가 모은 점수 · 뚜비 목표 보기</h3>
+        <h3>이번 미용 주기 내가 모은 점수 · 뚜비 목표 보기</h3>
         <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
       </div>
       <div class="sc-r" id="myScoreRank">🏅</div>
@@ -667,7 +667,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <button class="fi-share" onclick="shareInvite()">⤴</button>
     </div>
     <div class="fam-namebar">
-      <span class="fam-name" id="famName">우리가족 ✌️</span>
+      <span class="fam-name" id="famName">뚜비네 가족</span>
       <span class="fam-count" id="famCount">4</span>
       <button class="fam-edit" onclick="editFamilyName()">✏️</button>
     </div>
@@ -733,7 +733,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div class="fp-overlay" id="familyPhotoOverlay" onclick="closeFamilyPhoto(event)">
     <div class="fp-card">
       <div class="fp-head">
-        <span class="fp-title">우리가족 ✌️</span>
+        <span class="fp-title">뚜비네 가족</span>
         <span class="fp-date" id="fpDate"></span>
       </div>
       <div class="fp-grid" id="fpGrid"></div>
@@ -1636,7 +1636,7 @@ async function renderNotifications(){
 }
 
 // ========== 가족 · 초대 ==========
-function getFamilyName(){ return loadLocal('familyName', '우리가족 ✌️'); }
+function getFamilyName(){ return loadLocal('familyName', '뚜비네 가족'); }
 function getInviteLink(){ return 'https://www.ping.ai.kr'; }
 window.openFamily = function(){
   showScreen('family');
@@ -2134,8 +2134,9 @@ window.confirmGroomReset = async function(){
 window.openReward = function(i){
   const v = _rewardView[i]; if (!v) return;
   const img = document.getElementById('rwImg');
-  img.src = v.img; img.onerror = function(){ this.style.display = 'none'; };
   img.style.display = '';
+  img.onerror = function(){ this.style.display = 'none'; };
+  img.src = v.img;
   document.getElementById('rwPt').textContent = v.done ? '✓ 달성 완료' : `${v.pt}점 목표`;
   document.getElementById('rwName').textContent = v.name;
   document.getElementById('rwDetail').textContent = v.detail;
