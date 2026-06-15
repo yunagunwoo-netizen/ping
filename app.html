@@ -621,7 +621,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <div class="fi-icon">✉️</div>
       <div class="fi-text">
         <div class="fi-title">핑에 가족 초대하기</div>
-        <div class="fi-link" id="famLink">https://yunagunwoo-netizen.github.io/ping/</div>
+        <div class="fi-link" id="famLink">https://www.ping.ai.kr</div>
       </div>
       <button class="fi-share" onclick="shareInvite()">⤴</button>
     </div>
@@ -1563,7 +1563,7 @@ async function renderNotifications(){
 
 // ========== 가족 · 초대 ==========
 function getFamilyName(){ return loadLocal('familyName', '우리가족 ✌️'); }
-function getInviteLink(){ return location.origin + location.pathname; }
+function getInviteLink(){ return 'https://www.ping.ai.kr'; }
 window.openFamily = function(){
   showScreen('family');
   renderFamily();
