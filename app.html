@@ -101,6 +101,32 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .reaction-chip{font-size:16px;padding:2px 6px;background:var(--gray100);border-radius:12px;transition:all .15s}
 .reaction-chip.mine{background:#FFE8DC}
 .reaction-chip:active{transform:scale(1.2)}
+.comment-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.comment-row .comment-input{margin-bottom:0;flex:1}
+.mic-btn{width:46px;height:46px;border-radius:12px;background:#fff;box-shadow:var(--shadow);font-size:20px;flex-shrink:0}
+.mic-btn:active{transform:scale(.92);background:#FFE8DC}
+.mic-btn.listening{background:#FFE8DC;animation:micpulse 1s infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.4)}50%{box-shadow:0 0 0 8px rgba(255,107,53,0)}}
+/* 댓글 모달 */
+.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:120;display:none;align-items:flex-end;justify-content:center}
+.cm-overlay.show{display:flex}
+.cm-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:84vh;display:flex;flex-direction:column;animation:fadeUp .3s ease}
+.cm-head{display:flex;align-items:center;gap:10px;padding:16px}
+.cm-head img{width:44px;height:44px;border-radius:10px;object-fit:cover}
+.cm-head .cm-name{font-weight:800;color:var(--gray500);font-size:15px}
+.cm-head .cm-cap{font-size:12px;color:var(--gray400)}
+.cm-list{flex:1;overflow-y:auto;padding:6px 16px 12px;display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--gray100)}
+.cm-item{display:flex;gap:10px}
+.cm-item img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.cm-item .cm-body{background:var(--gray100);border-radius:12px;padding:8px 12px;max-width:80%}
+.cm-item .cm-who{font-size:12px;font-weight:700;color:var(--gray500)}
+.cm-item .cm-text{font-size:14px;color:#333}
+.cm-item .cm-time{font-size:10px;color:var(--gray300);margin-top:2px}
+.cm-empty{text-align:center;color:var(--gray400);font-size:13px;padding:30px 0}
+.cm-input-row{display:flex;gap:8px;align-items:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--gray100)}
+.cm-input-row input{flex:1;padding:11px 14px;background:var(--gray100);border-radius:20px;font-size:14px}
+.cm-input-row .mic-btn{width:42px;height:42px;font-size:18px}
+.cm-input-row .cm-send{background:var(--orange);color:#fff;font-weight:700;padding:0 16px;height:42px;border-radius:20px;font-size:14px;flex-shrink:0}
 .poke-btn{display:flex;align-items:center;justify-content:center;gap:4px;margin:0 12px 10px;padding:6px;background:var(--gray100);border-radius:8px;font-size:12px;color:var(--gray400)}
 .poke-btn:active{background:var(--gray200)}
 
@@ -303,6 +329,33 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .lb-hof-empty{font-size:12px;color:var(--gray400)}
 .score-card{cursor:pointer}
 
+/* ========== 뚜비 목표 (행복 게이지) ========== */
+.dg-top{text-align:center;padding:18px 20px 6px}
+.dg-mascot{width:128px;height:128px;border-radius:50%;object-fit:cover;margin:0 auto 6px;box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.dg-title{font-size:14px;font-weight:700;color:var(--gray400)}
+.dg-total{margin-top:2px}
+.dg-total #dgTotal{font-size:42px;font-weight:900;color:var(--orange);line-height:1}
+.dg-total .dg-unit{font-size:18px;font-weight:800;color:var(--orange)}
+.dg-month{font-size:12px;color:var(--gray400);margin-top:6px}
+.dg-barwrap{height:18px;background:var(--gray100);border-radius:12px;margin:14px 20px 0;overflow:hidden}
+.dg-bar{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange-light));border-radius:12px;width:0;transition:width .6s ease}
+.dg-next{text-align:center;font-size:13px;color:var(--gray500);margin:10px 20px 18px}
+.dg-next b{color:var(--orange)}
+.dg-tiers{margin:0 16px 18px;display:flex;flex-direction:column;gap:8px}
+.dg-tier{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);opacity:.55}
+.dg-tier.done{opacity:1;background:#FFF7E6;outline:2px solid #FBBF24;outline-offset:-2px}
+.dg-tier .dg-tier-ic{font-size:24px;width:34px;text-align:center}
+.dg-tier .dg-tier-name{flex:1;font-size:15px;font-weight:700;color:var(--gray500)}
+.dg-tier .dg-tier-pt{font-size:13px;font-weight:800;color:var(--gray400)}
+.dg-tier.done .dg-tier-pt{color:#D97706}
+.dg-contrib{margin:0 16px 28px;background:var(--gray100);border-radius:16px;padding:14px}
+.dg-contrib-title{font-size:13px;font-weight:800;color:var(--gray500);margin-bottom:12px;text-align:center}
+.dg-contrib-row{display:flex;justify-content:space-around}
+.dg-c{display:flex;flex-direction:column;align-items:center;gap:3px}
+.dg-c img{width:42px;height:42px;border-radius:50%;object-fit:cover}
+.dg-c span{font-size:12px;color:var(--gray400)}
+.dg-c b{font-size:14px;color:var(--orange)}
+
 /* ========== 가족 앨범 ========== */
 .album-tabs{display:flex;gap:8px;padding:4px 16px 10px}
 .album-tab{flex:1;padding:9px;border-radius:12px;background:var(--gray100);color:var(--gray400);font-size:13px;font-weight:700;text-align:center}
@@ -396,7 +449,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
           <button onclick="menuGo('notif')">🔔 알림</button>
           <button onclick="menuGo('family')">👨‍👩‍👧‍👦 가족 · 초대</button>
           <button onclick="menuGo('album')">📔 가족 앨범</button>
-          <button onclick="menuGo('lb')">🏆 가족 리더보드</button>
+          <button onclick="menuGo('lb')">🎯 뚜비 목표</button>
           <button onclick="menuGo('cal')">📅 추억 캘린더</button>
           <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/11</span></button>
         </div>
@@ -449,7 +502,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <div class="together-label">📸 같이 찍은 가족 <span>(1명당 +10점)</span></div>
         <div class="together-chips" id="togetherChips"></div>
       </div>
-      <input class="comment-input" id="commentInput" type="text" maxlength="50" placeholder="한줄 코멘트 (선택)">
+      <div class="comment-row">
+        <input class="comment-input" id="commentInput" type="text" maxlength="20" placeholder="한줄 설명 (20자, 선택)">
+        <button class="mic-btn" type="button" onclick="dictate('commentInput',20)" title="음성으로 입력">🎤</button>
+      </div>
       <div class="preview-actions">
         <button class="btn-cancel" onclick="cancelPreview()">다시 찍기</button>
         <button class="btn-ping" onclick="submitPing()">핑!</button>
@@ -467,9 +523,9 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <p id="myEmail">김씨네 가족</p>
       </div>
     </div>
-    <div class="score-card" onclick="openLeaderboard()">
+    <div class="score-card" onclick="openDubiGoal()">
       <div class="sc-l">
-        <h3>이번 달 내 점수</h3>
+        <h3>이번 달 내가 모은 점수 · 뚜비 목표 보기</h3>
         <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
       </div>
       <div class="sc-r" id="myScoreRank">🏅</div>
@@ -525,17 +581,23 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="cal-grid" id="calGrid"></div>
   </div>
 
-  <!-- LEADERBOARD (가족 리더보드 / 권한) -->
+  <!-- 뚜비 목표 (가족 협동 행복 게이지) -->
   <div id="leaderboard" class="screen">
     <div class="cal-header">
       <button class="cal-back" onclick="showScreen('feed')">‹</button>
-      <h2>가족 리더보드</h2>
+      <h2>뚜비 목표</h2>
       <div style="width:36px"></div>
     </div>
-    <div class="lb-month" id="lbMonth">이번 달</div>
-    <div class="lb-crown" id="lbCrown"></div>
-    <div class="lb-list" id="lbList"></div>
-    <div class="lb-hof" id="lbHof"></div>
+    <div class="dg-top">
+      <img class="dg-mascot" id="dgMascot" src="./dubi-card-happy.png" alt="뚜비">
+      <div class="dg-title">뚜비 행복도</div>
+      <div class="dg-total"><span id="dgTotal">0</span><span class="dg-unit">점</span></div>
+      <div class="dg-month" id="dgMonth"></div>
+    </div>
+    <div class="dg-barwrap"><div class="dg-bar" id="dgBar"></div></div>
+    <div class="dg-next" id="dgNext"></div>
+    <div class="dg-tiers" id="dgTiers"></div>
+    <div class="dg-contrib" id="dgContrib"></div>
   </div>
 
   <!-- NOTIFICATIONS (알림) -->
@@ -592,6 +654,23 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <h3 id="dayTitle">날짜</h3>
       <div class="day-grid" id="dayGrid"></div>
       <button class="day-close" onclick="closeDayDetail(event, true)">닫기</button>
+    </div>
+  </div>
+
+  <!-- 댓글 (말/글) -->
+  <div class="cm-overlay" id="commentsOverlay" onclick="closeComments(event)">
+    <div class="cm-sheet">
+      <div class="cm-head">
+        <img id="cmPhoto" src="" alt="">
+        <div><div class="cm-name" id="cmName">핑</div><div class="cm-cap" id="cmCap"></div></div>
+        <button onclick="closeComments(event,true)" style="margin-left:auto;color:#bbb;font-size:18px">✕</button>
+      </div>
+      <div class="cm-list" id="cmList"></div>
+      <div class="cm-input-row">
+        <input id="commentText" type="text" maxlength="20" placeholder="댓글 (20자)">
+        <button class="mic-btn" type="button" onclick="dictate('commentText',20)" title="음성으로 입력">🎤</button>
+        <button class="cm-send" onclick="addComment()">보내기</button>
+      </div>
     </div>
   </div>
 
@@ -691,7 +770,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 <script type="module">
 // ========== FIREBASE SETUP ==========
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId, arrayUnion } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js';
@@ -955,6 +1034,77 @@ async function saveReaction(targetMember, emoji) {
   }
 }
 
+// ========== 댓글 (말/글) ==========
+let commentTarget = null;
+window.openComments = function(id){
+  const p = todayPings[id]; if (!p) return;
+  commentTarget = id;
+  const m = getMember(id);
+  document.getElementById('cmPhoto').src = p.photoURL;
+  document.getElementById('cmName').textContent = `${m ? m.id : id}의 핑`;
+  document.getElementById('cmCap').textContent = p.comment || '';
+  renderComments();
+  document.getElementById('commentsOverlay').classList.add('show');
+};
+function renderComments(){
+  const p = todayPings[commentTarget];
+  const list = document.getElementById('cmList'); list.innerHTML = '';
+  const cs = (p && p.comments) || [];
+  if (!cs.length){ list.innerHTML = '<div class="cm-empty">첫 댓글을 남겨보세요 💬</div>'; return; }
+  for (const c of cs){
+    const mm = getMember(c.by); const av = mm ? mm.avatar : '';
+    const t = c.at ? timeAgo(new Date(c.at).getTime()) : '';
+    const row = document.createElement('div'); row.className = 'cm-item';
+    row.innerHTML = `<img src="${av}" alt="${c.by}" onerror="this.style.display='none'">
+      <div class="cm-body"><div class="cm-who">${c.by}</div><div class="cm-text">${c.text}</div><div class="cm-time">${t}</div></div>`;
+    list.appendChild(row);
+  }
+  list.scrollTop = list.scrollHeight;
+}
+window.addComment = async function(){
+  const input = document.getElementById('commentText');
+  const text = (input.value || '').trim().slice(0, 20);
+  if (!text || !commentTarget) return;
+  const today = getToday();
+  const p = todayPings[commentTarget]; if (!p) return;
+  const c = { by: currentMember, text, at: new Date().toISOString() };
+  if (!p.comments) p.comments = [];
+  p.comments.push(c);
+  // 로컬 저장
+  const localPings = loadLocal(`pings_${today}`, {});
+  localPings[commentTarget] = p;
+  saveLocal(`pings_${today}`, localPings);
+  // Firebase 저장 (누적)
+  if (firebaseReady){
+    try { await setDoc(doc(db, 'pings', `${today}_${commentTarget}`), { comments: arrayUnion(c) }, { merge: true }); }
+    catch(e){ console.warn('댓글 저장 실패', e); }
+  }
+  input.value = '';
+  renderComments();
+  renderFeed();
+};
+window.closeComments = function(e, force){
+  if (force || (e && e.target === document.getElementById('commentsOverlay'))) {
+    document.getElementById('commentsOverlay').classList.remove('show');
+  }
+};
+
+// ========== 음성 입력 (말로 → 글로) ==========
+window.dictate = function(inputId, maxlen){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const el = document.getElementById(inputId);
+  if (!SR){ showToast('이 브라우저는 음성 입력을 지원하지 않아요 (글로 입력해 주세요)'); return; }
+  const rec = new SR(); rec.lang = 'ko-KR'; rec.interimResults = false; rec.maxAlternatives = 1;
+  const btn = el.parentElement.querySelector('.mic-btn');
+  const prev = el.placeholder;
+  el.placeholder = '🎙️ 듣는 중...';
+  if (btn) btn.classList.add('listening');
+  rec.onresult = (e) => { el.value = ((e.results[0] && e.results[0][0] && e.results[0][0].transcript) || '').slice(0, maxlen); };
+  rec.onerror = () => showToast('음성 인식 실패 — 다시 시도해 주세요');
+  rec.onend = () => { el.placeholder = prev; if (btn) btn.classList.remove('listening'); };
+  try { rec.start(); } catch(e){}
+};
+
 function updateStreak(memberId) {
   const today = getToday();
   streaks = loadLocal('streaks', {});
@@ -1045,6 +1195,7 @@ function renderFeed() {
         </div>
         <div class="reactions-row">${reactionHTML}
           ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
+          <span class="reaction-chip" onclick="openComments('${m.id}')" style="cursor:pointer">💬 ${(ping.comments||[]).length || ''}</span>
         </div>`;
     } else {
       card.innerHTML = `
@@ -1091,15 +1242,11 @@ function renderMyPage() {
   const settings = loadLocal('settings', {});
   if (settings.alarmTime) document.getElementById('alarmTime').value = settings.alarmTime;
 
-  // 이번 달 점수 + 순위
+  // 이번 달 내가 모은 점수 (등수 없이 — 뚜비를 위해 함께!)
   const now = new Date();
   computeMonthScores(now.getFullYear(), now.getMonth()).then(scores => {
     document.getElementById('myMonthScore').textContent = scores[currentMember] || 0;
-    const ranked = MEMBERS.map(mm => mm.id).sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
-    const rank = ranked.indexOf(currentMember) + 1;
-    const medals = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '🏅' };
-    const myScore = scores[currentMember] || 0;
-    document.getElementById('myScoreRank').textContent = (myScore > 0 && rank === 1) ? '👑' : (medals[rank] || '🏅');
+    document.getElementById('myScoreRank').textContent = '🐾';
   }).catch(() => {});
 }
 
@@ -1356,7 +1503,7 @@ window.toggleHeaderMenu = function(e){
 window.menuGo = function(which){
   document.getElementById('headerMenu').classList.remove('show');
   if (which === 'album') openAlbum();
-  else if (which === 'lb') openLeaderboard();
+  else if (which === 'lb') openDubiGoal();
   else if (which === 'cal') openCalendar();
   else if (which === 'dex') showDubiDex();
   else if (which === 'family') openFamily();
@@ -1647,53 +1794,75 @@ async function computeMonthScores(y, m){
 }
 
 // ========== 리더보드 / 권한 ==========
-window.openLeaderboard = function(){
+// ========== 뚜비 목표 (가족 협동 행복 게이지) ==========
+// 등수 없이 가족 점수를 모두 합쳐 뚜비 보상을 함께 달성!
+const DUBI_GOALS = [
+  { pt: 200,  icon: '🦴', name: '뚜비 새 간식 사주기' },
+  { pt: 500,  icon: '🦮', name: '특별 산책 나들이' },
+  { pt: 900,  icon: '☕', name: '애견카페 데려가기' },
+  { pt: 1400, icon: '🧸', name: '미용 + 새 장난감' }
+];
+function dubiMascotFor(ratio){
+  if (ratio >= 1) return 'cheer';
+  if (ratio >= 0.75) return 'excited';
+  if (ratio >= 0.5) return 'happy';
+  if (ratio >= 0.25) return 'curious';
+  return 'sleepy';
+}
+window.openDubiGoal = function(){
   showScreen('leaderboard');
-  renderLeaderboard();
+  renderDubiGoal();
 };
-async function renderLeaderboard(){
+async function renderDubiGoal(){
   const now = new Date();
-  document.getElementById('lbMonth').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월`;
-  // 로딩 표시
-  document.getElementById('lbList').innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:13px">불러오는 중...</div>';
-  document.getElementById('lbCrown').innerHTML = '';
-  document.getElementById('lbHof').innerHTML = '';
+  document.getElementById('dgMonth').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 · 가족이 함께 모은 점수`;
+  document.getElementById('dgTiers').innerHTML = '<div style="text-align:center;color:#aaa;padding:14px;font-size:13px">불러오는 중...</div>';
 
   const scores = await computeMonthScores(now.getFullYear(), now.getMonth());
-  const ranked = MEMBERS.slice().sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
-  const top = ranked[0], topScore = scores[top.id] || 0;
+  const total = MEMBERS.reduce((s, m) => s + (scores[m.id] || 0), 0);
+  const goals = DUBI_GOALS;
+  const maxGoal = goals[goals.length - 1].pt;
 
-  // 이번 달 결정권자
-  const crown = document.getElementById('lbCrown');
-  if (topScore > 0){
-    crown.innerHTML = `<div class="lbc-title">👑 이번 달 결정권자</div>
-      <div class="lbc-member"><img src="${top.avatar}" alt="${top.id}" onerror="this.style.display='none'">
-        <div><div class="lbc-name">${top.id}</div><div class="lbc-priv">여행지 · 외식 장소 결정권 획득! 🗺️🍽️</div></div></div>`;
+  document.getElementById('dgTotal').textContent = total;
+  document.getElementById('dgMascot').src = `./dubi-card-${dubiMascotFor(total / maxGoal)}.png`;
+
+  // 진행바: 현재 구간(직전 달성 보상 ~ 다음 보상) 채움
+  const achieved = goals.filter(g => total >= g.pt).length;
+  const next = goals[achieved]; // 다음 목표 (없으면 전부 달성)
+  const bar = document.getElementById('dgBar');
+  const nextEl = document.getElementById('dgNext');
+  if (next){
+    const prevPt = achieved > 0 ? goals[achieved - 1].pt : 0;
+    const seg = (total - prevPt) / (next.pt - prevPt);
+    bar.style.width = Math.max(4, Math.min(100, seg * 100)) + '%';
+    nextEl.innerHTML = `다음 보상 <b>${next.icon} ${next.name}</b> 까지 <b>${next.pt - total}점</b>`;
   } else {
-    crown.innerHTML = `<div class="lbc-empty">이번 달 첫 핑을 올려 점수를 쌓아보세요!</div>`;
+    bar.style.width = '100%';
+    nextEl.innerHTML = `🎉 모든 보상 달성! 뚜비가 세상에서 제일 행복해요`;
   }
 
-  // 순위 리스트
-  const list = document.getElementById('lbList'); list.innerHTML = '';
-  const medals = ['🥇','🥈','🥉','4️⃣'];
-  ranked.forEach((m, i) => {
-    const row = document.createElement('div');
-    row.className = 'lb-row' + (i === 0 && topScore > 0 ? ' lead' : '');
-    row.innerHTML = `<span class="lb-rank">${medals[i] || (i+1)}</span>
-      <img class="lb-av" src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
-      <span class="lb-name">${m.id}</span><span class="lb-score">${scores[m.id] || 0}점</span>`;
-    list.appendChild(row);
-  });
+  // 보상 단계
+  const tl = document.getElementById('dgTiers'); tl.innerHTML = '';
+  for (const g of goals){
+    const done = total >= g.pt;
+    const it = document.createElement('div');
+    it.className = 'dg-tier' + (done ? ' done' : '');
+    it.innerHTML = `<span class="dg-tier-ic">${g.icon}</span><span class="dg-tier-name">${g.name}</span><span class="dg-tier-pt">${done ? '달성 ✓' : g.pt + '점'}</span>`;
+    tl.appendChild(it);
+  }
 
-  // 지난달 명예의 전당
-  const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastScores = await computeMonthScores(pm.getFullYear(), pm.getMonth());
-  const lastRanked = MEMBERS.slice().sort((a, b) => (lastScores[b.id] || 0) - (lastScores[a.id] || 0));
-  const lastTop = lastRanked[0], lastTopScore = lastScores[lastTop.id] || 0;
-  const hof = document.getElementById('lbHof');
-  hof.innerHTML = `<div class="lb-hof-title">🏆 지난달 명예의 전당</div>` + (lastTopScore > 0
-    ? `<div class="lb-hof-row"><img src="${lastTop.avatar}" alt="${lastTop.id}" onerror="this.style.display='none'"><span>${pm.getMonth()+1}월 1등 — <b>${lastTop.id}</b> (${lastTopScore}점)</span></div>`
-    : `<div class="lb-hof-empty">아직 기록이 없어요</div>`);
+  // 가족 기여 (등수 없이, 멤버 순서대로)
+  const c = document.getElementById('dgContrib');
+  c.innerHTML = '<div class="dg-contrib-title">우리가 함께 모았어요 🐾</div><div class="dg-contrib-row">' +
+    MEMBERS.map(m => `<div class="dg-c"><img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'"><span>${m.id}</span><b>${scores[m.id] || 0}</b></div>`).join('') + '</div>';
+
+  // 새 보상 달성 축하 (한 번만)
+  const seen = loadLocal('dubiGoalSeen', 0);
+  if (achieved > seen){
+    saveLocal('dubiGoalSeen', achieved);
+    const last = goals[achieved - 1];
+    setTimeout(() => showToast(`🎉 뚜비 보상 달성: ${last.icon} ${last.name}!`), 500);
+  }
 }
 
 // ========== 가족 앨범 ==========
