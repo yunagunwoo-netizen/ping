@@ -33,7 +33,9 @@ input,textarea{font-family:inherit;border:none;outline:none}
 /* ========== SPLASH ========== */
 #splash{justify-content:center;align-items:center;background:var(--orange);z-index:100}
 #splash .logo{font-size:72px;font-weight:900;color:#fff;animation:popIn .5s ease}
-#splash .logo img{width:168px;height:auto;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
+#splash .logo img{width:168px;height:auto;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18));transform-origin:50% 18%;animation:pingFlutter 3.4s ease-in-out infinite}
+@keyframes pingFlutter{0%,100%{transform:rotate(-1.6deg) skewX(0deg)}20%{transform:rotate(-0.4deg) skewX(3.5deg)}50%{transform:rotate(1.8deg) skewX(0deg)}80%{transform:rotate(-0.4deg) skewX(-3.5deg)}}
+@media (prefers-reduced-motion:reduce){#splash .logo img{animation:none}}
 #splash .slogan{color:rgba(255,255,255,.85);font-size:15px;margin-top:8px;animation:fadeUp .6s ease .2s both}
 #splash .family-pic{width:min(80%,340px);margin-top:26px;border-radius:18px;border:3px solid #fff;box-shadow:0 10px 28px rgba(0,0,0,.22);animation:fadeUp .6s ease .35s both}
 @keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
@@ -345,7 +347,12 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .dg-tier{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);opacity:.55}
 .dg-tier.done{opacity:1;background:#FFF7E6;outline:2px solid #FBBF24;outline-offset:-2px}
 .dg-tier .dg-tier-ic{font-size:24px;width:34px;text-align:center}
-.dg-tier .dg-tier-name{flex:1;font-size:15px;font-weight:700;color:var(--gray500)}
+.dg-tier .dg-tier-mid{flex:1;display:flex;flex-direction:column;gap:2px}
+.dg-tier .dg-tier-name{font-size:15px;font-weight:700;color:var(--gray500)}
+.dg-tier .dg-tier-detail{font-size:11px;font-weight:500;color:var(--gray400);line-height:1.4}
+.bonus-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--gray500);padding:8px 4px;cursor:pointer}
+.bonus-toggle input{width:18px;height:18px;accent-color:var(--orange);flex:none}
+.bonus-toggle span{color:var(--orange);font-weight:600;font-size:12px}
 .dg-tier .dg-tier-pt{font-size:13px;font-weight:800;color:var(--gray400)}
 .dg-tier.done .dg-tier-pt{color:#D97706}
 .dg-contrib{margin:0 16px 28px;background:var(--gray100);border-radius:16px;padding:14px}
@@ -499,8 +506,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <span id="questionText"></span>
       </div>
       <div class="together-box">
-        <div class="together-label">📸 같이 찍은 가족 <span>(1명당 +10점)</span></div>
-        <div class="together-chips" id="togetherChips"></div>
+        <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> 🐶 뚜비랑 같이 찍었어요 <span>(주 1회 +30점)</span></label>
+        <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> 👨‍👩‍👧‍👦 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
       </div>
       <div class="comment-row">
         <input class="comment-input" id="commentInput" type="text" maxlength="20" placeholder="한줄 설명 (20자, 선택)">
@@ -642,7 +649,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
     <div class="album-tabs">
       <button class="album-tab on" id="albumTabAll" onclick="albumSwitch(false)">전체</button>
-      <button class="album-tab" id="albumTabTogether" onclick="albumSwitch(true)">함께 찍은 순간</button>
+      <button class="album-tab" id="albumTabTogether" onclick="albumSwitch(true)">뚜비·가족 모임</button>
     </div>
     <div class="album-sub"><span id="albumCount">0</span>장의 추억</div>
     <div class="album-grid" id="albumGrid"></div>
@@ -972,14 +979,15 @@ function startListening() {
   } catch(e) { console.warn('Firestore listener 실패', e); }
 }
 
-async function savePing(memberId, photoDataURL, comment, withMembers) {
+async function savePing(memberId, photoDataURL, comment, withDubi, familyGathering) {
   const today = getToday();
   const pingData = {
     familyId: FAMILY_ID,
     memberId,
     photoURL: photoDataURL,
     comment: comment || '',
-    withMembers: withMembers || [],
+    withDubi: !!withDubi,
+    familyGathering: !!familyGathering,
     reactions: {},
     question: getDailyQuestion(),
     createdAt: new Date().toISOString()
@@ -1329,8 +1337,8 @@ window.capturePhoto = function() {
       currentStream.getTracks().forEach(t => t.stop());
       currentStream = null;
     }
-    togetherSelected = new Set();
-    buildTogetherChips();
+    const _wd = document.getElementById('withDubiChk'); if (_wd) _wd.checked = false;
+    const _fg = document.getElementById('gatherChk'); if (_fg) _fg.checked = false;
     showScreen('preview');
   }, 'image/jpeg', 0.7);
 };
@@ -1352,11 +1360,14 @@ window.submitPing = async function() {
       reader.readAsDataURL(capturedBlob);
     });
 
-    const withMembers = [...togetherSelected];
-    await savePing(currentMember, dataURL, comment, withMembers);
+    const withDubi = !!(document.getElementById('withDubiChk') && document.getElementById('withDubiChk').checked);
+    const gather = !!(document.getElementById('gatherChk') && document.getElementById('gatherChk').checked);
+    await savePing(currentMember, dataURL, comment, withDubi, gather);
     showLoading(false);
-    const pts = 10 + withMembers.length * 10;
-    showToast(withMembers.length ? `핑! +${pts}점 (함께찍기 보너스!) 🎉` : '핑! +10점 📸');
+    const tags = [];
+    if (withDubi) tags.push('🐶 뚜비와 함께');
+    if (gather) tags.push('👨‍👩‍👧‍👦 가족 모임');
+    showToast(tags.length ? `핑! 📸 ${tags.join(' · ')} (보너스는 주 1회 반영돼요!)` : '핑! +10점 📸');
     capturedBlob = null;
     togetherSelected = new Set();
     showScreen('feed');
@@ -1758,40 +1769,19 @@ window.closeDayDetail = function(e, force){
   }
 };
 
-// ========== 가족 점수 + 함께찍기 ==========
-function buildTogetherChips(){
-  const wrap = document.getElementById('togetherChips');
-  wrap.innerHTML = '';
-  for (const m of MEMBERS){
-    if (m.id === currentMember) continue;
-    const chip = document.createElement('button');
-    chip.className = 'together-chip' + (togetherSelected.has(m.id) ? ' on' : '');
-    chip.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">${m.id}`;
-    chip.onclick = () => toggleTogether(m.id, chip);
-    wrap.appendChild(chip);
-  }
-}
-function toggleTogether(id, chip){
-  if (togetherSelected.has(id)) { togetherSelected.delete(id); chip.classList.remove('on'); }
-  else { togetherSelected.add(id); chip.classList.add('on'); }
-}
-
-// 점수 규칙: 핑 +10, 함께찍기 1명당 +10, (전원 핑한 날) 모두 +5
-function pingPoints(ping){
-  let p = 10;
-  if (ping && ping.withMembers && ping.withMembers.length) p += 10 * ping.withMembers.length;
-  return p;
-}
-async function computeMonthScores(y, m){
-  const data = await loadMonth(y, m);
-  const scores = {}; MEMBERS.forEach(mm => scores[mm.id] = 0);
-  for (const date in data){
-    const dayPings = data[date];
-    const ids = Object.keys(dayPings);
-    for (const id of ids){ if (scores[id] !== undefined) scores[id] += pingPoints(dayPings[id]); }
-    if (ids.length >= 4){ MEMBERS.forEach(mm => { scores[mm.id] += 5; }); }
-  }
-  return scores;
+// ========== 가족 점수 ==========
+// 점수 규칙
+//  · 핑 1장 +10
+//  · 하루 4명 전원 핑한 날 모두 +5
+//  · 뚜비와 함께 찍기 : 주 1회 +30 (개인)
+//  · 온 가족 모임 사진(뚜비 제외) : 주 1회 +50 (가족 전체)
+const DUBI_TOGETHER_BONUS = 30;
+const GATHER_BONUS = 50;
+function weekKey(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const off = (d.getDay() + 6) % 7; // 월요일 시작
+  d.setDate(d.getDate() - off);
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 
 // ========== 리더보드 / 권한 ==========
@@ -1799,10 +1789,10 @@ async function computeMonthScores(y, m){
 // 등수 없이 가족 점수를 모두 합쳐 뚜비 보상을 함께 달성!
 // 시즌(3개월) 단위 목표 — 점수는 한 시즌 동안 누적, 시즌마다 리셋
 const DUBI_GOALS = [
-  { pt: 600,  icon: '🦴', name: '특별 간식 사주기' },
-  { pt: 1500, icon: '🦮', name: '특별 산책 나들이' },
-  { pt: 2700, icon: '☕', name: '애견카페 데려가기' },
-  { pt: 4200, icon: '🧸', name: '미용 + 새 장난감' }
+  { pt: 600,  icon: '🦴', name: '특별 간식 사주기',  detail: '육류 알레르기·눈물 걱정 없는 단일단백질/가수분해 간식 (연어·황태 등) — 예: 데이스포 헬시트릿 LID, 세이오앙 LID' },
+  { pt: 1500, icon: '🦮', name: '특별 산책 나들이',  detail: '광교호수공원·동천자연공원에서 뚜비랑 길게 산책' },
+  { pt: 2700, icon: '☕', name: '애견카페 가기',     detail: '고기동 카페 그라운드 · 별똥구리 · 카페 댕스 (차로 가까움)' },
+  { pt: 4200, icon: '🧸', name: '미용 + 새 장난감',  detail: '단골 미용(약 6만원) + 콩 KONG 워블러 / 노즈워크 매트 장난감' }
 ];
 // 현재 시즌(봄 3~5 / 여름 6~8 / 가을 9~11 / 겨울 12~2)의 (연,월) 목록과 이름
 function currentSeasonInfo(){
@@ -1819,9 +1809,34 @@ function currentSeasonInfo(){
 async function computeSeasonScores(){
   const { months } = currentSeasonInfo();
   const scores = {}; MEMBERS.forEach(m => scores[m.id] = 0);
+  // 시즌 전체 핑을 한 곳에 모으기 (주간 보너스를 정확히 계산하기 위해)
+  const all = {}; // date -> { member: ping }
   for (const [yy, mm] of months){
-    const s = await computeMonthScores(yy, mm);
-    MEMBERS.forEach(m => scores[m.id] += (s[m.id] || 0));
+    const data = await loadMonth(yy, mm);
+    for (const date in data){ all[date] = Object.assign(all[date] || {}, data[date]); }
+  }
+  // 기본 점수 + 전원 핑 보너스
+  for (const date in all){
+    const ids = Object.keys(all[date]);
+    for (const id of ids){ if (scores[id] !== undefined) scores[id] += 10; }
+    if (ids.length >= 4){ MEMBERS.forEach(m => { scores[m.id] += 5; }); }
+  }
+  // 주간 보너스 — 뚜비와 함께(개인 주1회), 온가족 모임(전원 주1회)
+  const dubiWeeks = {}; MEMBERS.forEach(m => dubiWeeks[m.id] = new Set());
+  const gatherWeeks = new Set();
+  for (const date in all){
+    const wk = weekKey(date);
+    const dayPings = all[date];
+    for (const id in dayPings){
+      const ping = dayPings[id];
+      if (!ping) continue;
+      if (ping.withDubi && scores[id] !== undefined && !dubiWeeks[id].has(wk)){
+        dubiWeeks[id].add(wk); scores[id] += DUBI_TOGETHER_BONUS;
+      }
+      if (ping.familyGathering && !gatherWeeks.has(wk)){
+        gatherWeeks.add(wk); MEMBERS.forEach(m => { scores[m.id] += GATHER_BONUS; });
+      }
+    }
   }
   return scores;
 }
@@ -1870,7 +1885,7 @@ async function renderDubiGoal(){
     const done = total >= g.pt;
     const it = document.createElement('div');
     it.className = 'dg-tier' + (done ? ' done' : '');
-    it.innerHTML = `<span class="dg-tier-ic">${g.icon}</span><span class="dg-tier-name">${g.name}</span><span class="dg-tier-pt">${done ? '달성 ✓' : g.pt + '점'}</span>`;
+    it.innerHTML = `<span class="dg-tier-ic">${g.icon}</span><div class="dg-tier-mid"><span class="dg-tier-name">${g.name}</span>${g.detail ? `<span class="dg-tier-detail">${g.detail}</span>` : ''}</div><span class="dg-tier-pt">${done ? '달성 ✓' : g.pt + '점'}</span>`;
     tl.appendChild(it);
   }
 
@@ -1947,7 +1962,7 @@ async function renderAlbum(){
     const dp = map[date];
     for (const id of MEMBERS.map(m => m.id)){
       const ping = dp[id]; if (!ping) continue;
-      if (albumTogetherOnly && !(ping.withMembers && ping.withMembers.length)) continue;
+      if (albumTogetherOnly && !(ping.withDubi || ping.familyGathering)) continue;
       items.push({ date, member: id, ping });
     }
   });
@@ -1959,7 +1974,7 @@ async function renderAlbum(){
   }
   for (const it of items){
     const cell = document.createElement('div'); cell.className = 'album-cell';
-    const badge = (it.ping.withMembers && it.ping.withMembers.length) ? '<span class="album-badge">👨‍👩‍👧‍👦</span>' : '';
+    const badge = it.ping.withDubi ? '<span class="album-badge">🐶</span>' : (it.ping.familyGathering ? '<span class="album-badge">👨‍👩‍👧‍👦</span>' : '');
     cell.innerHTML = `<img src="${it.ping.photoURL}" alt=""><span class="album-day">${it.member}·${it.date.slice(5)}</span>${badge}`;
     cell.onclick = () => showDayDetail(it.date, map[it.date]);
     grid.appendChild(cell);

@@ -19,7 +19,9 @@
 
   /* HERO */
   .hero{background:linear-gradient(160deg,var(--orange),var(--orange-light));color:#fff;text-align:center;padding:54px 20px 60px;border-radius:0 0 32px 32px}
-  .hero .logo{width:128px;margin:0 auto 10px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
+  .hero .logo{width:128px;margin:0 auto 10px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18));transform-origin:50% 18%;animation:pingFlutter 3.4s ease-in-out infinite}
+  @keyframes pingFlutter{0%,100%{transform:rotate(-1.6deg) skewX(0deg)}20%{transform:rotate(-0.4deg) skewX(3.5deg)}50%{transform:rotate(1.8deg) skewX(0deg)}80%{transform:rotate(-0.4deg) skewX(-3.5deg)}}
+  @media (prefers-reduced-motion:reduce){.hero .logo{animation:none}}
   .hero h1{font-size:30px;font-weight:900;letter-spacing:-.5px}
   .hero p{font-size:16px;opacity:.95;margin-top:10px}
   .hero .fam{width:min(420px,86%);margin:26px auto 0;border-radius:20px;border:4px solid #fff;box-shadow:0 14px 36px rgba(0,0,0,.25)}
@@ -36,6 +38,7 @@
   .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .feat{background:#fff;border-radius:18px;padding:20px 18px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
   .feat .emoji{font-size:30px}
+  .feat .feat-ic{width:54px;height:54px;object-fit:contain;display:block}
   .feat h3{font-size:16px;font-weight:800;margin:8px 0 4px}
   .feat p{font-size:13px;color:var(--gray);line-height:1.5}
 
@@ -79,12 +82,12 @@
       <div class="sec-title">핑은 이런 앱이에요</div>
       <div class="sec-sub">하루 한 번, 사진 한 장이면 충분해요</div>
       <div class="feat-grid">
-        <div class="feat"><div class="emoji">📸</div><h3>매일 생존신고</h3><p>하루 한 번 사진을 올리면 가족 모두가 안부를 확인해요.</p></div>
-        <div class="feat"><div class="emoji">👨‍👩‍👧‍👦</div><h3>오늘의 가족사진</h3><p>가족이 모두 핑한 날엔 4명 사진과 뚜비가 한 장으로!</p></div>
-        <div class="feat"><div class="emoji">🏆</div><h3>점수 & 결정권</h3><p>함께 찍으면 보너스 점수! 매달 1등은 여행지·외식 결정권을 가져요.</p></div>
-        <div class="feat"><div class="emoji">🐶</div><h3>뚜비 도감</h3><p>가족 모두 핑한 날, 강아지 뚜비 카드를 한 장씩 모아요.</p></div>
-        <div class="feat"><div class="emoji">📅</div><h3>추억 캘린더 & 앨범</h3><p>날짜별로 쌓인 사진을 달력과 앨범으로 다시 봐요.</p></div>
-        <div class="feat"><div class="emoji">🔔</div><h3>푸시 알림</h3><p>가족이 핑을 올리거나 콕 찌르면 폰으로 바로 알려줘요.</p></div>
+        <div class="feat"><img class="feat-ic" src="./feat-camera.png" alt=""><h3>매일 생존신고</h3><p>하루 한 번 사진을 올리면 가족 모두가 안부를 확인해요.</p></div>
+        <div class="feat"><img class="feat-ic" src="./feat-family.png" alt=""><h3>오늘의 가족사진</h3><p>가족이 모두 핑한 날엔 4명 사진과 뚜비가 한 장으로!</p></div>
+        <div class="feat"><img class="feat-ic" src="./feat-goal.png" alt=""><h3>뚜비 목표</h3><p>등수 없이 가족이 함께 점수를 모아 시즌마다 뚜비에게 선물을 줘요.</p></div>
+        <div class="feat"><img class="feat-ic" src="./feat-dubi.png" alt=""><h3>뚜비 도감</h3><p>가족 모두 핑한 날, 강아지 뚜비 카드를 한 장씩 모아요.</p></div>
+        <div class="feat"><img class="feat-ic" src="./feat-cal.png" alt=""><h3>추억 캘린더 & 앨범</h3><p>날짜별로 쌓인 사진을 달력과 앨범으로 다시 봐요.</p></div>
+        <div class="feat"><img class="feat-ic" src="./feat-bell.png" alt=""><h3>푸시 알림</h3><p>가족이 핑을 올리거나 콕 찌르면 폰으로 바로 알려줘요.</p></div>
       </div>
     </section>
 
