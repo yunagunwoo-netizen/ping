@@ -2298,6 +2298,8 @@ async function renderDubiGoal(){
 
   // 보상 단계 (아이콘 이미지 + 클릭 시 상세 모달)
   const tl = document.getElementById('dgTiers'); tl.innerHTML = '';
+  const tied = Math.max(...MEMBERS.map(m => scores[m.id] || 0)) === Math.min(...MEMBERS.map(m => scores[m.id] || 0));
+  const preStyle = 'margin-top:6px;font-size:11.5px;color:var(--gray400);line-height:1.5';
   _rewardView = [];
   goals.forEach((g, idx) => {
     const done = total >= g.pt;
@@ -2305,18 +2307,24 @@ async function renderDubiGoal(){
     if (g.assign){
       if (walkAssignee){
         assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:5px 9px;display:inline-block">🚶 이번 산책 담당: ${walkAssignee}</div>`;
-        roleHtml = `<div class="rw-role">🚶 이번 산책 담당: ${walkAssignee}</div>`;
+        roleHtml = `<div class="rw-role">🚶 이번 산책은 <b>${walkAssignee}</b>님이 뚜비랑 다녀와요!</div>`;
+      } else if (tied){
+        assignHtml = `<div style="${preStyle}">🚶 1500점을 모으는 순간, 점수가 가장 낮은 사람이 산책 담당! (지금은 모두 같은 점수)</div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">🚶 1500점을 모으는 순간, 그때 점수가 가장 낮은 사람이 뚜비 산책을 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
-        assignHtml = `<div style="margin-top:6px;font-size:11.5px;color:var(--gray400)">🚶 지금 최저 점수: <b>${lowestNames()}</b> · 달성하면 산책 담당이 돼요</div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">🚶 지금 최저 점수: ${lowestNames()}<br>달성하면 산책 담당이 확정돼요</div>`;
+        assignHtml = `<div style="${preStyle}">🚶 지금 순위라면 산책 담당은 <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">🚶 지금 순위라면 산책 담당은 <b>${lowestNames()}</b>.<br>1500점을 달성하는 순간의 최저 점수자로 정해져요.</div>`;
       }
     } else if (g.assignTopBottom){
       if (groomTop){
-        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5">👑 뚜비 대장: ${groomTop}<br>🚿 미용 케어 담당: ${groomBottom}</div>`;
-        roleHtml = `<div class="rw-role">👑 뚜비 대장: ${groomTop}<br>🚿 미용 케어 담당: ${groomBottom}</div>`;
+        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5">👑 뚜비 대장: ${groomTop}<br>🚿 미용 케어: ${groomBottom}</div>`;
+        roleHtml = `<div class="rw-role">👑 뚜비 대장: <b>${groomTop}</b><br>🚿 미용 케어 담당: <b>${groomBottom}</b></div>`;
+      } else if (tied){
+        assignHtml = `<div style="${preStyle}">👑 점수 1등은 미용 스타일·장난감 고르기, 🚿 꼴찌는 케어 담당! (지금은 모두 같은 점수)</div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">4200점을 달성하는 순간, 점수 1등은 👑 미용 스타일·장난감을 고르고, 꼴찌는 🚿 미용실 왕복·케어를 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
-        assignHtml = `<div style="margin-top:6px;font-size:11.5px;color:var(--gray400);line-height:1.5">👑 지금 1등: <b>${highestNames()}</b> · 🚿 최저: <b>${lowestNames()}</b><br>달성하면 역할이 확정돼요</div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">👑 지금 1등: ${highestNames()} · 🚿 최저: ${lowestNames()}<br>달성하면 역할이 확정돼요</div>`;
+        assignHtml = `<div style="${preStyle}">👑 지금 순위라면 대장 <b>${highestNames()}</b> · 🚿 케어 <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">지금 순위라면 👑 대장은 <b>${highestNames()}</b>, 🚿 케어는 <b>${lowestNames()}</b>.<br>4200점을 달성하는 순간의 점수로 확정돼요.</div>`;
       }
     }
     _rewardView.push({ img: g.img, icon: g.icon, name: g.name, pt: g.pt, done, detail: g.detail || '', roleHtml });
