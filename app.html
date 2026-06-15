@@ -81,21 +81,21 @@ input,textarea{font-family:inherit;border:none;outline:none}
 /* 설치 방법 가이드 모달 */
 .ig-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:160;display:none;align-items:center;justify-content:center;padding:16px}
 .ig-overlay.show{display:flex}
-.ig-card{background:#fff;border-radius:20px;width:100%;max-width:420px;max-height:88vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
-.ig-img{width:100%;display:block;border-radius:20px 20px 0 0}
-.ig-actions{display:flex;gap:8px;padding:14px}
+.ig-card{background:#fff;border-radius:20px;width:100%;max-width:420px;max-height:94vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease;display:flex;flex-direction:column}
+.ig-img{display:block;margin:10px auto 0;max-width:92%;max-height:40vh;border-radius:14px;flex-shrink:0}
+.ig-actions{display:flex;gap:8px;padding:10px 12px;flex-shrink:0}
 .ig-actions button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700}
 .ig-install{background:var(--orange);color:#fff}
 .ig-close{background:var(--gray100);color:var(--gray500)}
 /* '안전하지 않은 앱' 경고 안심 안내 (안드로이드) */
-.ig-note{margin:0 14px 4px;background:#FFF6E9;border:1px solid #FBE2BC;border-radius:14px;padding:13px 15px;display:none}
+.ig-note{margin:6px 12px;background:#FFF6E9;border:1px solid #FBE2BC;border-radius:14px;padding:10px 12px;display:none}
 .ig-note.show{display:block}
-.ig-note .nt{font-weight:800;font-size:14px;color:var(--gray500);margin-bottom:6px}
-.ig-note p{font-size:12.5px;line-height:1.65;color:var(--gray400);margin:0 0 8px}
-.ig-note .step{background:#fff;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;color:var(--gray500);font-weight:600}
+.ig-note .nt{font-weight:800;font-size:13px;color:var(--gray500);margin-bottom:5px;line-height:1.35}
+.ig-note p{font-size:11.5px;line-height:1.5;color:var(--gray400);margin:0 0 6px}
+.ig-note .step{background:#fff;border-radius:10px;padding:8px 10px;font-size:11.5px;line-height:1.5;color:var(--gray500);font-weight:600}
 .ig-note b{color:var(--orange)}
-.ig-note .ig-note-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.ig-note .ig-note-head .dubi{width:62px;height:auto;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.08))}
+.ig-note .ig-note-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ig-note .ig-note-head .dubi{width:44px;height:auto;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.08))}
 .ig-note .ig-note-head .nt{margin-bottom:0}
 .feed-grid{flex:1;overflow-y:auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
 .ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
@@ -882,7 +882,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <img class="ig-img" id="igImg" src="./install-ios.png" alt="설치 방법">
       <div class="ig-note" id="igProtect">
         <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">"안전하지 않은 앱 차단됨"이 떠도 괜찮아요</div></div>
-        <p>바이러스가 아니에요. 핑은 홈 화면에 <b>웹앱</b>으로 추가되는데, 구글 플레이 프로텍트가 "옛 안드로이드 기준이라 최신 보호 기능이 없다"고 안내하는 것뿐이에요. 핑은 아빠가 만든 <b>우리 가족 전용 앱</b>이고, 주소창 자물쇠(🔒&nbsp;ping.ai.kr)에서 안전하게 작동해요. 사진·글은 우리 가족만 봐요.</p>
+        <p>바이러스가 아니에요. 홈 화면에 <b>웹앱</b>으로 추가될 때 뜨는 안내일 뿐이고, 핑은 아빠가 만든 <b>우리 가족 전용 앱</b>이라 안전해요 🔒</p>
         <div class="step">설치하려면 → <b>세부정보 더보기</b> 누르고 → <b>무시하고 설치</b>(또는 "어쨌든 설치")를 누르세요.<br>💡 <b>'확인'만 누르면 설치가 취소돼요!</b></div>
       </div>
       <div class="ig-actions">
