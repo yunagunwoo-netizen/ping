@@ -415,7 +415,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div id="splash" class="screen active">
     <div class="logo"><img src="./logo-ping.png" alt="핑" onerror="this.parentElement.textContent='핑'"></div>
     <div class="slogan">오늘도 살아있음을 핑!</div>
-    <img class="family-pic" src="./family-portrait.png" alt="우리 가족" onerror="this.style.display='none'">
+    <img class="family-pic" id="splashFam" src="./family-portrait.png" alt="우리 가족" onerror="this.style.display='none'">
   </div>
 
   <!-- ONBOARDING -->
@@ -451,7 +451,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
           <button onclick="menuGo('album')">📔 가족 앨범</button>
           <button onclick="menuGo('lb')">🎯 뚜비 목표</button>
           <button onclick="menuGo('cal')">📅 추억 캘린더</button>
-          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/11</span></button>
+          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/17</span></button>
         </div>
       </div>
     </div>
@@ -525,7 +525,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
     <div class="score-card" onclick="openDubiGoal()">
       <div class="sc-l">
-        <h3>이번 달 내가 모은 점수 · 뚜비 목표 보기</h3>
+        <h3>이번 시즌 내가 모은 점수 · 뚜비 목표 보기</h3>
         <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
       </div>
       <div class="sc-r" id="myScoreRank">🏅</div>
@@ -711,7 +711,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dex-modal">
       <div class="dex-modal-head">
         <h3>🐶 뚜비 도감</h3>
-        <span class="dex-prog"><span id="dexProgNum">0</span>/11</span>
+        <span class="dex-prog"><span id="dexProgNum">0</span>/17</span>
       </div>
       <div class="dex-sub">가족 모두가 핑한 날, 뚜비 카드를 한 장씩 모아요!</div>
       <div class="dex-grid" id="dexGrid"></div>
@@ -1242,9 +1242,8 @@ function renderMyPage() {
   const settings = loadLocal('settings', {});
   if (settings.alarmTime) document.getElementById('alarmTime').value = settings.alarmTime;
 
-  // 이번 달 내가 모은 점수 (등수 없이 — 뚜비를 위해 함께!)
-  const now = new Date();
-  computeMonthScores(now.getFullYear(), now.getMonth()).then(scores => {
+  // 이번 시즌 내가 모은 점수 (등수 없이 — 뚜비를 위해 함께!)
+  computeSeasonScores().then(scores => {
     document.getElementById('myMonthScore').textContent = scores[currentMember] || 0;
     document.getElementById('myScoreRank').textContent = '🐾';
   }).catch(() => {});
@@ -1439,7 +1438,9 @@ const DUBI_CARDS = [
   { id:'happy', name:'행복뚜비' }, { id:'play', name:'장난뚜비' }, { id:'sleepy', name:'졸린뚜비' },
   { id:'love', name:'사랑뚜비' }, { id:'excited', name:'신난뚜비' }, { id:'snack', name:'간식뚜비' },
   { id:'birthday', name:'생일뚜비' }, { id:'winter', name:'겨울뚜비' }, { id:'flower', name:'꽃뚜비' },
-  { id:'curious', name:'궁금뚜비' }, { id:'cheer', name:'응원뚜비' }
+  { id:'curious', name:'궁금뚜비' }, { id:'cheer', name:'응원뚜비' },
+  { id:'rain', name:'우산뚜비' }, { id:'book', name:'책벌레뚜비' }, { id:'chef', name:'요리사뚜비' },
+  { id:'music', name:'음악뚜비' }, { id:'beach', name:'바다뚜비' }, { id:'gift', name:'선물뚜비' }
 ];
 function dubiName(id){ const c = DUBI_CARDS.find(x => x.id === id); return c ? c.name : '뚜비'; }
 
@@ -1796,35 +1797,57 @@ async function computeMonthScores(y, m){
 // ========== 리더보드 / 권한 ==========
 // ========== 뚜비 목표 (가족 협동 행복 게이지) ==========
 // 등수 없이 가족 점수를 모두 합쳐 뚜비 보상을 함께 달성!
+// 시즌(3개월) 단위 목표 — 점수는 한 시즌 동안 누적, 시즌마다 리셋
 const DUBI_GOALS = [
-  { pt: 200,  icon: '🦴', name: '뚜비 새 간식 사주기' },
-  { pt: 500,  icon: '🦮', name: '특별 산책 나들이' },
-  { pt: 900,  icon: '☕', name: '애견카페 데려가기' },
-  { pt: 1400, icon: '🧸', name: '미용 + 새 장난감' }
+  { pt: 600,  icon: '🦴', name: '특별 간식 사주기' },
+  { pt: 1500, icon: '🦮', name: '특별 산책 나들이' },
+  { pt: 2700, icon: '☕', name: '애견카페 데려가기' },
+  { pt: 4200, icon: '🧸', name: '미용 + 새 장난감' }
 ];
+// 현재 시즌(봄 3~5 / 여름 6~8 / 가을 9~11 / 겨울 12~2)의 (연,월) 목록과 이름
+function currentSeasonInfo(){
+  const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
+  let sy = y, sm, name;
+  if (m >= 2 && m <= 4){ sm = 2; name = '봄'; }
+  else if (m >= 5 && m <= 7){ sm = 5; name = '여름'; }
+  else if (m >= 8 && m <= 10){ sm = 8; name = '가을'; }
+  else { sm = 11; name = '겨울'; if (m < 2) sy = y - 1; } // 1~2월은 작년 12월부터의 겨울
+  const months = [];
+  for (let i = 0; i < 3; i++){ let mm = sm + i, yy = sy; if (mm > 11){ mm -= 12; yy += 1; } months.push([yy, mm]); }
+  return { months, name, key: `${sy}-${name}` };
+}
+async function computeSeasonScores(){
+  const { months } = currentSeasonInfo();
+  const scores = {}; MEMBERS.forEach(m => scores[m.id] = 0);
+  for (const [yy, mm] of months){
+    const s = await computeMonthScores(yy, mm);
+    MEMBERS.forEach(m => scores[m.id] += (s[m.id] || 0));
+  }
+  return scores;
+}
 function dubiMascotFor(ratio){
-  if (ratio >= 1) return 'cheer';
-  if (ratio >= 0.75) return 'excited';
-  if (ratio >= 0.5) return 'happy';
-  if (ratio >= 0.25) return 'curious';
-  return 'sleepy';
+  if (ratio >= 1) return 5;      // 최고 행복
+  if (ratio >= 0.75) return 4;   // 신남
+  if (ratio >= 0.5) return 3;    // 미소
+  if (ratio >= 0.25) return 2;   // 보통
+  return 1;                      // 시무룩
 }
 window.openDubiGoal = function(){
   showScreen('leaderboard');
   renderDubiGoal();
 };
 async function renderDubiGoal(){
-  const now = new Date();
-  document.getElementById('dgMonth').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 · 가족이 함께 모은 점수`;
+  const season = currentSeasonInfo();
+  document.getElementById('dgMonth').textContent = `${season.key} 시즌 (3개월) · 가족이 함께 모은 점수`;
   document.getElementById('dgTiers').innerHTML = '<div style="text-align:center;color:#aaa;padding:14px;font-size:13px">불러오는 중...</div>';
 
-  const scores = await computeMonthScores(now.getFullYear(), now.getMonth());
+  const scores = await computeSeasonScores();
   const total = MEMBERS.reduce((s, m) => s + (scores[m.id] || 0), 0);
   const goals = DUBI_GOALS;
   const maxGoal = goals[goals.length - 1].pt;
 
   document.getElementById('dgTotal').textContent = total;
-  document.getElementById('dgMascot').src = `./dubi-card-${dubiMascotFor(total / maxGoal)}.png`;
+  document.getElementById('dgMascot').src = `./dubi-mood-${dubiMascotFor(total / maxGoal)}.png`;
 
   // 진행바: 현재 구간(직전 달성 보상 ~ 다음 보상) 채움
   const achieved = goals.filter(g => total >= g.pt).length;
@@ -1856,10 +1879,11 @@ async function renderDubiGoal(){
   c.innerHTML = '<div class="dg-contrib-title">우리가 함께 모았어요 🐾</div><div class="dg-contrib-row">' +
     MEMBERS.map(m => `<div class="dg-c"><img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'"><span>${m.id}</span><b>${scores[m.id] || 0}</b></div>`).join('') + '</div>';
 
-  // 새 보상 달성 축하 (한 번만)
-  const seen = loadLocal('dubiGoalSeen', 0);
+  // 새 보상 달성 축하 (시즌별로 한 번만)
+  const seenKey = 'dubiGoalSeen_' + season.key;
+  const seen = loadLocal(seenKey, 0);
   if (achieved > seen){
-    saveLocal('dubiGoalSeen', achieved);
+    saveLocal(seenKey, achieved);
     const last = goals[achieved - 1];
     setTimeout(() => showToast(`🎉 뚜비 보상 달성: ${last.icon} ${last.name}!`), 500);
   }
@@ -2038,6 +2062,16 @@ window.dismissInstall = function(){
 
 // ========== INIT ==========
 async function init() {
+  // 스플래시 가족 이미지: 계절에 맞게 자동 선택
+  (function(){
+    const mo = new Date().getMonth() + 1;
+    let img = 'family-portrait';
+    if (mo === 12) img = 'family-xmas';
+    else if (mo === 7 || mo === 8) img = 'family-beach';
+    else if (mo === 9 || mo === 10) img = 'family-chuseok';
+    const el = document.getElementById('splashFam');
+    if (el) el.src = `./${img}.png`;
+  })();
   // 포그라운드 푸시 수신 핸들러
   initForegroundPush();
   // 홈 화면 설치 안내 (아이폰 등 beforeinstallprompt 미지원 대비)

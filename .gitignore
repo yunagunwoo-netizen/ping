@@ -18,6 +18,9 @@ firebase-debug.log
 *.log
 FCM_SETUP.md
 
+# 임시 미리보기 이미지 (배포 제외)
+_*.png
+
 # 시스템 파일
 .DS_Store
 Thumbs.db
