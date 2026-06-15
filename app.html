@@ -1833,7 +1833,7 @@ const DUBI_GOALS = [
   { pt: 600,  icon: '🦴', name: '특별 간식 사주기',  detail: '육류 알레르기·눈물 걱정 없는 단일단백질/가수분해 간식 (연어·황태 등) — 예: 데이스포 헬시트릿 LID, 세이오앙 LID' },
   { pt: 1500, icon: '🦮', name: '특별 산책 나들이',  assign: true, detail: '달성 시점까지 점수가 가장 낮은 사람이 뚜비를 데리고 광교호수공원으로 특별 산책! 🐾' },
   { pt: 2700, icon: '☕', name: '애견카페 가기',     detail: '고기동 카페 그라운드 · 별똥구리 · 카페 댕스 (차로 가까움)' },
-  { pt: 4200, icon: '🧸', name: '미용 + 새 장난감',  detail: '단골 미용(약 6만원) + 콩 KONG 워블러 / 노즈워크 매트 장난감' }
+  { pt: 4200, icon: '🧸', name: '뚜비 미용 (최종 목표)', assignTopBottom: true, detail: '가족이 함께 모은 최종 목표! 달성하면 뚜비 미용 → 점수 리셋, 새 미용 주기 시작. 👑 최고 점수자는 미용 스타일·새 장난감을 고르는 「오늘의 뚜비 대장」. 🚿 최저 점수자는 미용실 왕복 라이드 + 미용 후 1주 빗질·눈물자국 케어 담당.' }
 ];
 // 현재 시즌(봄 3~5 / 여름 6~8 / 가을 9~11 / 겨울 12~2)의 (연,월) 목록과 이름
 function currentSeasonInfo(){
@@ -1847,14 +1847,53 @@ function currentSeasonInfo(){
   for (let i = 0; i < 3; i++){ let mm = sm + i, yy = sy; if (mm > 11){ mm -= 12; yy += 1; } months.push([yy, mm]); }
   return { months, name, key: `${sy}-${name}` };
 }
+// ===== 미용 주기(목표 달성형) =====
+// 점수는 cycle.startDate 부터 누적. 최종 목표(4200) 달성 → '미용 완료'로 새 주기 시작 → 0부터.
+let _cycle = null;
+function _defaultCycle(){
+  const si = currentSeasonInfo();
+  return { startDate: `${si.months[0][0]}-${String(si.months[0][1]+1).padStart(2,'0')}-01`, n: 1 };
+}
+async function getCycle(){
+  if (_cycle) return _cycle;
+  const dft = _defaultCycle();
+  if (firebaseReady){
+    try {
+      const ref = doc(db, 'cycle', 'current');
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data().startDate){ _cycle = { startDate: snap.data().startDate, n: snap.data().n || 1 }; }
+      else { _cycle = dft; await setDoc(ref, { startDate: dft.startDate, n: dft.n, familyId: FAMILY_ID }); }
+      saveLocal('cycle', JSON.stringify(_cycle));
+    } catch(e){ try { _cycle = JSON.parse(loadLocal('cycle', 'null')) || dft; } catch(_){ _cycle = dft; } }
+  } else {
+    try { _cycle = JSON.parse(loadLocal('cycle', 'null')) || dft; } catch(_){ _cycle = dft; }
+  }
+  return _cycle;
+}
+async function startNewCycle(){
+  const cur = await getCycle();
+  const next = { startDate: getToday(), n: (cur.n || 1) + 1 };
+  if (firebaseReady){
+    try { await setDoc(doc(db, 'cycle', 'current'), { startDate: next.startDate, n: next.n, familyId: FAMILY_ID, updatedAt: new Date().toISOString() }); } catch(e){}
+  }
+  _cycle = next; saveLocal('cycle', JSON.stringify(next));
+}
+function monthsBetween(a, b){
+  let y = parseInt(a.slice(0,4)), m = parseInt(a.slice(5,7)) - 1;
+  const by = parseInt(b.slice(0,4)), bm = parseInt(b.slice(5,7)) - 1;
+  const out = [];
+  while (y < by || (y === by && m <= bm)){ out.push([y, m]); m++; if (m > 11){ m = 0; y++; } }
+  return out;
+}
 async function computeSeasonScores(){
-  const { months } = currentSeasonInfo();
+  const cyc = await getCycle();
+  const start = cyc.startDate;
   const scores = {}; MEMBERS.forEach(m => scores[m.id] = 0);
-  // 시즌 전체 핑을 한 곳에 모으기 (주간 보너스를 정확히 계산하기 위해)
+  // 주기 시작일 이후 핑을 한 곳에 모으기 (주간/연속 보너스 정확 계산)
   const all = {}; // date -> { member: ping }
-  for (const [yy, mm] of months){
+  for (const [yy, mm] of monthsBetween(start, getToday())){
     const data = await loadMonth(yy, mm);
-    for (const date in data){ all[date] = Object.assign(all[date] || {}, data[date]); }
+    for (const date in data){ if (date >= start) all[date] = Object.assign(all[date] || {}, data[date]); }
   }
   // 기본 점수 + 전원 핑 보너스
   for (const date in all){
@@ -1916,8 +1955,9 @@ window.openDubiGoal = function(){
   renderDubiGoal();
 };
 async function renderDubiGoal(){
-  const season = currentSeasonInfo();
-  document.getElementById('dgMonth').textContent = `${season.key} 시즌 (3개월) · 가족이 함께 모은 점수`;
+  const cyc = await getCycle();
+  const season = { key: 'cycle' + cyc.n }; // 주기별 키 (담당자·축하 스냅샷용)
+  document.getElementById('dgMonth').textContent = `미용 주기 #${cyc.n} · ${cyc.startDate}부터 · 가족이 함께 모은 점수`;
   document.getElementById('dgTiers').innerHTML = '<div style="text-align:center;color:#aaa;padding:14px;font-size:13px">불러오는 중...</div>';
 
   const scores = await computeSeasonScores();
@@ -1976,6 +2016,34 @@ async function renderDubiGoal(){
     }
   }
 
+  // 최종 미용 보상: 최고/최저 점수자 역할을 달성 시점에 1회 스냅샷(가족 공통, 고정)
+  function highestNames(){
+    const max = Math.max(...MEMBERS.map(m => scores[m.id] || 0));
+    return MEMBERS.filter(m => (scores[m.id] || 0) === max).map(m => m.id).join(' · ');
+  }
+  const groomGoal = goals.find(g => g.assignTopBottom);
+  let groomTop = null, groomBottom = null;
+  if (groomGoal && total >= groomGoal.pt){
+    const gkey = 'groomAssignee_' + season.key;
+    if (firebaseReady){
+      try {
+        const gref = doc(db, 'groomAssignee', season.key);
+        await runTransaction(db, async (tx) => {
+          const s = await tx.get(gref);
+          if (s.exists() && s.data().top){ groomTop = s.data().top; groomBottom = s.data().bottom; }
+          else { groomTop = highestNames(); groomBottom = lowestNames(); tx.set(gref, { familyId: FAMILY_ID, season: season.key, top: groomTop, bottom: groomBottom, total, createdAt: new Date().toISOString() }); }
+        });
+        saveLocal(gkey, JSON.stringify({ top: groomTop, bottom: groomBottom }));
+      } catch(e){
+        try { const o = JSON.parse(loadLocal(gkey, 'null')); if (o){ groomTop = o.top; groomBottom = o.bottom; } } catch(_){}
+        if (!groomTop){ groomTop = highestNames(); groomBottom = lowestNames(); }
+      }
+    } else {
+      try { const o = JSON.parse(loadLocal(gkey, 'null')); if (o){ groomTop = o.top; groomBottom = o.bottom; } } catch(_){}
+      if (!groomTop){ groomTop = highestNames(); groomBottom = lowestNames(); saveLocal(gkey, JSON.stringify({ top: groomTop, bottom: groomBottom })); }
+    }
+  }
+
   // 보상 단계
   const tl = document.getElementById('dgTiers'); tl.innerHTML = '';
   for (const g of goals){
@@ -1989,6 +2057,12 @@ async function renderDubiGoal(){
       } else {
         assignHtml = `<div style="margin-top:6px;font-size:11.5px;color:var(--gray400)">🚶 지금 최저 점수: <b>${lowestNames()}</b> · 달성하면 산책 담당이 돼요</div>`;
       }
+    } else if (g.assignTopBottom){
+      if (groomTop){
+        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5">👑 뚜비 대장: ${groomTop}<br>🚿 미용 케어 담당: ${groomBottom}</div>`;
+      } else {
+        assignHtml = `<div style="margin-top:6px;font-size:11.5px;color:var(--gray400);line-height:1.5">👑 지금 1등: <b>${highestNames()}</b> · 🚿 최저: <b>${lowestNames()}</b><br>달성하면 역할이 확정돼요</div>`;
+      }
     }
     it.innerHTML = `<span class="dg-tier-ic">${g.icon}</span><div class="dg-tier-mid"><span class="dg-tier-name">${g.name}</span>${g.detail ? `<span class="dg-tier-detail">${g.detail}</span>` : ''}${assignHtml}</div><span class="dg-tier-pt">${done ? '달성 ✓' : g.pt + '점'}</span>`;
     tl.appendChild(it);
@@ -1999,7 +2073,12 @@ async function renderDubiGoal(){
   c.innerHTML = '<div class="dg-contrib-title">우리가 함께 모았어요 🐾</div><div class="dg-contrib-row">' +
     MEMBERS.map(m => `<div class="dg-c"><img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'"><span>${m.id}</span><b>${scores[m.id] || 0}</b></div>`).join('') + '</div>';
 
-  // 새 보상 달성 축하 (시즌별로 한 번만)
+  // 최종 목표 달성 → '미용 완료 · 새 주기 시작' 버튼 (수동 리셋)
+  if (total >= maxGoal){
+    c.innerHTML += `<button onclick="confirmGroomReset()" style="margin-top:16px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:14px;border-radius:14px;border:none">✂️ 미용 완료 · 새 미용 주기 시작</button><div style="margin-top:6px;font-size:11.5px;color:var(--gray400);text-align:center">누르면 점수가 0으로 초기화되고 다음 주기가 시작돼요</div>`;
+  }
+
+  // 새 보상 달성 축하 (주기별로 한 번만)
   const seenKey = 'dubiGoalSeen_' + season.key;
   const seen = loadLocal(seenKey, 0);
   if (achieved > seen){
@@ -2008,6 +2087,17 @@ async function renderDubiGoal(){
     setTimeout(() => showToast(`🎉 뚜비 보상 달성: ${last.icon} ${last.name}!`), 500);
   }
 }
+// 미용 완료 → 새 미용 주기 시작 (점수 0부터)
+window.confirmGroomReset = async function(){
+  if (!confirm('뚜비 미용 완료! 🎉\n점수를 0으로 리셋하고 새 미용 주기를 시작할까요?')) return;
+  await startNewCycle();
+  await renderDubiGoal();
+  try {
+    const el = document.getElementById('myMonthScore');
+    if (el && currentMember){ const s = await computeSeasonScores(); el.textContent = s[currentMember] || 0; }
+  } catch(e){}
+  showToast('새 미용 주기 시작! 0점부터 다시 모아요 🐾');
+};
 
 // ========== 가족 앨범 ==========
 let albumCache = null;
