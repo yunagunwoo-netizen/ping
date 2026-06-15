@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>핑 v2 — 가입·온보딩 (실제 저장)</title>
+<style>
+  :root{--orange:#FF6B35;--orange-l:#FF9A5A;--cream:#FFF8F0;--ink:#3a3430;--gray:#8b8680;--line:#f0e6dc;--g100:#f3efe9}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+  body{background:#e9e4dd;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:24px 12px;color:var(--ink)}
+  .phone{width:100%;max-width:420px;background:var(--cream);border-radius:28px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden;position:relative;min-height:780px;display:flex;flex-direction:column}
+  .authbar{font-size:11px;color:var(--gray);text-align:center;padding:8px 10px 0}
+  .authbar b{color:var(--orange)}
+  .topbar{display:flex;align-items:center;gap:10px;padding:8px 18px 6px}
+  .back{border:none;background:none;font-size:22px;color:var(--ink);cursor:pointer;width:28px;visibility:hidden}
+  .dots{flex:1;display:flex;gap:6px;justify-content:center}
+  .dot{width:8px;height:8px;border-radius:50%;background:#e4d8cc;transition:.2s}
+  .dot.on{background:var(--orange);width:22px;border-radius:5px}
+  .skip{font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;width:36px}
+  .screen{flex:1;padding:6px 22px 0;display:none;flex-direction:column;animation:fade .25s}
+  .screen.on{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1{font-size:23px;font-weight:900;letter-spacing:-.3px;margin-top:6px}
+  .sub{color:var(--gray);font-size:14px;margin:8px 0 18px;line-height:1.5}
+  label.f{display:block;font-size:13px;font-weight:800;margin:14px 0 6px;color:#5b554f}
+  input[type=text],input[type=date],input[type=number],select,textarea{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:13px 14px;font-size:15px;color:var(--ink);outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--orange)}
+  textarea{resize:none;height:64px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--gray);cursor:pointer;transition:.12s}
+  .chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
+  .chip:active{transform:scale(.95)}
+  .row2{display:flex;gap:10px}.row2>div{flex:1}
+  .toggle{display:flex;gap:8px}.toggle .chip{flex:1;text-align:center}
+  .spacer{flex:1}
+  .cta{margin:16px 0 6px;background:var(--orange);color:#fff;border:none;font-size:16px;font-weight:800;padding:16px;border-radius:16px;cursor:pointer;width:100%;box-shadow:0 8px 20px rgba(255,107,53,.3)}
+  .cta:active{transform:scale(.98)}
+  .cta:disabled{opacity:.5}
+  .cta.ghost{background:#fff;color:var(--orange);border:2px solid var(--orange);box-shadow:none}
+  .cta.sm{margin:8px 0 0}
+  .cta.google{background:#fff;color:#444;border:1.5px solid var(--line);box-shadow:none;font-weight:700}
+  .center{text-align:center}
+  .logo{width:96px;display:block;margin:18px auto 4px}
+  .card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 4px 14px rgba(0,0,0,.05);margin-bottom:10px}
+  .reward{display:flex;align-items:center;gap:12px}
+  .reward .ic{font-size:24px;width:34px;text-align:center}
+  .reward .mid{flex:1}.reward .mid b{font-size:14px;display:block}.reward .mid small{font-size:11px;color:var(--gray)}
+  .reward input[type=number]{width:84px;padding:8px;text-align:right;font-size:13px}
+  .note{background:#FFF3EB;border:1px solid #ffd9c2;border-radius:12px;padding:11px 13px;font-size:12.5px;color:#9a4a23;line-height:1.5;margin-top:6px}
+  .scorerow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .scorerow:last-child{border:none}
+  .scorerow .lbl{flex:1;font-size:13.5px;font-weight:700}
+  .scorerow .lbl small{display:block;color:var(--gray);font-weight:500;font-size:11px;margin-top:2px}
+  .scorerow input{width:64px;padding:8px;text-align:center;font-size:14px}
+  .mascot{width:140px;height:140px;border-radius:50%;object-fit:cover;display:block;margin:6px auto 0;box-shadow:0 8px 22px rgba(0,0,0,.12);background:#fff}
+  .upload{border:2px dashed #e0cdbd;border-radius:16px;padding:24px;text-align:center;color:var(--gray);font-size:14px;background:#fff}
+  .uploaded{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  .uploaded span{width:50px;height:50px;border-radius:12px;background:#f1e3d6;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .miniavatars{display:flex;gap:8px;justify-content:center;margin:8px 0}
+  .miniavatars img{width:46px;height:46px;border-radius:50%;object-fit:cover}
+  .spin{width:40px;height:40px;border:4px solid #f0ddcd;border-top-color:var(--orange);border-radius:50%;margin:16px auto;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .hidden{display:none}
+  .sum{font-size:13.5px;line-height:1.7}.sum b{color:var(--orange)}
+  .codebox{font-size:28px;font-weight:900;letter-spacing:4px;color:var(--orange);text-align:center;background:#fff;border:2px dashed var(--orange);border-radius:14px;padding:14px;margin:6px 0}
+  .err{color:#c0392b;font-size:13px;text-align:center;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="authbar" id="authbar">로그인 준비 중…</div>
+  <div class="topbar">
+    <button class="back" id="backBtn">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="skip" id="skipBtn">건너뛰기</button>
+  </div>
+
+  <!-- 0 시작 -->
+  <div class="screen on" data-step="0">
+    <img class="logo" src="./logo-ping.png" alt="핑" onerror="this.style.display='none'">
+    <h1 class="center">우리 가족 핑 시작하기</h1>
+    <p class="sub center">반려동물을 매개로 가족이 매일 모이고,<br>함께 점수를 모아 우리 아이에게 보상을 줘요.</p>
+    <div class="spacer"></div>
+    <button class="cta" id="btnNew">새 가족 만들기</button>
+    <button class="cta ghost sm" id="btnJoin">초대코드로 합류하기</button>
+    <button class="cta google sm" id="btnGoogle">구글로 로그인 (선택)</button>
+    <div class="center" style="margin:10px 0 6px;font-size:11.5px;color:var(--gray)">v2 — 실제 Firebase에 저장돼요(테스트 데이터)</div>
+  </div>
+
+  <!-- 1 가족 -->
+  <div class="screen" data-step="1">
+    <h1>가족 방 만들기</h1>
+    <p class="sub">가족이 함께 들어올 방이에요. 완료하면 초대코드가 나와요.</p>
+    <label class="f">가족 방 이름</label>
+    <input type="text" id="famName" placeholder="예: 뚜비네 가족" value="뚜비네 가족">
+    <label class="f">내 이름</label>
+    <input type="text" id="myName" placeholder="예: 아빠" value="아빠">
+    <label class="f">내 역할</label>
+    <div class="chips" id="roleChips"></div>
+    <div class="spacer"></div>
+    <button class="cta" data-next>다음</button>
+  </div>
+
+  <!-- 2 펫 -->
+  <div class="screen" data-step="2">
+    <h1>반려동물 프로필</h1>
+    <p class="sub">우리 아이를 소개해 주세요. 건강 정보는 맞춤 추천에 쓰여요.</p>
+    <label class="f">이름</label>
+    <input type="text" id="petName" placeholder="예: 뚜비" value="뚜비">
+    <div class="row2">
+      <div><label class="f">종류</label><select id="petKind"><option>강아지</option><option>고양이</option></select></div>
+      <div><label class="f">품종</label><input type="text" id="petBreed" value="말티즈"></div>
+    </div>
+    <div class="row2">
+      <div><label class="f">생일</label><input type="date" id="petBirth"></div>
+      <div><label class="f">체중(kg)</label><input type="number" id="petKg" step="0.1" value="3.2"></div>
+    </div>
+    <label class="f">성별 / 중성화</label>
+    <div class="row2">
+      <div class="toggle" data-group="sex"><div class="chip on">여아</div><div class="chip">남아</div></div>
+      <div class="toggle" data-group="neuter"><div class="chip on">중성화 O</div><div class="chip">X</div></div>
+    </div>
+    <label class="f">건강 특이사항 (복수 선택)</label>
+    <div class="chips" id="healthChips"></div>
+    <label class="f">메모</label>
+    <textarea id="petMemo">육류 알레르기, 눈물 많음</textarea>
+    <div class="spacer"></div>
+    <button class="cta" data-next>다음</button>
+  </div>
+
+  <!-- 3 마스코트 -->
+  <div class="screen" data-step="3">
+    <h1>AI 마스코트 만들기</h1>
+    <p class="sub">사진을 올리면 우리 가족 캐릭터를 만들어요. (데모 — 샘플 마스코트로 대체)</p>
+    <div id="mascotStart">
+      <div class="upload" id="uploadBox">📷 사진 올리기 (탭)<br><small style="font-size:12px">가족 + 반려동물 사진 2~3장</small></div>
+      <div class="uploaded" id="uploaded"></div>
+      <button class="cta sm" id="genBtn" disabled>✨ 마스코트 생성하기</button>
+    </div>
+    <div id="mascotLoading" class="hidden center"><div class="spin"></div><p style="color:var(--gray);font-size:14px">마스코트를 그리는 중…</p></div>
+    <div id="mascotDone" class="hidden center">
+      <img class="mascot" src="./dubi-card-happy.png" onerror="this.style.display='none'">
+      <div class="miniavatars" id="miniAvatars"></div>
+      <p class="sub center">마음에 들어요? 나중에 다시 만들 수도 있어요.</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="cta hidden" id="mascotNext" data-next>이 마스코트로 시작</button>
+  </div>
+
+  <!-- 4 보상 -->
+  <div class="screen" data-step="4">
+    <h1>보상 정하기</h1>
+    <p class="sub">가족 점수가 모이면 우리 아이에게 줄 보상이에요.</p>
+    <div id="rewardList"></div>
+    <button class="cta ghost sm" id="addRewardBtn">+ 보상 추가</button>
+    <div class="note">🐾 <b>뚜비</b>는 <b>육류 알레르기·눈물</b>이 있어요 → 간식은 <b>단일단백질·가수분해(연어 등)</b>를 추천해요.</div>
+    <div class="spacer"></div>
+    <button class="cta" data-next>다음</button>
+  </div>
+
+  <!-- 5 점수 규칙 -->
+  <div class="screen" data-step="5">
+    <h1>점수 규칙 정하기</h1>
+    <p class="sub">어떤 행동에 점수를 줄지 정해요. 기본값을 써도 좋아요.</p>
+    <div class="card">
+      <div class="scorerow"><div class="lbl">매일 핑 올리기<small>사진 한 장</small></div><input type="number" id="scPing" value="10"></div>
+      <div class="scorerow"><div class="lbl">하루 전원 핑<small>모두 참여한 날 전원</small></div><input type="number" id="scAll" value="5"></div>
+      <div class="scorerow"><div class="lbl">🐶 반려동물과 함께<small>주 1회 · 개인</small></div><input type="number" id="scPet" value="30"></div>
+      <div class="scorerow"><div class="lbl">👨‍👩‍👧‍👦 온 가족 모임<small>주 1회 · 가족 전체</small></div><input type="number" id="scGather" value="50"></div>
+    </div>
+    <label class="f">시즌 길이</label>
+    <div class="chips" id="seasonChips"></div>
+    <div class="spacer"></div>
+    <button class="cta" data-next>다음</button>
+  </div>
+
+  <!-- 6 완료 -->
+  <div class="screen" data-step="6">
+    <h1 class="center">마지막 확인 🎉</h1>
+    <p class="sub center">아래 설정으로 가족을 만들게요.</p>
+    <div class="card"><div class="sum" id="summary"></div></div>
+    <div id="saveErr" class="err"></div>
+    <div class="spacer"></div>
+    <button class="cta" id="finishBtn">가족 만들고 시작하기</button>
+  </div>
+
+  <!-- 7 결과 -->
+  <div class="screen" data-step="7">
+    <h1 class="center">완료! 🐾</h1>
+    <p class="sub center">가족이 생성됐어요. 가족에게 이 코드를 공유하세요.</p>
+    <div class="codebox" id="codeOut">------</div>
+    <div class="card"><div class="sum" id="resultSum"></div></div>
+    <div class="spacer"></div>
+    <button class="cta" id="restartBtn">처음부터 다시</button>
+  </div>
+</div>
+
+<script type="module">
+import * as Ping from './lib-ping-v2.js';
+
+const TOTAL = 8;
+let step = 0;
+const state = { role:'아빠', health:['육류 알레르기','눈물 많음'], season:'3개월(시즌)', mascot:false, joining:false };
+
+// ---- auth bootstrap ----
+const authbar = document.getElementById('authbar');
+(async () => {
+  try {
+    const u = await Ping.ensureAuth();
+    authbar.innerHTML = u.isAnonymous ? '익명으로 로그인됨 · <b>구글 로그인</b>하면 계정이 유지돼요' : `로그인됨: <b>${u.displayName||u.email||'사용자'}</b>`;
+  } catch(e){ authbar.innerHTML = '⚠️ 로그인 실패 — 배포 도메인/localhost에서 열어주세요'; }
+})();
+
+// ---- dots / nav ----
+const dotsEl = document.getElementById('dots');
+for(let i=0;i<TOTAL;i++){const d=document.createElement('div');d.className='dot'+(i===0?' on':'');dotsEl.appendChild(d);}
+function paint(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', +s.dataset.step===step));
+  [...dotsEl.children].forEach((d,i)=>d.classList.toggle('on',i===step));
+  document.getElementById('backBtn').style.visibility = (step===0||step===7)?'hidden':'visible';
+  document.getElementById('skipBtn').style.visibility = (step>=1&&step<=5)?'visible':'hidden';
+  if(step===6) buildSummary();
+  document.querySelector('.phone').scrollTop=0;
+}
+function next(){ if(step<6){step++;paint();} else if(step===6){/* finish handles */} }
+function prev(){ if(step>0){step--;paint();} }
+document.getElementById('backBtn').onclick=prev;
+document.getElementById('skipBtn').onclick=()=>{ if(step<6){step++;paint();} };
+document.querySelectorAll('[data-next]').forEach(b=>b.onclick=next);
+
+// start buttons
+document.getElementById('btnNew').onclick=()=>{ state.joining=false; step=1; paint(); };
+document.getElementById('btnJoin').onclick=async ()=>{
+  const code = prompt('초대코드를 입력하세요'); if(!code) return;
+  const name = prompt('내 이름은?')||'';
+  try { authbar.textContent='합류 중…'; const r = await Ping.joinFamily(code,{myName:name});
+    document.getElementById('codeOut').textContent=code.toUpperCase();
+    document.getElementById('resultSum').innerHTML=`<div><b>가족에 합류했어요</b></div><div>familyId: ${r.familyId}</div>`;
+    step=7; paint();
+  } catch(e){ alert(e.message||'합류 실패'); }
+};
+document.getElementById('btnGoogle').onclick=async ()=>{
+  try { const u = await Ping.signInWithGoogle(); authbar.innerHTML=`로그인됨: <b>${u.displayName||u.email}</b>`; }
+  catch(e){ alert('구글 로그인 실패: '+(e.message||e.code)); }
+};
+
+// ---- chips ----
+function chipSet(id, items, multi, store, preset=[]){
+  const el=document.getElementById(id); el.innerHTML='';
+  items.forEach(t=>{
+    const c=document.createElement('div'); c.className='chip'+(preset.includes(t)?' on':''); c.textContent=t;
+    c.onclick=()=>{
+      if(multi){ c.classList.toggle('on'); state[store]=[...el.querySelectorAll('.on')].map(x=>x.textContent); }
+      else { [...el.children].forEach(x=>x.classList.remove('on')); c.classList.add('on'); state[store]=t; }
+    };
+    el.appendChild(c);
+  });
+}
+chipSet('roleChips',['아빠','엄마','딸','아들','기타'],false,'role',['아빠']);
+chipSet('healthChips',['육류 알레르기','닭고기','소고기','유제품','눈물 많음','피부 민감','관절'],true,'health',['육류 알레르기','눈물 많음']);
+chipSet('seasonChips',['1개월(매달)','3개월(시즌)','직접 설정'],false,'season',['3개월(시즌)']);
+
+document.querySelectorAll('.toggle').forEach(g=>{
+  g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); });
+});
+function toggleVal(group){ const g=document.querySelector(`.toggle[data-group="${group}"]`); return g.querySelector('.chip.on').textContent; }
+
+// ---- mascot ----
+let upCount=0;
+document.getElementById('uploadBox').onclick=()=>{
+  if(upCount>=3) return; upCount++;
+  const u=document.getElementById('uploaded'); const s=document.createElement('span'); s.textContent= upCount===1?'👨‍👩‍👧‍👦':'🐶'; u.appendChild(s);
+  if(upCount>=2){ const b=document.getElementById('genBtn'); b.disabled=false; }
+};
+document.getElementById('genBtn').onclick=()=>{
+  document.getElementById('mascotStart').classList.add('hidden');
+  document.getElementById('mascotLoading').classList.remove('hidden');
+  setTimeout(()=>{
+    document.getElementById('mascotLoading').classList.add('hidden');
+    document.getElementById('mascotDone').classList.remove('hidden');
+    document.getElementById('mascotNext').classList.remove('hidden');
+    const m=document.getElementById('miniAvatars'); m.innerHTML='';
+    ['avatar-dad','avatar-mom','avatar-yuna','avatar-gunwoo'].forEach(a=>{const i=document.createElement('img');i.src='./'+a+'.png';i.onerror=()=>i.style.display='none';m.appendChild(i);});
+    state.mascot=true;
+  },1500);
+};
+
+// ---- rewards ----
+let rewards=[
+  {icon:'🦴',name:'특별 간식',pt:600,detail:'단일단백질/가수분해(연어 등) — 알레르기·눈물 안심'},
+  {icon:'🦮',name:'특별 산책',pt:1500,detail:'광교호수공원·동천자연공원'},
+  {icon:'☕',name:'애견카페',pt:2700,detail:'고기동 카페 그라운드 등'},
+  {icon:'🧸',name:'미용 + 장난감',pt:4200,detail:'단골 미용 + 콩 KONG 워블러/노즈워크'},
+];
+function renderRewards(){
+  const el=document.getElementById('rewardList'); el.innerHTML='';
+  rewards.forEach((r,i)=>{
+    const c=document.createElement('div'); c.className='card reward';
+    c.innerHTML=`<span class="ic">${r.icon}</span><div class="mid"><b>${r.name}</b><small>달성 목표 점수</small></div>`;
+    const inp=document.createElement('input'); inp.type='number'; inp.value=r.pt; inp.step=100; inp.onchange=()=>rewards[i].pt=+inp.value;
+    c.appendChild(inp); el.appendChild(c);
+  });
+}
+document.getElementById('addRewardBtn').onclick=()=>{ const n=prompt('새 보상 이름'); if(!n)return; rewards.push({icon:'🎁',name:n,pt:(rewards.at(-1)?.pt||0)+800,detail:''}); renderRewards(); };
+renderRewards();
+
+// ---- summary ----
+function gatherPet(){
+  return { name:val('petName'), kind:val('petKind'), breed:val('petBreed'), birth:val('petBirth'),
+    weightKg:parseFloat(val('petKg'))||null, sex:toggleVal('sex'), neutered:toggleVal('neuter')==='중성화 O',
+    health:state.health, memo:val('petMemo') };
+}
+function gatherRules(){ return { ping:+val('scPing'), allMembers:+val('scAll'), withPet:+val('scPet'), gathering:+val('scGather'), withPetWeekly:true, gatheringWeekly:true }; }
+function val(id){ return document.getElementById(id).value.trim?document.getElementById(id).value.trim():document.getElementById(id).value; }
+
+function buildSummary(){
+  const p=gatherPet(); const r=gatherRules();
+  document.getElementById('summary').innerHTML=
+    `<div><b>가족</b> : ${val('famName')||'우리 가족'} (나: ${val('myName')||'나'}/${state.role})</div>`+
+    `<div><b>반려동물</b> : ${p.name} · ${p.breed} · ${p.weightKg||'?'}kg</div>`+
+    `<div><b>건강</b> : ${p.health.join(', ')||'없음'}</div>`+
+    `<div><b>시즌</b> : ${state.season}</div>`+
+    `<div style="margin-top:4px"><b>보상</b> : ${rewards.map(x=>x.icon+' '+x.name+'('+x.pt+')').join(' · ')}</div>`+
+    `<div style="margin-top:4px"><b>점수</b> : 핑${r.ping}·전원${r.allMembers}·펫${r.withPet}(주1)·모임${r.gathering}(주1)</div>`;
+}
+
+// ---- finish: 실제 저장 ----
+document.getElementById('finishBtn').onclick=async ()=>{
+  const btn=document.getElementById('finishBtn'); const err=document.getElementById('saveErr');
+  err.textContent=''; btn.disabled=true; btn.textContent='저장 중…';
+  try{
+    const { familyId, inviteCode } = await Ping.createFamily({
+      name: val('famName')||'우리 가족', myName: val('myName')||'나', role: state.role,
+      scoreRules: gatherRules(), season:{ length: state.season }
+    });
+    await Ping.addPet(familyId, gatherPet());
+    await Ping.setRewards(familyId, rewards);
+    document.getElementById('codeOut').textContent = inviteCode;
+    document.getElementById('resultSum').innerHTML =
+      `<div><b>familyId</b> : ${familyId}</div>`+
+      `<div><b>초대코드</b> : ${inviteCode}</div>`+
+      `<div style="margin-top:4px;color:var(--gray)">Firestore의 families/${familyId} 아래에 저장됐어요.</div>`;
+    step=7; paint();
+  }catch(e){
+    err.textContent='저장 실패: '+(e.message||e.code)+' (배포 도메인/localhost에서 열어주세요)';
+    btn.disabled=false; btn.textContent='가족 만들고 시작하기';
+  }
+};
+document.getElementById('restartBtn').onclick=()=>{ location.reload(); };
+
+paint();
+</script>
+</body>
+</html>

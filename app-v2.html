@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>핑 v2</title>
+<style>
+  :root{--orange:#FF6B35;--orange-l:#FF9A5A;--cream:#FFF8F0;--ink:#3a3430;--gray:#8b8680;--line:#f0e6dc;--g100:#f3efe9;--shadow:0 4px 14px rgba(0,0,0,.06)}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+  body{background:var(--cream);color:var(--ink);min-height:100vh}
+  .wrap{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
+  .screen{display:none;flex-direction:column;flex:1;padding:0 18px}
+  .screen.on{display:flex}
+  /* splash */
+  #splash{position:fixed;inset:0;background:linear-gradient(160deg,var(--orange),var(--orange-l));display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;color:#fff;transition:opacity .4s}
+  #splash img{width:120px;transform-origin:50% 18%;animation:flutter 3.4s ease-in-out infinite;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
+  @keyframes flutter{0%,100%{transform:rotate(-1.6deg) skewX(0)}20%{transform:rotate(-.4deg) skewX(3.5deg)}50%{transform:rotate(1.8deg) skewX(0)}80%{transform:rotate(-.4deg) skewX(-3.5deg)}}
+  #splash p{margin-top:14px;font-weight:700;opacity:.95}
+  /* header */
+  .top{display:flex;align-items:center;gap:10px;padding:16px 2px 10px}
+  .top .fam{flex:1}
+  .top .fam h1{font-size:20px;font-weight:900}
+  .top .fam small{color:var(--gray);font-size:12px}
+  .top .pet{width:46px;height:46px;border-radius:50%;object-fit:cover;box-shadow:var(--shadow);background:#fff}
+  .iconbtn{border:none;background:#fff;box-shadow:var(--shadow);border-radius:12px;width:40px;height:40px;font-size:18px;cursor:pointer}
+  .daterow{font-size:13px;color:var(--gray);margin:2px 0 12px;font-weight:600}
+  /* member cards */
+  .members{display:flex;flex-direction:column;gap:12px;padding-bottom:120px}
+  .mcard{background:#fff;border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  .mcard .ph{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--g100);display:block}
+  .mcard .empty{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;color:#cbb;font-size:14px;background:var(--g100);flex-direction:column;gap:6px}
+  .mcard .bar{display:flex;align-items:center;gap:10px;padding:10px 12px}
+  .mcard .av{width:30px;height:30px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;object-fit:cover}
+  .mcard .nm{font-weight:800;font-size:14px;flex:1}
+  .mcard .cap{color:var(--gray);font-size:12.5px}
+  .mcard.me{outline:2px solid var(--orange-l);outline-offset:-2px}
+  .poke{border:none;background:var(--g100);border-radius:10px;font-size:12px;font-weight:700;color:var(--gray);padding:6px 10px;cursor:pointer}
+  /* FAB */
+  .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--orange);color:#fff;border:none;border-radius:30px;padding:15px 26px;font-size:16px;font-weight:800;box-shadow:0 10px 24px rgba(255,107,53,.4);cursor:pointer;z-index:20}
+  .fab:active{transform:translateX(-50%) scale(.97)}
+  .fab.done{background:#bbb;box-shadow:none}
+  /* generic */
+  .cal-header{display:flex;align-items:center;padding:14px 0 8px}
+  .cal-header h2{flex:1;text-align:center;font-size:18px;font-weight:900}
+  .cal-back{border:none;background:none;font-size:24px;cursor:pointer;width:36px;color:var(--ink)}
+  .cta{margin:16px 0 6px;background:var(--orange);color:#fff;border:none;font-size:16px;font-weight:800;padding:15px;border-radius:16px;cursor:pointer;width:100%}
+  .cta.ghost{background:#fff;color:var(--orange);border:2px solid var(--orange)}
+  .center{text-align:center}.sub{color:var(--gray);font-size:14px;line-height:1.5}
+  /* preview */
+  #preview img.pv{width:100%;border-radius:18px;margin-top:8px;box-shadow:var(--shadow)}
+  .comment-row{display:flex;gap:8px;margin-top:12px}
+  .comment-row input{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:13px;font-size:15px;outline:none}
+  .bonus-toggle{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#5b554f;padding:10px 2px;cursor:pointer}
+  .bonus-toggle input{width:18px;height:18px;accent-color:var(--orange)}
+  .bonus-toggle span{color:var(--orange);font-size:12px;font-weight:600}
+  .pa{display:flex;gap:10px;margin-top:14px}
+  .pa button{flex:1;padding:15px;border-radius:14px;font-size:15px;font-weight:800;border:none;cursor:pointer}
+  .btn-cancel{background:var(--g100);color:var(--gray)}.btn-ping{background:var(--orange);color:#fff}
+  /* goal */
+  .dg-top{text-align:center;padding:10px}
+  .dg-mascot{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 6px;box-shadow:var(--shadow)}
+  .dg-total b{font-size:40px;color:var(--orange);font-weight:900}
+  .dg-bar{height:16px;background:var(--g100);border-radius:10px;overflow:hidden;margin:10px 0}
+  .dg-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--orange-l));width:0}
+  .tier{display:flex;gap:10px;align-items:flex-start;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:12px;margin-bottom:8px;opacity:.55}
+  .tier.done{opacity:1;background:#FFF7E6;outline:2px solid #FBBF24;outline-offset:-2px}
+  .tier .ic{font-size:22px}.tier .mid{flex:1}.tier .mid b{font-size:14px}.tier .mid small{display:block;color:var(--gray);font-size:11px;line-height:1.4;margin-top:2px}
+  .tier .pt{font-size:12px;font-weight:800;color:var(--gray)}
+  .codebox{font-size:30px;font-weight:900;letter-spacing:5px;color:var(--orange);text-align:center;background:#fff;border:2px dashed var(--orange);border-radius:14px;padding:16px;margin:10px 0}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#333;color:#fff;padding:11px 18px;border-radius:20px;font-size:14px;z-index:60;opacity:0;transition:.3s;pointer-events:none}
+  .toast.on{opacity:1}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div id="splash"><img src="./logo-ping.png" alt="핑" onerror="this.style.display='none'"><p>오늘도 살아있음을 핑!</p></div>
+
+<div class="wrap">
+  <!-- 가족 없음 -->
+  <div id="nofamily" class="screen">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px">
+      <div style="font-size:54px">🐾</div>
+      <h1 style="font-size:22px;font-weight:900">아직 가족이 없어요</h1>
+      <p class="sub">새 가족을 만들거나 초대코드로 합류하세요.</p>
+      <a class="cta" href="./onboarding-v2.html" style="text-decoration:none;display:block;max-width:280px">가족 만들기 / 합류하기 →</a>
+    </div>
+  </div>
+
+  <!-- 피드 -->
+  <div id="feed" class="screen">
+    <div class="top">
+      <img class="pet" id="petImg" src="./dubi-card-happy.png" onerror="this.style.display='none'">
+      <div class="fam"><h1 id="famName">우리 가족</h1><small id="petLine">반려동물</small></div>
+      <button class="iconbtn" id="goGoal" title="뚜비 목표">🎯</button>
+      <button class="iconbtn" id="goInvite" title="초대">✉️</button>
+    </div>
+    <div class="daterow" id="dateRow"></div>
+    <div class="members" id="memberList"></div>
+    <button class="fab" id="fab">📸 오늘의 핑 올리기</button>
+  </div>
+
+  <!-- 미리보기/업로드 -->
+  <div id="preview" class="screen">
+    <div class="cal-header"><button class="cal-back" id="pvBack">‹</button><h2>오늘의 핑</h2><div style="width:36px"></div></div>
+    <img class="pv" id="pvImg" src="">
+    <div class="comment-row"><input id="capIn" maxlength="20" placeholder="한 줄 설명 (20자, 선택)"></div>
+    <label class="bonus-toggle"><input type="checkbox" id="withPet"> 🐶 우리 아이랑 같이 찍었어요 <span>(주 1회 보너스)</span></label>
+    <label class="bonus-toggle"><input type="checkbox" id="gather"> 👨‍👩‍👧‍👦 온 가족이 모였어요 <span>(주 1회 · 가족 전체)</span></label>
+    <div class="pa"><button class="btn-cancel" id="pvCancel">다시</button><button class="btn-ping" id="pvSubmit">핑!</button></div>
+  </div>
+
+  <!-- 목표 -->
+  <div id="goal" class="screen">
+    <div class="cal-header"><button class="cal-back" id="goalBack">‹</button><h2>우리 아이 목표</h2><div style="width:36px"></div></div>
+    <div class="dg-top">
+      <img class="dg-mascot" id="goalMascot" src="./dubi-mood-3.png" onerror="this.src='./dubi-card-happy.png'">
+      <div class="dg-total"><b id="goalTotal">0</b><span style="font-weight:800;color:var(--orange)"> 점</span></div>
+      <div class="sub" id="goalSeason"></div>
+    </div>
+    <div class="dg-bar"><i id="goalBar"></i></div>
+    <div class="sub center" id="goalNext" style="margin-bottom:12px"></div>
+    <div id="goalTiers"></div>
+  </div>
+
+  <!-- 초대 -->
+  <div id="invite" class="screen">
+    <div class="cal-header"><button class="cal-back" id="invBack">‹</button><h2>가족 초대</h2><div style="width:36px"></div></div>
+    <p class="sub center" style="margin-top:10px">이 코드를 가족에게 알려주세요. (onboarding-v2 → 초대코드로 합류)</p>
+    <div class="codebox" id="invCode">------</div>
+    <button class="cta ghost" id="invShare">코드 공유하기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import * as Ping from './lib-ping-v2.js';
+
+const $ = id => document.getElementById(id);
+let FID=null, FAM=null, MEMBERS=[], PET=null, REWARDS=[], MYUID=null, dayMap={};
+let pendingBlob=null;
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); window.scrollTo(0,0); }
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(()=>e.classList.remove('on'),2200); }
+function initials(n){ return (n||'?').slice(0,1); }
+
+async function boot(){
+  try { await Ping.ensureAuth(); }
+  catch(e){ $('splash').innerHTML='<p style="padding:20px;text-align:center">로그인 실패<br><small>배포 도메인 또는 localhost에서 열어주세요</small></p>'; return; }
+  MYUID = Ping.getUid();
+  FID = await Ping.resolveMyFamilyId();
+  setTimeout(()=>{ $('splash').style.opacity=0; setTimeout(()=>$('splash').style.display='none',400); }, 700);
+  if (!FID){ show('nofamily'); return; }
+  await loadAll();
+}
+
+async function loadAll(){
+  [FAM, MEMBERS, PET, REWARDS] = await Promise.all([
+    Ping.loadFamily(FID), Ping.loadMembers(FID), Ping.loadPet(FID), Ping.loadRewards(FID)
+  ]);
+  if (!FAM){ show('nofamily'); return; }
+  $('famName').textContent = FAM.name || '우리 가족';
+  $('petLine').textContent = PET ? `${PET.name} · ${PET.breed||''}`.trim() : '반려동물 미등록';
+  if (PET && PET.mascotUrls && PET.mascotUrls.happy) $('petImg').src = PET.mascotUrls.happy;
+  $('invCode').textContent = FAM.inviteCode || '------';
+  const d=new Date(); $('dateRow').textContent = `${d.getMonth()+1}월 ${d.getDate()}일 · 오늘의 안부`;
+  dayMap = await Ping.loadDay(FID, Ping.todayStr());
+  renderFeed();
+  show('feed');
+}
+
+function renderFeed(){
+  const list=$('memberList'); list.innerHTML='';
+  const mine = dayMap[MYUID];
+  $('fab').classList.toggle('done', !!mine);
+  $('fab').textContent = mine ? '오늘 핑 완료 ✓' : '📸 오늘의 핑 올리기';
+  MEMBERS.forEach(m=>{
+    const ping = dayMap[m.uid];
+    const card=document.createElement('div'); card.className='mcard'+(m.uid===MYUID?' me':'');
+    const av = m.avatarUrl ? `<img class="av" src="${m.avatarUrl}">` : `<div class="av">${initials(m.displayName)}</div>`;
+    const top = ping
+      ? `<img class="ph" src="${ping.photoURL}" alt="">`
+      : `<div class="empty">🕊️<span>${m.uid===MYUID?'오늘 핑을 올려보세요':'아직 안부 전이에요'}</span></div>`;
+    const right = (!ping && m.uid!==MYUID) ? `<button class="poke" data-poke="${m.uid}">콕 찌르기</button>` : '';
+    card.innerHTML = `${top}<div class="bar">${av}<div class="nm">${m.displayName||'가족'}</div><div class="cap">${ping&&ping.comment?ping.comment:''}</div>${right}</div>`;
+    list.appendChild(card);
+  });
+  list.querySelectorAll('[data-poke]').forEach(b=>b.onclick=()=>toast(`${b.previous? '':''}콕! 알림을 보냈어요 (데모)`));
+}
+
+// 업로드
+$('fab').onclick=()=>{ if (dayMap[MYUID]){ toast('오늘은 이미 핑을 올렸어요'); return; }
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.capture='environment';
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; pendingBlob=f; $('pvImg').src=URL.createObjectURL(f);
+    $('capIn').value=''; $('withPet').checked=false; $('gather').checked=false; show('preview'); };
+  inp.click();
+};
+$('pvBack').onclick=()=>show('feed');
+$('pvCancel').onclick=()=>show('feed');
+$('pvSubmit').onclick=async ()=>{
+  $('pvSubmit').disabled=true; $('pvSubmit').textContent='올리는 중…';
+  try{
+    await Ping.savePing(FID, { blob:pendingBlob, comment:$('capIn').value.trim(),
+      withPet:$('withPet').checked, familyGathering:$('gather').checked });
+    dayMap = await Ping.loadDay(FID, Ping.todayStr());
+    renderFeed(); show('feed');
+    const tags=[]; if($('withPet').checked)tags.push('🐶'); if($('gather').checked)tags.push('👨‍👩‍👧‍👦');
+    toast(tags.length?`핑 완료! ${tags.join(' ')} 보너스(주1회) 🎉`:'핑 완료! 📸');
+  }catch(e){ toast('실패: '+(e.message||e.code)); }
+  $('pvSubmit').disabled=false; $('pvSubmit').textContent='핑!';
+};
+
+// 목표
+$('goGoal').onclick=async ()=>{ show('goal'); await renderGoal(); };
+$('goalBack').onclick=()=>show('feed');
+async function renderGoal(){
+  const season=Ping.currentSeasonInfo();
+  $('goalSeason').textContent=`${season.key} 시즌 · 가족이 함께 모은 점수`;
+  $('goalTiers').innerHTML='<div class="sub center" style="padding:14px">불러오는 중…</div>';
+  const memberIds=MEMBERS.map(m=>m.uid);
+  const { total } = await Ping.computeSeasonScores(FID, FAM.scoreRules, memberIds);
+  $('goalTotal').textContent=total;
+  const goals=REWARDS.length?REWARDS:[{icon:'🦴',name:'특별 간식',pt:600},{icon:'🦮',name:'특별 산책',pt:1500},{icon:'☕',name:'애견카페',pt:2700},{icon:'🧸',name:'미용+장난감',pt:4200}];
+  const maxGoal=goals[goals.length-1].pt;
+  $('goalMascot').src=`./dubi-mood-${Ping.dubiMascotFor(total/maxGoal)}.png`;
+  const achieved=goals.filter(g=>total>=g.pt).length;
+  const next=goals[achieved];
+  const prev=achieved>0?goals[achieved-1].pt:0;
+  $('goalBar').style.width = next ? Math.max(4,Math.min(100,(total-prev)/(next.pt-prev)*100))+'%' : '100%';
+  $('goalNext').innerHTML = next ? `다음 보상 <b>${next.icon} ${next.name}</b> 까지 <b>${next.pt-total}점</b>` : '🎉 모든 보상 달성!';
+  $('goalTiers').innerHTML='';
+  goals.forEach(g=>{
+    const done=total>=g.pt; const el=document.createElement('div'); el.className='tier'+(done?' done':'');
+    el.innerHTML=`<span class="ic">${g.icon}</span><div class="mid"><b>${g.name}</b>${g.detail?`<small>${g.detail}</small>`:''}</div><span class="pt">${done?'달성 ✓':g.pt+'점'}</span>`;
+    $('goalTiers').appendChild(el);
+  });
+}
+
+// 초대
+$('goInvite').onclick=()=>show('invite');
+$('invBack').onclick=()=>show('feed');
+$('invShare').onclick=async ()=>{
+  const code=FAM.inviteCode||''; const url=location.origin+location.pathname.replace('app-v2.html','onboarding-v2.html');
+  const text=`${FAM.name} 핑에 초대합니다! 초대코드: ${code}\n${url}`;
+  try{ if(navigator.share){ await navigator.share({title:'핑 초대',text}); } else { await navigator.clipboard.writeText(text); toast('초대 내용 복사됨 📋'); } }
+  catch(e){ try{ await navigator.clipboard.writeText(text); toast('복사됨 📋'); }catch(_){}}
+};
+
+boot();
+</script>
+</body>
+</html>

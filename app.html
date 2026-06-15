@@ -85,6 +85,16 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ig-actions button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700}
 .ig-install{background:var(--orange);color:#fff}
 .ig-close{background:var(--gray100);color:var(--gray500)}
+/* '안전하지 않은 앱' 경고 안심 안내 (안드로이드) */
+.ig-note{margin:0 14px 4px;background:#FFF6E9;border:1px solid #FBE2BC;border-radius:14px;padding:13px 15px;display:none}
+.ig-note.show{display:block}
+.ig-note .nt{font-weight:800;font-size:14px;color:var(--gray500);margin-bottom:6px}
+.ig-note p{font-size:12.5px;line-height:1.65;color:var(--gray400);margin:0 0 8px}
+.ig-note .step{background:#fff;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;color:var(--gray500);font-weight:600}
+.ig-note b{color:var(--orange)}
+.ig-note .ig-note-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ig-note .ig-note-head .dubi{width:62px;height:auto;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.08))}
+.ig-note .ig-note-head .nt{margin-bottom:0}
 .feed-grid{flex:1;overflow-y:auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
 .ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
 .ping-card:active{transform:scale(.98)}
@@ -764,6 +774,11 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div class="ig-overlay" id="installGuide" onclick="closeInstallGuide(event)">
     <div class="ig-card">
       <img class="ig-img" id="igImg" src="./install-ios.png" alt="설치 방법">
+      <div class="ig-note" id="igProtect">
+        <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">"안전하지 않은 앱 차단됨"이 떠도 괜찮아요</div></div>
+        <p>바이러스가 아니에요. 핑은 홈 화면에 <b>웹앱</b>으로 추가되는데, 구글 플레이 프로텍트가 "옛 안드로이드 기준이라 최신 보호 기능이 없다"고 안내하는 것뿐이에요. 핑은 아빠가 만든 <b>우리 가족 전용 앱</b>이고, 주소창 자물쇠(🔒&nbsp;ping.ai.kr)에서 안전하게 작동해요. 사진·글은 우리 가족만 봐요.</p>
+        <div class="step">설치하려면 → <b>세부정보 더보기</b> 누르고 → <b>무시하고 설치</b>(또는 "어쨌든 설치")를 누르세요.<br>💡 <b>'확인'만 누르면 설치가 취소돼요!</b></div>
+      </div>
       <div class="ig-actions">
         <button class="ig-install" id="igInstallBtn" style="display:none" onclick="installApp()">지금 설치</button>
         <button class="ig-close" onclick="closeInstallGuide(event, true)">닫기</button>
@@ -2052,6 +2067,9 @@ window.addEventListener('appinstalled', () => {
 });
 window.openInstallGuide = function(){
   document.getElementById('igImg').src = guideImageFor();
+  // 안드로이드(아이폰·인앱 제외)에서만 '안전하지 않은 앱' 안심 안내 노출
+  const isAndroidWeb = !isIOS() && !isInAppBrowser();
+  document.getElementById('igProtect').classList.toggle('show', isAndroidWeb);
   // 안드로이드에서 즉시 설치 가능하면 '지금 설치' 버튼 노출
   document.getElementById('igInstallBtn').style.display = deferredInstallPrompt ? '' : 'none';
   document.getElementById('installGuide').classList.add('show');
