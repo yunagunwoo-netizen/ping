@@ -1007,12 +1007,41 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+let currentScreen = 'feed';
 function showScreen(id) {
+  currentScreen = id;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'feed') renderFeed();
   if (id === 'mypage') renderMyPage();
 }
+
+// ===== 폰(안드로이드) 뒤로가기 버튼 처리 =====
+// 우선순위: 열린 모달 닫기 → 하위 화면이면 피드로 → 피드에서 한 번 더 누르면 종료
+const OVERLAY_IDS = ['commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','rewardModal','dayOverlay','installGuide','coachOverlay'];
+function _openOverlay(){
+  for (const oid of OVERLAY_IDS){ const el = document.getElementById(oid); if (el && el.classList.contains('show')) return el; }
+  const hm = document.getElementById('headerMenu'); if (hm && hm.classList.contains('show')) return hm;
+  return null;
+}
+let _backExitArmed = false;
+function _armBack(){ try { history.pushState({ ping:1 }, ''); } catch(e){} }
+window.addEventListener('popstate', function(){
+  // 1) 열린 모달/메뉴가 있으면 닫기
+  const ov = _openOverlay();
+  if (ov){ ov.classList.remove('show'); _armBack(); return; }
+  // 2) 피드/온보딩이 아니면 피드로
+  if (currentScreen && currentScreen !== 'feed' && currentScreen !== 'onboarding'){ showScreen('feed'); _armBack(); return; }
+  // 3) 피드/온보딩에서: 한 번 더 누르면 종료
+  if (!_backExitArmed){
+    _backExitArmed = true;
+    try { showToast('한 번 더 누르면 앱을 나가요'); } catch(e){}
+    _armBack();
+    setTimeout(() => { _backExitArmed = false; }, 2000);
+    return;
+  }
+  history.back(); // 실제 종료(뒤로)
+});
 
 function showLoading(show) {
   document.getElementById('loadingOverlay').classList.toggle('show', show);
@@ -2532,6 +2561,7 @@ window.closeCoach = function(e, force){
 
 // ========== INIT ==========
 async function init() {
+  _armBack(); // 폰 뒤로가기 트랩 진입점
   // 스플래시 가족 이미지: 계절에 맞게 자동 선택
   (function(){
     const mo = new Date().getMonth() + 1;
