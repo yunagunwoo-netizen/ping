@@ -1,7 +1,7 @@
 {
-  "name": "핑 - 가족 생존신고",
+  "name": "핑 - 뚜비와 함께하는 가족 미션",
   "short_name": "핑",
-  "description": "매일 사진 한 장으로 가족의 안부를 확인하는 생존신고 앱",
+  "description": "매일 사진 한 장으로 가족이 함께 뚜비를 위한 미션을 채워가는 가족 유대 앱",
   "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",

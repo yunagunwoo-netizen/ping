@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#FF6B35">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>핑 - 가족 생존신고</title>
+<title>핑 - 뚜비와 함께하는 가족 미션</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./icon-192.png">
@@ -496,7 +496,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <!-- SPLASH -->
   <div id="splash" class="screen active">
     <div class="logo"><img src="./logo-ping.png" alt="핑" onerror="this.parentElement.textContent='핑'"></div>
-    <div class="slogan">오늘도 살아있음을 핑!</div>
+    <div class="slogan">오늘도 가족이 함께, 핑!</div>
     <img class="family-pic" id="splashFam" src="./family-portrait.png" alt="우리 가족" onerror="this.style.display='none'">
   </div>
 
@@ -538,7 +538,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       </div>
     </div>
     <div class="countdown" id="countdown"></div>
-    <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 생존신고</div>
+    <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 핑</div>
     <button class="family-photo-btn" id="familyPhotoBtn" style="display:none" onclick="showFamilyPhoto()">📸 오늘의 가족사진 보기</button>
     <div class="week-card-banner" id="weekCardBanner" style="display:none" onclick="showDubiDex()"></div>
     <div class="feed-grid" id="feedGrid"></div>
@@ -785,7 +785,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <img id="fpDubi" src="./dubi-card-happy.png" alt="뚜비" onerror="this.style.display='none'">
         <span>뚜비도 함께 🐾</span>
       </div>
-      <div class="fp-foot">오늘 가족 모두 생존 확인! 📸</div>
+      <div class="fp-foot">오늘 가족 모두 핑 완료! 📸</div>
       <div class="fp-hint">화면을 캡처해서 저장하세요 📷</div>
       <button class="fp-close" onclick="closeFamilyPhoto(event, true)">닫기</button>
     </div>
@@ -1335,8 +1335,8 @@ function renderFeed() {
 
   const uploadedCount = MEMBERS.filter(m => todayPings[m.id]).length;
   document.getElementById('feedSubtitle').textContent =
-    uploadedCount === 4 ? '오늘 가족 모두 생존 확인! ✨' :
-    `${uploadedCount}/4명 생존 확인`;
+    uploadedCount === 4 ? '오늘 가족 모두 핑 완료! ✨' :
+    `${uploadedCount}/4명 핑 완료`;
 
   // 뚜비 도감 버튼 카운트 갱신
   updateDexButton();
@@ -1816,7 +1816,7 @@ async function renderNotifications(){
       for (const reactor in myPing.reactions){
         if (reactor === currentMember) continue;
         const baseTs = myPing.createdAt ? new Date(myPing.createdAt).getTime() : new Date(date + 'T12:00:00').getTime();
-        items.push({ who: reactor, ts: baseTs + 1, text: `${reactor}님이 내 생존신고에 리액션했어요`, sub: '', emoji: myPing.reactions[reactor] });
+        items.push({ who: reactor, ts: baseTs + 1, text: `${reactor}님이 내 핑에 리액션했어요`, sub: '', emoji: myPing.reactions[reactor] });
       }
     }
   }
@@ -1856,7 +1856,7 @@ function renderFamily(){
 }
 window.shareInvite = async function(){
   const url = getInviteLink();
-  const data = { title: '핑 - 가족 생존신고', text: getFamilyName() + ' 핑에 초대합니다!', url };
+  const data = { title: '핑 - 뚜비와 함께하는 가족 미션', text: getFamilyName() + ' 핑에 초대합니다!', url };
   try {
     if (navigator.share) { await navigator.share(data); }
     else { await navigator.clipboard.writeText(url); showToast('초대 링크 복사됨 📋'); }
@@ -2497,7 +2497,7 @@ function scheduleSurvivalTimer() {
   setTimeout(() => {
     if (!todayPings[currentMember]) {
       if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('핑', { body: '핑 보내세요! 오늘의 생존신고가 아직이에요 📸', icon: '📸' });
+        new Notification('핑', { body: '오늘의 핑이 아직이에요! 가족이 기다려요 📸', icon: '📸' });
       }
       showToast('⏰ 핑 보내세요!');
     }
