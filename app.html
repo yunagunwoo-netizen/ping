@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FF6B35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>핑 - 가족 생존신고</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --orange:#FF6B35;--orange-light:#FF8F5E;--navy:#004E89;--cream:#FFF8F0;
+  --gray100:#F5F0EB;--gray200:#E8E0D8;--gray300:#C4B8AC;--gray400:#9E9189;
+  --gray500:#6B6159;--shadow:0 2px 12px rgba(0,0,0,.08);
+  --radius:16px;--radius-sm:10px;
+}
+html,body{height:100%;font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:#2D2017;overflow:hidden}
+button{font-family:inherit;border:none;cursor:pointer;background:none}
+input,textarea{font-family:inherit;border:none;outline:none}
+
+/* ========== APP SHELL ========== */
+#app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
+.screen{display:none;flex-direction:column;height:100%;position:absolute;inset:0;background:var(--cream);z-index:1}
+.screen.active{display:flex;z-index:2}
+
+/* ========== SPLASH ========== */
+#splash{justify-content:center;align-items:center;background:var(--orange);z-index:100}
+#splash .logo{font-size:72px;font-weight:900;color:#fff;animation:popIn .5s ease}
+#splash .logo img{width:168px;height:auto;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
+#splash .slogan{color:rgba(255,255,255,.85);font-size:15px;margin-top:8px;animation:fadeUp .6s ease .2s both}
+#splash .family-pic{width:min(80%,340px);margin-top:26px;border-radius:18px;border:3px solid #fff;box-shadow:0 10px 28px rgba(0,0,0,.22);animation:fadeUp .6s ease .35s both}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes fadeUp{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+/* ========== ONBOARDING (Member Select) ========== */
+#onboarding{justify-content:center;align-items:center;padding:32px}
+#onboarding h2{font-size:22px;font-weight:700;margin-bottom:8px}
+#onboarding p{color:var(--gray400);font-size:14px;margin-bottom:32px}
+.member-select{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:320px}
+.member-btn{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 16px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);transition:all .2s}
+.member-btn:active{transform:scale(.96)}
+.member-btn .avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px}
+.member-btn span{font-weight:600;font-size:15px}
+.member-btn.dad .avatar{background:#FFE0CC}
+.member-btn.mom .avatar{background:#CCE5FF}
+.member-btn.yuna .avatar{background:#FFD6E8}
+.member-btn.gunwoo .avatar{background:#D4F5D4}
+.member-btn .avatar img,.my-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+
+/* ========== FEED (Main) ========== */
+#feed{padding:0}
+.feed-header{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center}
+.feed-header .date{font-size:20px;font-weight:700}
+.feed-header .streak-badge{display:flex;align-items:center;gap:4px;background:var(--orange);color:#fff;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600}
+.feed-subtitle{padding:4px 20px 16px;font-size:13px;color:var(--gray400)}
+.countdown{margin:12px 16px 2px;background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border-radius:16px;padding:14px 16px;text-align:center;box-shadow:var(--shadow)}
+.countdown .cd-time{font-size:30px;font-weight:900;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1.1}
+.countdown .cd-sub{font-size:11px;opacity:.85;margin-top:5px;font-weight:600}
+.countdown.done{background:#ECFDF5;color:#059669;font-size:15px;font-weight:800;padding:16px}
+
+/* ========== 홈 화면 설치 배너 ========== */
+.install-banner{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:12px 14px;display:none;align-items:center;gap:12px;z-index:150}
+.install-banner.show{display:flex;animation:fadeUp .4s ease}
+.install-banner .ib-icon{width:46px;height:46px;border-radius:12px;flex-shrink:0}
+.install-banner .ib-text{flex:1;min-width:0}
+.install-banner .ib-title{font-size:14px;font-weight:800;color:var(--gray500)}
+.install-banner .ib-sub{font-size:11px;color:var(--gray400);margin-top:2px;line-height:1.3}
+.install-banner .ib-btn{background:var(--orange);color:#fff;font-weight:700;font-size:13px;padding:10px 15px;border-radius:12px;flex-shrink:0}
+.install-banner .ib-close{width:26px;height:26px;color:var(--gray300);font-size:14px;flex-shrink:0}
+/* 설치 방법 가이드 모달 */
+.ig-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:160;display:none;align-items:center;justify-content:center;padding:16px}
+.ig-overlay.show{display:flex}
+.ig-card{background:#fff;border-radius:20px;width:100%;max-width:420px;max-height:88vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
+.ig-img{width:100%;display:block;border-radius:20px 20px 0 0}
+.ig-actions{display:flex;gap:8px;padding:14px}
+.ig-actions button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700}
+.ig-install{background:var(--orange);color:#fff}
+.ig-close{background:var(--gray100);color:var(--gray500)}
+.feed-grid{flex:1;overflow-y:auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+.ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
+.ping-card:active{transform:scale(.98)}
+.ping-card .photo-area{position:relative;width:100%;aspect-ratio:1;background:var(--gray100);overflow:hidden}
+.ping-card .photo-area img{width:100%;height:100%;object-fit:cover}
+.ping-card .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--gray300);gap:8px}
+.ping-card .placeholder svg{width:48px;height:48px;opacity:.4}
+.ping-card .placeholder img.ph-av{width:54px;height:54px;border-radius:50%;object-fit:cover;opacity:.45;filter:grayscale(.25)}
+.ping-card .placeholder span{font-size:12px}
+.ping-card .card-info{padding:10px 12px}
+.ping-card .card-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px}
+.ping-card .card-name .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.ping-card .card-comment{font-size:12px;color:var(--gray400);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ping-card .card-time{font-size:11px;color:var(--gray300);margin-top:4px}
+.ping-card .reactions-row{display:flex;gap:2px;padding:0 12px 10px;flex-wrap:wrap}
+.reaction-chip{font-size:16px;padding:2px 6px;background:var(--gray100);border-radius:12px;transition:all .15s}
+.reaction-chip.mine{background:#FFE8DC}
+.reaction-chip:active{transform:scale(1.2)}
+.poke-btn{display:flex;align-items:center;justify-content:center;gap:4px;margin:0 12px 10px;padding:6px;background:var(--gray100);border-radius:8px;font-size:12px;color:var(--gray400)}
+.poke-btn:active{background:var(--gray200)}
+
+/* ========== FAB (Camera Button) ========== */
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,107,53,.4);z-index:50;transition:all .2s}
+.fab:active{transform:translateX(-50%) scale(.92)}
+.fab.disabled{background:var(--gray300);box-shadow:none;pointer-events:none}
+.fab svg{width:28px;height:28px}
+
+/* ========== NAV BAR ========== */
+.nav-bar{display:flex;justify-content:space-around;padding:8px 0;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--gray100);position:relative;z-index:40}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 12px;color:var(--gray300);font-size:10px;transition:color .2s}
+.nav-item.active{color:var(--orange)}
+.nav-item svg{width:22px;height:22px}
+
+/* ========== CAMERA ========== */
+#camera{background:#000;z-index:60}
+.camera-top{position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.camera-top button{color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3);backdrop-filter:blur(8px)}
+#videoPreview{width:100%;height:100%;object-fit:cover}
+.camera-bottom{position:absolute;bottom:0;left:0;right:0;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;z-index:2}
+.shutter-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);transition:all .15s}
+.shutter-btn:active{transform:scale(.9);background:#ddd}
+
+/* ========== PREVIEW (after capture) ========== */
+#preview{background:#000;z-index:70}
+.preview-img{width:100%;flex:1;object-fit:contain;background:#000}
+.preview-bottom{background:var(--cream);border-radius:var(--radius) var(--radius) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.preview-bottom .question-box{background:var(--gray100);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px;color:var(--gray500)}
+.preview-bottom .question-box strong{color:var(--orange);display:block;margin-bottom:4px;font-size:12px}
+.comment-input{width:100%;padding:12px 16px;background:#fff;border-radius:var(--radius-sm);font-size:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.comment-input::placeholder{color:var(--gray300)}
+.preview-actions{display:flex;gap:10px}
+.preview-actions button{flex:1;padding:14px;border-radius:var(--radius-sm);font-size:15px;font-weight:700;transition:all .15s}
+.preview-actions button:active{transform:scale(.97)}
+.btn-cancel{background:var(--gray200);color:var(--gray500)}
+.btn-ping{background:var(--orange);color:#fff}
+.together-box{margin-bottom:12px}
+.together-label{font-size:12px;font-weight:700;color:var(--gray500);margin-bottom:8px}
+.together-label span{color:var(--orange);font-weight:600}
+.together-chips{display:flex;gap:8px;flex-wrap:wrap}
+.together-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:#fff;box-shadow:var(--shadow);font-size:13px;font-weight:600;color:var(--gray500);transition:all .15s}
+.together-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.together-chip.on{background:var(--orange);color:#fff}
+.together-chip:active{transform:scale(.95)}
+/* 이달 점수 카드 */
+.score-card{background:linear-gradient(135deg,#A78BFA,#F0ABFC);color:#fff;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.score-card .sc-l h3{font-size:14px;opacity:.9;margin-bottom:6px}
+.score-card .sc-l .sc-num{font-size:34px;font-weight:900;line-height:1}
+.score-card .sc-l .sc-unit{font-size:14px;font-weight:700}
+.score-card .sc-r{font-size:34px}
+
+/* ========== MYPAGE ========== */
+#mypage{padding:20px;overflow-y:auto;padding-bottom:80px}
+#mypage h2{font-size:22px;font-weight:700;margin-bottom:20px}
+.my-profile-card{display:flex;align-items:center;gap:16px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
+.my-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--gray100)}
+.my-info h3{font-size:18px;font-weight:700}
+.my-info p{font-size:13px;color:var(--gray400);margin-top:2px}
+.settings-section{margin-bottom:20px}
+.settings-section h4{font-size:14px;font-weight:700;color:var(--gray400);margin-bottom:10px;padding-left:4px}
+.setting-item{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:16px;border-radius:var(--radius-sm);margin-bottom:8px;box-shadow:var(--shadow)}
+.setting-item label{font-size:14px;font-weight:600}
+.setting-item input[type="time"]{padding:4px 8px;border-radius:6px;background:var(--gray100);font-size:14px}
+.setting-item select{padding:4px 8px;border-radius:6px;background:var(--gray100);font-size:14px}
+.streak-card{background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
+.streak-card h3{font-size:14px;opacity:.85;margin-bottom:8px}
+.streak-card .streak-num{font-size:48px;font-weight:900;line-height:1}
+.streak-card .streak-label{font-size:13px;opacity:.75;margin-top:4px}
+.streak-card .streak-best{margin-top:12px;font-size:12px;opacity:.7}
+.reset-btn{width:100%;padding:14px;background:#fff;border:2px solid #F44;color:#F44;border-radius:var(--radius-sm);font-size:14px;font-weight:700;margin-top:20px}
+
+/* ========== TOAST ========== */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:200;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ========== REACTION PICKER ========== */
+.reaction-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:80;display:none;align-items:flex-end;justify-content:center}
+.reaction-overlay.show{display:flex}
+.reaction-picker{background:#fff;border-radius:var(--radius) var(--radius) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;text-align:center}
+.reaction-picker h4{font-size:14px;color:var(--gray400);margin-bottom:16px}
+.reaction-options{display:flex;justify-content:center;gap:12px}
+.reaction-options button{font-size:32px;padding:8px;border-radius:12px;transition:all .15s}
+.reaction-options button:active{transform:scale(1.3)}
+
+/* ========== 오늘의 가족사진 ========== */
+.family-photo-btn{display:block;width:100%;margin:0 0 14px;padding:13px;background:var(--orange);color:#fff;border-radius:14px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(255,107,53,.35);animation:fadeUp .4s ease}
+.fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
+.fp-overlay.show{display:flex}
+.fp-card{background:#fff;border-radius:20px;padding:16px 16px 14px;width:100%;max-width:360px;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .4s ease}
+.fp-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.fp-head .fp-title{font-size:17px;font-weight:800;color:var(--gray500)}
+.fp-head .fp-date{font-size:12px;color:var(--gray400);font-weight:600}
+.fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fp-cell{position:relative;border-radius:12px;overflow:hidden;background:var(--gray100);aspect-ratio:1/1}
+.fp-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.fp-cell .fp-name{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.fp-dubi{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:8px;background:#FFF8E1;border-radius:12px}
+.fp-dubi img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.fp-dubi span{font-size:13px;font-weight:700;color:#C58A00}
+.fp-foot{text-align:center;font-size:13px;font-weight:700;color:var(--orange);margin-top:12px}
+.fp-hint{text-align:center;font-size:11px;color:var(--gray400);margin-top:8px}
+.fp-close{display:block;width:100%;margin-top:12px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
+
+/* ========== 뚜비 도감 ========== */
+.feed-header-right{display:flex;align-items:center;gap:8px}
+.dex-btn{display:flex;align-items:center;gap:4px;background:#FFF3C4;color:#C58A00;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700}
+.dex-btn:active{transform:scale(.95)}
+.feed-header-right{position:relative}
+.menu-btn{width:42px;height:32px;border-radius:16px;background:var(--gray100);color:var(--gray500);font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:1px}
+.menu-btn:active{transform:scale(.95)}
+.header-menu{position:absolute;top:42px;right:0;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;display:none;flex-direction:column;gap:2px;z-index:60;min-width:180px}
+.header-menu.show{display:flex}
+.header-menu button{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--gray500);text-align:left;white-space:nowrap}
+.header-menu button:active{background:var(--gray100)}
+.header-menu .hm-count{margin-left:auto;color:var(--gray300);font-weight:700}
+.dex-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:18px}
+.dex-overlay.show{display:flex}
+.dex-modal{background:#fff;border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
+.dex-modal-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.dex-modal-head h3{font-size:18px;font-weight:800;color:var(--gray500)}
+.dex-modal-head .dex-prog{font-size:13px;color:var(--orange);font-weight:700}
+.dex-sub{font-size:12px;color:var(--gray400);margin-bottom:14px}
+.dex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dex-item{text-align:center}
+.dex-thumb{width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--gray100);display:flex;align-items:center;justify-content:center}
+.dex-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dex-thumb.locked{font-size:26px;color:var(--gray300)}
+.dex-label{font-size:11px;font-weight:600;color:var(--gray300);margin-top:4px}
+.dex-label.owned{color:var(--gray500)}
+.dex-close{display:block;width:100%;margin-top:16px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
+/* 카드 획득 축하 */
+.cu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:130;display:none;align-items:center;justify-content:center;padding:24px}
+.cu-overlay.show{display:flex}
+.cu-card{background:#fff;border-radius:22px;padding:24px;text-align:center;max-width:300px;width:100%;animation:popIn .45s ease}
+.cu-card .cu-title{font-size:16px;font-weight:800;color:var(--orange);margin-bottom:14px}
+.cu-card .cu-img{width:180px;height:180px;border-radius:16px;object-fit:cover;margin:0 auto;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+.cu-card .cu-name{font-size:18px;font-weight:800;color:var(--gray500);margin-top:14px}
+.cu-card .cu-sub{font-size:12px;color:var(--gray400);margin-top:4px}
+.cu-btns{display:flex;gap:8px;margin-top:18px}
+.cu-btns button{flex:1;padding:11px;border-radius:12px;font-size:14px;font-weight:700}
+.cu-btns .cu-dex{background:var(--orange);color:#fff}
+.cu-btns .cu-ok{background:var(--gray100);color:var(--gray500)}
+
+/* ========== 추억 캘린더 ========== */
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 6px}
+.cal-header h2{font-size:20px;font-weight:800}
+.cal-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--gray100)}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 4px}
+.cal-nav .cal-month{font-size:22px;font-weight:800}
+.cal-nav button{width:34px;height:34px;border-radius:10px;background:var(--gray100);font-size:16px;color:var(--gray500)}
+.cal-nav button:disabled{opacity:.3}
+.cal-stat{margin:8px 16px 14px;background:linear-gradient(135deg,#FFE0CC,#FFD6E8);border-radius:18px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+.cal-stat .cs-l .cs-big{font-size:24px;font-weight:800;color:#C2410C}
+.cal-stat .cs-l .cs-sub{font-size:12px;color:#9A5B3B;margin-top:2px;font-weight:600}
+.cal-stat .cs-r{font-size:13px;font-weight:700;color:#9A5B3B}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;margin-bottom:4px}
+.cal-weekdays span{text-align:center;font-size:12px;color:var(--gray400);font-weight:600}
+.cal-weekdays span.sun{color:#E5484D}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 12px 24px}
+.cal-cell{aspect-ratio:1/1;border-radius:10px;background:var(--gray100);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cal-cell.empty{background:transparent}
+.cal-cell .cal-day{font-size:13px;font-weight:600;color:var(--gray400);z-index:1}
+.cal-cell.today{outline:2px solid var(--orange);outline-offset:-2px}
+.cal-cell.has-photo .cal-day{position:absolute;top:3px;left:5px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:11px}
+.cal-cell.has-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cal-cell .cal-allbadge{position:absolute;bottom:2px;right:3px;font-size:9px;z-index:1}
+/* 날짜 상세 */
+.day-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
+.day-overlay.show{display:flex}
+.day-card{background:#fff;border-radius:20px;padding:16px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease}
+.day-card h3{font-size:16px;font-weight:800;color:var(--gray500);margin-bottom:12px}
+.day-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.day-item{border-radius:12px;overflow:hidden;background:var(--gray100)}
+.day-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+.day-item .di-name{font-size:11px;font-weight:700;color:var(--gray500);padding:5px 8px}
+.day-item .di-cmt{font-size:11px;color:var(--gray400);padding:0 8px 7px}
+.day-close{display:block;width:100%;margin-top:14px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
+
+/* ========== 리더보드 / 권한 ========== */
+.lb-month{text-align:center;font-size:14px;color:var(--gray400);font-weight:700;margin:4px 0 12px}
+.lb-crown{margin:0 16px 16px;background:linear-gradient(135deg,#FDE68A,#FCA5A5);border-radius:20px;padding:18px}
+.lbc-title{font-size:14px;font-weight:800;color:#92400E;margin-bottom:12px}
+.lbc-member{display:flex;align-items:center;gap:14px}
+.lbc-member img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fff}
+.lbc-name{font-size:20px;font-weight:800;color:#7C2D12}
+.lbc-priv{font-size:12px;font-weight:700;color:#9A3412;margin-top:3px}
+.lbc-empty{font-size:13px;color:#92400E;font-weight:600;text-align:center}
+.lb-list{margin:0 16px 20px;display:flex;flex-direction:column;gap:8px}
+.lb-row{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.lb-row.lead{background:#FFF7E6;outline:2px solid #FBBF24;outline-offset:-2px}
+.lb-rank{font-size:18px;width:28px;text-align:center}
+.lb-av{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.lb-name{flex:1;font-size:15px;font-weight:700;color:var(--gray500)}
+.lb-score{font-size:15px;font-weight:800;color:var(--orange)}
+.lb-hof{margin:0 16px 28px;background:var(--gray100);border-radius:16px;padding:16px}
+.lb-hof-title{font-size:13px;font-weight:800;color:var(--gray500);margin-bottom:10px}
+.lb-hof-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray500)}
+.lb-hof-row img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.lb-hof-empty{font-size:12px;color:var(--gray400)}
+.score-card{cursor:pointer}
+
+/* ========== 가족 앨범 ========== */
+.album-tabs{display:flex;gap:8px;padding:4px 16px 10px}
+.album-tab{flex:1;padding:9px;border-radius:12px;background:var(--gray100);color:var(--gray400);font-size:13px;font-weight:700;text-align:center}
+.album-tab.on{background:var(--orange);color:#fff}
+.album-sub{padding:0 16px 10px;font-size:12px;color:var(--gray400)}
+.album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 12px 24px}
+.album-cell{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--gray100)}
+.album-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.album-cell .album-day{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.album-cell .album-badge{position:absolute;top:3px;right:4px;font-size:12px}
+.album-empty{grid-column:1/-1;text-align:center;color:var(--gray400);padding:40px 0;font-size:13px}
+
+/* ========== 가족 (초대) ========== */
+.fam-invite{display:flex;align-items:center;gap:12px;margin:6px 16px 18px;background:#FFF7E6;border-radius:16px;padding:14px}
+.fam-invite .fi-icon{width:44px;height:44px;border-radius:50%;background:#FDE68A;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.fam-invite .fi-text{flex:1;min-width:0}
+.fam-invite .fi-title{font-size:14px;font-weight:800;color:var(--gray500)}
+.fam-invite .fi-link{font-size:11px;color:var(--gray400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fam-invite .fi-share{width:40px;height:40px;border-radius:12px;background:var(--orange);color:#fff;font-size:18px;flex-shrink:0}
+.fam-namebar{display:flex;align-items:center;gap:8px;padding:0 20px 14px;border-bottom:1px solid var(--gray100);margin:0 0 8px}
+.fam-namebar .fam-name{font-size:20px;font-weight:800;color:var(--gray500)}
+.fam-namebar .fam-count{font-size:14px;color:var(--gray400);font-weight:700}
+.fam-namebar .fam-edit{margin-left:auto;width:34px;height:34px;border-radius:10px;background:var(--gray100);font-size:15px}
+.fam-list{padding:0 16px 24px;display:flex;flex-direction:column}
+.fam-row{display:flex;align-items:center;gap:14px;padding:12px 4px}
+.fam-row img{width:52px;height:52px;border-radius:50%;object-fit:cover}
+.fam-row .fr-name{font-size:16px;font-weight:700;color:var(--gray500)}
+.fam-row .fr-me{font-size:11px;color:var(--gray400);margin-top:2px}
+
+/* ========== 알림 피드 ========== */
+.notif-list{padding:4px 16px 24px;display:flex;flex-direction:column}
+.notif-row{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--gray100)}
+.notif-row .nr-avatar{position:relative;flex-shrink:0}
+.notif-row .nr-avatar img{width:46px;height:46px;border-radius:50%;object-fit:cover}
+.notif-row .nr-emoji{position:absolute;bottom:-2px;right:-4px;font-size:16px}
+.notif-row .nr-body{flex:1;min-width:0}
+.notif-row .nr-text{font-size:14px;color:var(--gray500);font-weight:600}
+.notif-row .nr-sub{font-size:12px;color:var(--gray400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notif-row .nr-time{font-size:11px;color:var(--gray300);flex-shrink:0}
+.notif-empty{text-align:center;color:var(--gray400);padding:48px 0;font-size:13px}
+
+/* ========== LOADING ========== */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,248,240,.9);display:none;align-items:center;justify-content:center;z-index:90;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--gray200);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay span{font-size:14px;color:var(--gray500);font-weight:600}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="splash" class="screen active">
+    <div class="logo"><img src="./logo-ping.png" alt="핑" onerror="this.parentElement.textContent='핑'"></div>
+    <div class="slogan">오늘도 살아있음을 핑!</div>
+    <img class="family-pic" src="./family-portrait.png" alt="우리 가족" onerror="this.style.display='none'">
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="onboarding" class="screen">
+    <h2>누구세요?</h2>
+    <p>가족 구성원을 선택해주세요</p>
+    <div class="member-select">
+      <button class="member-btn dad" onclick="selectMember('아빠')">
+        <div class="avatar"><img src="./avatar-dad.png" alt="아빠" onerror="this.parentElement.textContent='👨'"></div><span>아빠</span>
+      </button>
+      <button class="member-btn mom" onclick="selectMember('엄마')">
+        <div class="avatar"><img src="./avatar-mom.png" alt="엄마" onerror="this.parentElement.textContent='👩'"></div><span>엄마</span>
+      </button>
+      <button class="member-btn yuna" onclick="selectMember('윤아')">
+        <div class="avatar"><img src="./avatar-yuna.png" alt="윤아" onerror="this.parentElement.textContent='👧'"></div><span>윤아</span>
+      </button>
+      <button class="member-btn gunwoo" onclick="selectMember('건우')">
+        <div class="avatar"><img src="./avatar-gunwoo.png" alt="건우" onerror="this.parentElement.textContent='👦'"></div><span>건우</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="feed" class="screen">
+    <div class="feed-header">
+      <div class="date" id="feedDate"></div>
+      <div class="feed-header-right">
+        <div class="streak-badge" id="familyStreak">🔥 0일째</div>
+        <button class="menu-btn" id="menuBtn" onclick="toggleHeaderMenu(event)">⋯</button>
+        <div class="header-menu" id="headerMenu">
+          <button onclick="menuGo('notif')">🔔 알림</button>
+          <button onclick="menuGo('family')">👨‍👩‍👧‍👦 가족 · 초대</button>
+          <button onclick="menuGo('album')">📔 가족 앨범</button>
+          <button onclick="menuGo('lb')">🏆 가족 리더보드</button>
+          <button onclick="menuGo('cal')">📅 추억 캘린더</button>
+          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/11</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="countdown" id="countdown"></div>
+    <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 생존신고</div>
+    <button class="family-photo-btn" id="familyPhotoBtn" style="display:none" onclick="showFamilyPhoto()">📸 오늘의 가족사진 보기</button>
+    <div class="feed-grid" id="feedGrid"></div>
+    <div class="nav-bar">
+      <button class="nav-item active" onclick="showScreen('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>홈</span>
+      </button>
+      <button class="nav-item" onclick="showScreen('mypage')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span>마이</span>
+      </button>
+    </div>
+    <button class="fab" id="fabBtn" onclick="openCamera()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </button>
+  </div>
+
+  <!-- CAMERA -->
+  <div id="camera" class="screen">
+    <video id="videoPreview" autoplay playsinline></video>
+    <div class="camera-top">
+      <button onclick="closeCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <button onclick="flipCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+      </button>
+    </div>
+    <div class="camera-bottom">
+      <button class="shutter-btn" onclick="capturePhoto()"></button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview" class="screen">
+    <img class="preview-img" id="previewImg" src="">
+    <div class="preview-bottom">
+      <div class="question-box" id="questionBox" style="display:none">
+        <strong>오늘의 질문</strong>
+        <span id="questionText"></span>
+      </div>
+      <div class="together-box">
+        <div class="together-label">📸 같이 찍은 가족 <span>(1명당 +10점)</span></div>
+        <div class="together-chips" id="togetherChips"></div>
+      </div>
+      <input class="comment-input" id="commentInput" type="text" maxlength="50" placeholder="한줄 코멘트 (선택)">
+      <div class="preview-actions">
+        <button class="btn-cancel" onclick="cancelPreview()">다시 찍기</button>
+        <button class="btn-ping" onclick="submitPing()">핑!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MYPAGE -->
+  <div id="mypage" class="screen">
+    <h2>마이페이지</h2>
+    <div class="my-profile-card">
+      <div class="my-avatar" id="myAvatar">👤</div>
+      <div class="my-info">
+        <h3 id="myName">-</h3>
+        <p id="myEmail">김씨네 가족</p>
+      </div>
+    </div>
+    <div class="score-card" onclick="openLeaderboard()">
+      <div class="sc-l">
+        <h3>이번 달 내 점수</h3>
+        <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
+      </div>
+      <div class="sc-r" id="myScoreRank">🏅</div>
+    </div>
+    <div class="streak-card">
+      <h3>나의 연속 핑</h3>
+      <div class="streak-num" id="myStreakNum">0</div>
+      <div class="streak-label">일 연속</div>
+      <div class="streak-best">최고 기록: <span id="myStreakBest">0</span>일</div>
+    </div>
+    <div class="settings-section">
+      <h4>설정</h4>
+      <div class="setting-item">
+        <label>알림 시간</label>
+        <input type="time" id="alarmTime" value="22:00" onchange="saveSettings()">
+      </div>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-item" onclick="showScreen('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>홈</span>
+      </button>
+      <button class="nav-item active" onclick="showScreen('mypage')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span>마이</span>
+      </button>
+    </div>
+    <button class="reset-btn" onclick="resetApp()">로그아웃 (구성원 재선택)</button>
+  </div>
+
+  <!-- CALENDAR (추억 캘린더) -->
+  <div id="calendar" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>추억 캘린더</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="cal-nav">
+      <button onclick="calPrevMonth()">‹</button>
+      <div class="cal-month" id="calMonthLabel">2026.06</div>
+      <button id="calNextBtn" onclick="calNextMonth()">›</button>
+    </div>
+    <div class="cal-stat">
+      <div class="cs-l">
+        <div class="cs-big"><span id="calMemoryCount">0</span>개의 추억</div>
+        <div class="cs-sub">모두 참여한 날 <span id="calAllDays">0</span>일</div>
+      </div>
+      <div class="cs-r" id="calRate">참여율 0%</div>
+    </div>
+    <div class="cal-weekdays">
+      <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- LEADERBOARD (가족 리더보드 / 권한) -->
+  <div id="leaderboard" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>가족 리더보드</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="lb-month" id="lbMonth">이번 달</div>
+    <div class="lb-crown" id="lbCrown"></div>
+    <div class="lb-list" id="lbList"></div>
+    <div class="lb-hof" id="lbHof"></div>
+  </div>
+
+  <!-- NOTIFICATIONS (알림) -->
+  <div id="notif" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>알림</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </div>
+
+  <!-- FAMILY (가족 · 초대) -->
+  <div id="family" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>가족</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="fam-invite">
+      <div class="fi-icon">✉️</div>
+      <div class="fi-text">
+        <div class="fi-title">핑에 가족 초대하기</div>
+        <div class="fi-link" id="famLink">https://yunagunwoo-netizen.github.io/ping/</div>
+      </div>
+      <button class="fi-share" onclick="shareInvite()">⤴</button>
+    </div>
+    <div class="fam-namebar">
+      <span class="fam-name" id="famName">우리가족 ✌️</span>
+      <span class="fam-count" id="famCount">4</span>
+      <button class="fam-edit" onclick="editFamilyName()">✏️</button>
+    </div>
+    <div class="fam-list" id="famList"></div>
+  </div>
+
+  <!-- ALBUM (가족 앨범) -->
+  <div id="album" class="screen">
+    <div class="cal-header">
+      <button class="cal-back" onclick="showScreen('feed')">‹</button>
+      <h2>가족 앨범</h2>
+      <div style="width:36px"></div>
+    </div>
+    <div class="album-tabs">
+      <button class="album-tab on" id="albumTabAll" onclick="albumSwitch(false)">전체</button>
+      <button class="album-tab" id="albumTabTogether" onclick="albumSwitch(true)">함께 찍은 순간</button>
+    </div>
+    <div class="album-sub"><span id="albumCount">0</span>장의 추억</div>
+    <div class="album-grid" id="albumGrid"></div>
+  </div>
+
+  <!-- 날짜 상세 -->
+  <div class="day-overlay" id="dayOverlay" onclick="closeDayDetail(event)">
+    <div class="day-card">
+      <h3 id="dayTitle">날짜</h3>
+      <div class="day-grid" id="dayGrid"></div>
+      <button class="day-close" onclick="closeDayDetail(event, true)">닫기</button>
+    </div>
+  </div>
+
+  <!-- REACTION OVERLAY -->
+  <div class="reaction-overlay" id="reactionOverlay" onclick="closeReactionPicker(event)">
+    <div class="reaction-picker">
+      <h4 id="reactionTarget">리액션 보내기</h4>
+      <div class="reaction-options">
+        <button onclick="sendReaction('❤️')">❤️</button>
+        <button onclick="sendReaction('😂')">😂</button>
+        <button onclick="sendReaction('👍')">👍</button>
+        <button onclick="sendReaction('🔥')">🔥</button>
+        <button onclick="sendReaction('😢')">😢</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오늘의 가족사진 -->
+  <div class="fp-overlay" id="familyPhotoOverlay" onclick="closeFamilyPhoto(event)">
+    <div class="fp-card">
+      <div class="fp-head">
+        <span class="fp-title">우리가족 ✌️</span>
+        <span class="fp-date" id="fpDate"></span>
+      </div>
+      <div class="fp-grid" id="fpGrid"></div>
+      <div class="fp-dubi">
+        <img id="fpDubi" src="./dubi-card-happy.png" alt="뚜비" onerror="this.style.display='none'">
+        <span>뚜비도 함께 🐾</span>
+      </div>
+      <div class="fp-foot">오늘 가족 모두 생존 확인! 📸</div>
+      <div class="fp-hint">화면을 캡처해서 저장하세요 📷</div>
+      <button class="fp-close" onclick="closeFamilyPhoto(event, true)">닫기</button>
+    </div>
+  </div>
+
+  <!-- 뚜비 도감 -->
+  <div class="dex-overlay" id="dubiDexOverlay" onclick="closeDubiDex(event)">
+    <div class="dex-modal">
+      <div class="dex-modal-head">
+        <h3>🐶 뚜비 도감</h3>
+        <span class="dex-prog"><span id="dexProgNum">0</span>/11</span>
+      </div>
+      <div class="dex-sub">가족 모두가 핑한 날, 뚜비 카드를 한 장씩 모아요!</div>
+      <div class="dex-grid" id="dexGrid"></div>
+      <button class="dex-close" onclick="closeDubiDex(event, true)">닫기</button>
+    </div>
+  </div>
+
+  <!-- 뚜비 카드 획득 축하 -->
+  <div class="cu-overlay" id="cardUnlockOverlay" onclick="closeCardUnlock(event)">
+    <div class="cu-card">
+      <div class="cu-title">🎉 새 뚜비 카드 획득!</div>
+      <img class="cu-img" id="cuImg" src="" alt="뚜비 카드">
+      <div class="cu-name" id="cuName">뚜비</div>
+      <div class="cu-sub">가족 모두가 오늘 생존 확인했어요!</div>
+      <div class="cu-btns">
+        <button class="cu-dex" onclick="closeCardUnlock(event, true); showDubiDex();">도감 보기</button>
+        <button class="cu-ok" onclick="closeCardUnlock(event, true)">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <span>핑 전송 중...</span>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- 홈 화면 설치 안내 배너 -->
+  <div class="install-banner" id="installBanner">
+    <img class="ib-icon" src="./icon-192.png" alt="핑">
+    <div class="ib-text">
+      <div class="ib-title">핑을 홈 화면에 설치하세요</div>
+      <div class="ib-sub" id="ibSub">설치해야 알림도 받고 앱처럼 빨라요</div>
+    </div>
+    <button class="ib-btn" id="ibBtn" onclick="openInstallGuide()">설치 방법</button>
+    <button class="ib-close" onclick="dismissInstall()">✕</button>
+  </div>
+
+  <!-- 설치 방법 그림 가이드 -->
+  <div class="ig-overlay" id="installGuide" onclick="closeInstallGuide(event)">
+    <div class="ig-card">
+      <img class="ig-img" id="igImg" src="./install-ios.png" alt="설치 방법">
+      <div class="ig-actions">
+        <button class="ig-install" id="igInstallBtn" style="display:none" onclick="installApp()">지금 설치</button>
+        <button class="ig-close" onclick="closeInstallGuide(event, true)">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="captureCanvas" style="display:none"></canvas>
+
+<script type="module">
+// ========== FIREBASE SETUP ==========
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
+import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js';
+
+// 🔧 Firebase 설정 — 본인의 Firebase 프로젝트 정보로 교체하세요
+const firebaseConfig = {
+  apiKey: "AIzaSyBsdwetovnP6RrgMAxcWZc7tmAQHVHNuLM",
+  authDomain: "ping-family.firebaseapp.com",
+  projectId: "ping-family",
+  storageBucket: "ping-family.firebasestorage.app",
+  messagingSenderId: "1076131335477",
+  appId: "1:1076131335477:web:45bc309dcbdfe315cd507c"
+};
+
+// 🔔 FCM 웹푸시 공개키(VAPID) — Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 구성에서 생성해 붙여넣기
+const FCM_VAPID_KEY = "BCgnrgbnGqkRgx00n2oMw10kA617cNSzJHQh6j_7HC9fQJX4OzlUPwv51_xdBRdKeI898AzNvbpWsY80jzYNEkw";
+
+let db, storage, auth, messaging, firebaseReady = false;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  storage = getStorage(app);
+  if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    auth = getAuth(app);
+    // 익명 로그인 — 보안 규칙(인증된 사용자만)을 통과하기 위해 필요
+    try { messaging = getMessaging(app); } catch(e) { console.warn('FCM 미지원 브라우저', e); }
+    signInAnonymously(auth).then(async () => {
+      firebaseReady = true;
+      console.log('Firebase 익명 로그인 성공');
+      // 로그인 완료 시점이 화면 진입보다 늦을 수 있으므로 데이터 다시 로드
+      if (currentMember) {
+        await loadTodayPings();
+        renderFeed();
+        startListening();
+      }
+      registerPush();
+    }).catch(e => console.warn('익명 로그인 실패 — 로컬 모드로 실행합니다.', e));
+  }
+} catch(e) {
+  console.warn('Firebase 초기화 실패 — 로컬 모드로 실행합니다.', e);
+}
+
+// 포그라운드(앱 켜져 있을 때) 푸시 수신 → 토스트
+function initForegroundPush(){
+  if (!messaging) return;
+  try {
+    onMessage(messaging, (payload) => {
+      const n = payload.notification || {};
+      showToast(`${n.title || '핑'} · ${n.body || ''}`);
+    });
+  } catch(e){}
+}
+
+// FCM 토큰 등록 (알림 권한 + 토큰을 Firestore에 저장)
+let pushRegistered = false;
+async function registerPush(){
+  if (pushRegistered) return;
+  if (!messaging || !firebaseReady || !currentMember) return;
+  if (!FCM_VAPID_KEY || FCM_VAPID_KEY.startsWith('여기에')) return; // VAPID 키 미설정 시 건너뜀
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  try {
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+    if (token){
+      await setDoc(doc(db, 'fcmTokens', currentMember), { token, member: currentMember, updatedAt: new Date().toISOString() });
+      pushRegistered = true;
+      console.log('FCM 토큰 등록 완료');
+    }
+  } catch(e){ console.warn('FCM 등록 실패', e); }
+}
+
+// ========== STATE ==========
+const FAMILY_ID = 'kimfamily';
+const MEMBERS = [
+  { id: '아빠', emoji: '👨', color: '#FFE0CC', avatar: './avatar-dad.png' },
+  { id: '엄마', emoji: '👩', color: '#CCE5FF', avatar: './avatar-mom.png' },
+  { id: '윤아', emoji: '👧', color: '#FFD6E8', avatar: './avatar-yuna.png' },
+  { id: '건우', emoji: '👦', color: '#D4F5D4', avatar: './avatar-gunwoo.png' }
+];
+
+const QUESTIONS = [
+  "오늘 가장 맛있었던 것은?","지금 기분을 날씨로 표현하면?","오늘 가장 웃긴 순간은?",
+  "지금 듣고 싶은 노래는?","오늘 가장 힘들었던 순간은?","내일 가장 기대되는 것은?",
+  "지금 먹고 싶은 간식은?","오늘 새로 알게 된 것은?","지금 창밖 풍경을 한 단어로?",
+  "오늘 가장 고마웠던 사람은?","지금 가고 싶은 곳은?","오늘 나에게 점수를 준다면?",
+  "가장 최근에 웃은 이유는?","지금 하고 싶은 것 하나만?","오늘 점심 뭐 먹었어?",
+  "가장 기억에 남는 꿈은?","지금 가장 보고 싶은 사람은?","오늘 가장 많이 한 행동은?",
+  "지금 신고 있는 양말 색깔은?","올해 꼭 하고 싶은 것 하나는?","오늘 들은 가장 좋은 말은?",
+  "지금 주머니에 뭐가 있어?","오늘 가장 오래 본 것은?","나를 동물로 표현하면?",
+  "오늘 가장 맛없었던 것은?","지금 옆에 있는 물건 하나는?","이번 주말에 하고 싶은 것은?",
+  "오늘 가장 예뻤던 것은?","최근에 빠진 취미가 있다면?","지금 배고파? 1~10점으로!",
+  "오늘 가장 집중한 것은?","가족에게 하고 싶은 한마디는?","오늘 가장 피곤한 신체 부위는?",
+  "지금 마시고 싶은 음료는?","오늘 본 가장 귀여운 것은?","내가 요리한다면 뭘 만들까?",
+  "지금 기분을 색깔로 표현하면?","오늘 가장 바빴던 시간은?","최근에 감동받은 것은?",
+  "지금 자신감 레벨 1~10은?","오늘 가장 맘에 든 내 모습은?","가족 여행 간다면 어디로?",
+  "지금 떠오르는 단어 세 개는?","오늘 아침에 가장 먼저 한 것은?","10년 후 나는 뭘 하고 있을까?",
+  "지금 가장 갖고 싶은 것은?","오늘 하루를 이모지 하나로?","가족 중 오늘 가장 보고 싶은 사람은?",
+  "지금 눈앞에 보이는 글자는?","오늘 하루 수고한 나에게 한마디!"
+];
+
+let currentMember = null;
+let currentStream = null;
+let facingMode = 'environment';
+let capturedBlob = null;
+let reactionTargetMember = null;
+let todayPings = {}; // { memberId: { photoURL, comment, reactions, createdAt } }
+let streaks = {}; // { memberId: { current, best, lastPingDate } }
+let unsubscribe = null;
+let togetherSelected = new Set(); // 이번 사진에 함께 찍은 가족
+
+// ========== HELPERS ==========
+function getToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getTodayKR() {
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+}
+
+function getDailyQuestion() {
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  return QUESTIONS[dayOfYear % QUESTIONS.length];
+}
+
+function getMember(id) { return MEMBERS.find(m => m.id === id); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'feed') renderFeed();
+  if (id === 'mypage') renderMyPage();
+}
+
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('show', show);
+}
+
+// ========== LOCAL STORAGE ==========
+function saveLocal(key, val) { localStorage.setItem(`ping_${key}`, JSON.stringify(val)); }
+function loadLocal(key, def) { try { return JSON.parse(localStorage.getItem(`ping_${key}`)) || def; } catch { return def; } }
+
+// ========== ONBOARDING ==========
+window.selectMember = function(id) {
+  currentMember = id;
+  saveLocal('member', id);
+  showScreen('feed');
+  startListening();
+  scheduleSurvivalTimer();
+};
+
+// ========== FIREBASE / LOCAL DATA ==========
+async function loadTodayPings() {
+  const today = getToday();
+  if (firebaseReady) {
+    try {
+      for (const m of MEMBERS) {
+        const docId = `${today}_${m.id}`;
+        const snap = await getDoc(doc(db, 'pings', docId));
+        if (snap.exists()) todayPings[m.id] = snap.data();
+      }
+    } catch(e) { console.warn('Firestore 읽기 실패', e); }
+  }
+  // Merge local data
+  const localPings = loadLocal(`pings_${today}`, {});
+  for (const [k, v] of Object.entries(localPings)) {
+    if (!todayPings[k]) todayPings[k] = v;
+  }
+}
+
+let listening = false;
+function startListening() {
+  if (!firebaseReady || listening) return;
+  listening = true;
+  const today = getToday();
+  try {
+    // Listen for changes to today's pings
+    for (const m of MEMBERS) {
+      const docId = `${today}_${m.id}`;
+      onSnapshot(doc(db, 'pings', docId), (snap) => {
+        if (snap.exists()) {
+          todayPings[m.id] = snap.data();
+          renderFeed();
+        }
+      });
+    }
+  } catch(e) { console.warn('Firestore listener 실패', e); }
+}
+
+async function savePing(memberId, photoDataURL, comment, withMembers) {
+  const today = getToday();
+  const pingData = {
+    familyId: FAMILY_ID,
+    memberId,
+    photoURL: photoDataURL,
+    comment: comment || '',
+    withMembers: withMembers || [],
+    reactions: {},
+    question: getDailyQuestion(),
+    createdAt: new Date().toISOString()
+  };
+
+  // Save locally first
+  todayPings[memberId] = pingData;
+  const localPings = loadLocal(`pings_${today}`, {});
+  localPings[memberId] = pingData;
+  saveLocal(`pings_${today}`, localPings);
+
+  // Update streak
+  updateStreak(memberId);
+
+  // Try Firebase
+  if (firebaseReady) {
+    try {
+      const docId = `${today}_${memberId}`;
+      // Upload photo to Storage
+      if (capturedBlob) {
+        const photoRef = storageRef(storage, `families/${FAMILY_ID}/pings/${today}/${memberId}.jpg`);
+        await uploadBytes(photoRef, capturedBlob);
+        const url = await getDownloadURL(photoRef);
+        pingData.photoURL = url;
+      }
+      await setDoc(doc(db, 'pings', docId), pingData);
+    } catch(e) { console.warn('Firebase 저장 실패 — 로컬에 저장됨', e); }
+  }
+}
+
+async function saveReaction(targetMember, emoji) {
+  const today = getToday();
+  if (!todayPings[targetMember]) return;
+
+  if (!todayPings[targetMember].reactions) todayPings[targetMember].reactions = {};
+  todayPings[targetMember].reactions[currentMember] = emoji;
+
+  // Save locally
+  const localPings = loadLocal(`pings_${today}`, {});
+  localPings[targetMember] = todayPings[targetMember];
+  saveLocal(`pings_${today}`, localPings);
+
+  // Try Firebase
+  if (firebaseReady) {
+    try {
+      const docId = `${today}_${targetMember}`;
+      // setDoc + merge: 문서가 아직 없어도 에러 없이 리액션 저장됨 (이슈 10 수정)
+      await setDoc(doc(db, 'pings', docId), {
+        reactions: { [currentMember]: emoji }
+      }, { merge: true });
+    } catch(e) { console.warn('리액션 저장 실패', e); }
+  }
+}
+
+function updateStreak(memberId) {
+  const today = getToday();
+  streaks = loadLocal('streaks', {});
+  if (!streaks[memberId]) streaks[memberId] = { current: 0, best: 0, lastPingDate: null };
+
+  const s = streaks[memberId];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+  if (s.lastPingDate === today) return; // Already pinged today
+  if (s.lastPingDate === yesterdayStr) {
+    s.current += 1;
+  } else {
+    s.current = 1;
+  }
+  s.lastPingDate = today;
+  if (s.current > s.best) s.best = s.current;
+  saveLocal('streaks', streaks);
+}
+
+function getFamilyStreak() {
+  streaks = loadLocal('streaks', {});
+  let min = Infinity;
+  for (const m of MEMBERS) {
+    const s = streaks[m.id];
+    if (!s || s.lastPingDate !== getToday()) return 0;
+    min = Math.min(min, s.current);
+  }
+  return min === Infinity ? 0 : min;
+}
+
+// ========== RENDER FEED ==========
+function renderFeed() {
+  document.getElementById('feedDate').textContent = getTodayKR();
+
+  const familyStreak = getFamilyStreak();
+  document.getElementById('familyStreak').innerHTML = `🔥 ${familyStreak}일째`;
+
+  const uploadedCount = MEMBERS.filter(m => todayPings[m.id]).length;
+  document.getElementById('feedSubtitle').textContent =
+    uploadedCount === 4 ? '오늘 가족 모두 생존 확인! ✨' :
+    `${uploadedCount}/4명 생존 확인`;
+
+  // 뚜비 도감 버튼 카운트 갱신
+  updateDexButton();
+
+  // 전원 완료 시: 가족사진 버튼 + 하루 한 번 뚜비 카드 보상
+  const fpBtn = document.getElementById('familyPhotoBtn');
+  if (uploadedCount === 4) {
+    fpBtn.style.display = 'block';
+    if (loadLocal('familyPhotoSeen', '') !== getToday()) {
+      saveLocal('familyPhotoSeen', getToday());
+      const newCard = unlockDubiCard();
+      updateDexButton();
+      setTimeout(() => {
+        if (newCard) showCardUnlock(newCard);
+        else showFamilyPhoto();
+      }, 600);
+    }
+  } else {
+    fpBtn.style.display = 'none';
+  }
+
+  const grid = document.getElementById('feedGrid');
+  grid.innerHTML = '';
+
+  for (const m of MEMBERS) {
+    const ping = todayPings[m.id];
+    const card = document.createElement('div');
+    card.className = 'ping-card';
+
+    if (ping) {
+      const reactions = ping.reactions || {};
+      const reactionHTML = Object.values(reactions).map((emoji, i) => {
+        const reactor = Object.keys(reactions)[i];
+        return `<span class="reaction-chip ${reactor === currentMember ? 'mine' : ''}">${emoji}</span>`;
+      }).join('');
+
+      const timeStr = ping.createdAt ? new Date(ping.createdAt).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'}) : '';
+
+      card.innerHTML = `
+        <div class="photo-area"><img src="${ping.photoURL}" alt="${m.id}의 핑"></div>
+        <div class="card-info">
+          <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
+          ${ping.comment ? `<div class="card-comment">${ping.comment}</div>` : ''}
+          <div class="card-time">${timeStr}</div>
+        </div>
+        <div class="reactions-row">${reactionHTML}
+          ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="photo-area">
+          <div class="placeholder">
+            <img class="ph-av" src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
+            <span>아직 핑 안 옴</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
+        </div>
+        ${m.id !== currentMember ? `<button class="poke-btn" onclick="pokeMember('${m.id}')">👈 찌르기</button>` : ''}`;
+    }
+    grid.appendChild(card);
+  }
+
+  // Update FAB
+  const fab = document.getElementById('fabBtn');
+  if (todayPings[currentMember]) {
+    fab.classList.add('disabled');
+  } else {
+    fab.classList.remove('disabled');
+  }
+
+  startCountdown();
+  registerPush();
+}
+
+// ========== RENDER MYPAGE ==========
+function renderMyPage() {
+  const m = getMember(currentMember);
+  if (!m) return;
+  const myAv = document.getElementById('myAvatar');
+  myAv.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.parentElement.textContent='${m.emoji}'">`;
+  myAv.style.background = m.color;
+  document.getElementById('myName').textContent = m.id;
+
+  streaks = loadLocal('streaks', {});
+  const s = streaks[currentMember] || { current: 0, best: 0 };
+  document.getElementById('myStreakNum').textContent = s.current;
+  document.getElementById('myStreakBest').textContent = s.best;
+
+  const settings = loadLocal('settings', {});
+  if (settings.alarmTime) document.getElementById('alarmTime').value = settings.alarmTime;
+
+  // 이번 달 점수 + 순위
+  const now = new Date();
+  computeMonthScores(now.getFullYear(), now.getMonth()).then(scores => {
+    document.getElementById('myMonthScore').textContent = scores[currentMember] || 0;
+    const ranked = MEMBERS.map(mm => mm.id).sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
+    const rank = ranked.indexOf(currentMember) + 1;
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '🏅' };
+    const myScore = scores[currentMember] || 0;
+    document.getElementById('myScoreRank').textContent = (myScore > 0 && rank === 1) ? '👑' : (medals[rank] || '🏅');
+  }).catch(() => {});
+}
+
+// ========== CAMERA ==========
+window.openCamera = async function() {
+  if (todayPings[currentMember]) {
+    showToast('오늘은 이미 핑을 보냈어요!');
+    return;
+  }
+  showScreen('camera');
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    document.getElementById('videoPreview').srcObject = currentStream;
+  } catch(e) {
+    showToast('카메라를 사용할 수 없습니다');
+    closeCamera();
+  }
+};
+
+window.closeCamera = function() {
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+    currentStream = null;
+  }
+  showScreen('feed');
+};
+
+window.flipCamera = async function() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+  }
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    document.getElementById('videoPreview').srcObject = currentStream;
+  } catch(e) {
+    showToast('카메라 전환 실패');
+  }
+};
+
+window.capturePhoto = function() {
+  const video = document.getElementById('videoPreview');
+  const canvas = document.getElementById('captureCanvas');
+
+  // Resize to max 1080px
+  const size = Math.min(video.videoWidth, video.videoHeight, 1080);
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext('2d');
+  // Center crop to square
+  const sx = (video.videoWidth - size) / 2;
+  const sy = (video.videoHeight - size) / 2;
+
+  // Mirror if front camera
+  if (facingMode === 'user') {
+    ctx.translate(size, 0);
+    ctx.scale(-1, 1);
+  }
+
+  ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+
+  canvas.toBlob(blob => {
+    capturedBlob = blob;
+    const url = URL.createObjectURL(blob);
+    document.getElementById('previewImg').src = url;
+
+    // Show question
+    const q = getDailyQuestion();
+    document.getElementById('questionText').textContent = q;
+    document.getElementById('questionBox').style.display = 'block';
+    document.getElementById('commentInput').value = '';
+
+    if (currentStream) {
+      currentStream.getTracks().forEach(t => t.stop());
+      currentStream = null;
+    }
+    togetherSelected = new Set();
+    buildTogetherChips();
+    showScreen('preview');
+  }, 'image/jpeg', 0.7);
+};
+
+window.cancelPreview = function() {
+  capturedBlob = null;
+  openCamera();
+};
+
+window.submitPing = async function() {
+  const comment = document.getElementById('commentInput').value.trim();
+  showLoading(true);
+
+  try {
+    // Convert blob to data URL for local storage
+    const reader = new FileReader();
+    const dataURL = await new Promise((resolve) => {
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(capturedBlob);
+    });
+
+    const withMembers = [...togetherSelected];
+    await savePing(currentMember, dataURL, comment, withMembers);
+    showLoading(false);
+    const pts = 10 + withMembers.length * 10;
+    showToast(withMembers.length ? `핑! +${pts}점 (함께찍기 보너스!) 🎉` : '핑! +10점 📸');
+    capturedBlob = null;
+    togetherSelected = new Set();
+    showScreen('feed');
+  } catch(e) {
+    showLoading(false);
+    showToast('전송 실패 — 다시 시도해주세요');
+    console.error(e);
+  }
+};
+
+// ========== REACTIONS ==========
+window.openReactionPicker = function(targetId) {
+  reactionTargetMember = targetId;
+  const m = getMember(targetId);
+  document.getElementById('reactionTarget').textContent = `${m.emoji} ${m.id}에게 리액션`;
+  document.getElementById('reactionOverlay').classList.add('show');
+};
+
+window.closeReactionPicker = function(e) {
+  if (e.target === document.getElementById('reactionOverlay')) {
+    document.getElementById('reactionOverlay').classList.remove('show');
+  }
+};
+
+window.sendReaction = async function(emoji) {
+  if (!reactionTargetMember) return;
+  await saveReaction(reactionTargetMember, emoji);
+  document.getElementById('reactionOverlay').classList.remove('show');
+  renderFeed();
+  showToast(`${emoji} 리액션 전송!`);
+};
+
+// ========== POKE ==========
+window.pokeMember = async function(targetId) {
+  const m = getMember(targetId);
+  showToast(`${m.id}에게 찌르기 전송! 👈`);
+  // Firestore에 찌르기 기록 → Cloud Function이 FCM 푸시 발송
+  if (firebaseReady && currentMember) {
+    try {
+      await setDoc(doc(db, 'pokes', `${Date.now()}_${currentMember}_${targetId}`), {
+        from: currentMember, target: targetId, createdAt: new Date().toISOString()
+      });
+    } catch(e){ console.warn('찌르기 기록 실패', e); }
+  }
+};
+
+// ========== 오늘의 가족사진 (전원 핑 완료 시) ==========
+window.showFamilyPhoto = function() {
+  if (MEMBERS.filter(m => todayPings[m.id]).length < 4) {
+    showToast('아직 가족 모두 핑하지 않았어요!');
+    return;
+  }
+  document.getElementById('fpDate').textContent = getTodayKR();
+  // 뚜비 기분 카드: 날짜에 따라 3종 순환
+  const dubiCards = ['./dubi-card-happy.png', './dubi-card-play.png', './dubi-card-sleepy.png'];
+  const d = new Date();
+  const dayOfYear = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  document.getElementById('fpDubi').src = dubiCards[dayOfYear % 3];
+  const grid = document.getElementById('fpGrid');
+  grid.innerHTML = '';
+  for (const m of MEMBERS) {
+    const ping = todayPings[m.id];
+    const cell = document.createElement('div');
+    cell.className = 'fp-cell';
+    cell.innerHTML = `<img src="${ping.photoURL}" alt="${m.id}"><span class="fp-name">${m.id}</span>`;
+    grid.appendChild(cell);
+  }
+  document.getElementById('familyPhotoOverlay').classList.add('show');
+};
+
+window.closeFamilyPhoto = function(e, force) {
+  if (force || (e && e.target === document.getElementById('familyPhotoOverlay'))) {
+    document.getElementById('familyPhotoOverlay').classList.remove('show');
+  }
+};
+
+// ========== 뚜비 카드 도감 (일일 보상) ==========
+const DUBI_CARDS = [
+  { id:'happy', name:'행복뚜비' }, { id:'play', name:'장난뚜비' }, { id:'sleepy', name:'졸린뚜비' },
+  { id:'love', name:'사랑뚜비' }, { id:'excited', name:'신난뚜비' }, { id:'snack', name:'간식뚜비' },
+  { id:'birthday', name:'생일뚜비' }, { id:'winter', name:'겨울뚜비' }, { id:'flower', name:'꽃뚜비' },
+  { id:'curious', name:'궁금뚜비' }, { id:'cheer', name:'응원뚜비' }
+];
+function dubiName(id){ const c = DUBI_CARDS.find(x => x.id === id); return c ? c.name : '뚜비'; }
+
+function unlockDubiCard(){
+  const owned = loadLocal('dubiCards', []);
+  if (owned.some(c => c.date === getToday())) return null; // 오늘 이미 획득
+  const ownedSet = new Set(owned.map(c => c.card));
+  const remaining = DUBI_CARDS.filter(c => !ownedSet.has(c.id));
+  if (remaining.length === 0) return null; // 도감 완성
+  const pick = remaining[Math.floor(Math.random() * remaining.length)];
+  owned.push({ card: pick.id, date: getToday() });
+  saveLocal('dubiCards', owned);
+  return pick.id;
+}
+
+function updateDexButton(){
+  const ownedSet = new Set(loadLocal('dubiCards', []).map(c => c.card));
+  const n = DUBI_CARDS.filter(c => ownedSet.has(c.id)).length;
+  const el = document.getElementById('dexCount');
+  if (el) el.textContent = n;
+}
+
+window.showCardUnlock = function(cardId){
+  document.getElementById('cuImg').src = `./dubi-card-${cardId}.png`;
+  document.getElementById('cuName').textContent = dubiName(cardId);
+  document.getElementById('cardUnlockOverlay').classList.add('show');
+};
+window.closeCardUnlock = function(e, force){
+  if (force || (e && e.target === document.getElementById('cardUnlockOverlay'))) {
+    document.getElementById('cardUnlockOverlay').classList.remove('show');
+  }
+};
+
+window.showDubiDex = function(){
+  const ownedSet = new Set(loadLocal('dubiCards', []).map(c => c.card));
+  const n = DUBI_CARDS.filter(c => ownedSet.has(c.id)).length;
+  document.getElementById('dexProgNum').textContent = n;
+  const grid = document.getElementById('dexGrid');
+  grid.innerHTML = '';
+  for (const c of DUBI_CARDS) {
+    const item = document.createElement('div');
+    item.className = 'dex-item';
+    item.innerHTML = ownedSet.has(c.id)
+      ? `<div class="dex-thumb"><img src="./dubi-card-${c.id}.png" alt="${c.name}"></div><div class="dex-label owned">${c.name}</div>`
+      : `<div class="dex-thumb locked">🔒</div><div class="dex-label">???</div>`;
+    grid.appendChild(item);
+  }
+  document.getElementById('dubiDexOverlay').classList.add('show');
+};
+window.closeDubiDex = function(e, force){
+  if (force || (e && e.target === document.getElementById('dubiDexOverlay'))) {
+    document.getElementById('dubiDexOverlay').classList.remove('show');
+  }
+};
+
+// ========== 헤더 더보기 메뉴 ==========
+window.toggleHeaderMenu = function(e){
+  if (e) e.stopPropagation();
+  document.getElementById('headerMenu').classList.toggle('show');
+};
+window.menuGo = function(which){
+  document.getElementById('headerMenu').classList.remove('show');
+  if (which === 'album') openAlbum();
+  else if (which === 'lb') openLeaderboard();
+  else if (which === 'cal') openCalendar();
+  else if (which === 'dex') showDubiDex();
+  else if (which === 'family') openFamily();
+  else if (which === 'notif') openNotifications();
+};
+
+// ========== 알림 피드 ==========
+function timeAgo(ts){
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '방금';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}분 전`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}시간 전`;
+  return `${Math.floor(diff/86400000)}일 전`;
+}
+window.openNotifications = function(){ showScreen('notif'); renderNotifications(); };
+async function renderNotifications(){
+  const list = document.getElementById('notifList');
+  list.innerHTML = '<div class="notif-empty">불러오는 중...</div>';
+  const now = new Date();
+  const m1 = await loadMonth(now.getFullYear(), now.getMonth());
+  const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const m2 = await loadMonth(pm.getFullYear(), pm.getMonth());
+  const data = { ...m2, ...m1 };
+  const items = [];
+  for (const date in data){
+    const dp = data[date];
+    for (const mid in dp){
+      const ping = dp[mid];
+      const baseTs = ping.createdAt ? new Date(ping.createdAt).getTime() : new Date(date + 'T12:00:00').getTime();
+      if (mid !== currentMember){
+        items.push({ who: mid, ts: baseTs, text: `${mid}님이 오늘의 핑을 올렸어요`, sub: ping.comment || '', emoji: '' });
+      }
+    }
+    const myPing = dp[currentMember];
+    if (myPing && myPing.reactions){
+      for (const reactor in myPing.reactions){
+        if (reactor === currentMember) continue;
+        const baseTs = myPing.createdAt ? new Date(myPing.createdAt).getTime() : new Date(date + 'T12:00:00').getTime();
+        items.push({ who: reactor, ts: baseTs + 1, text: `${reactor}님이 내 생존신고에 리액션했어요`, sub: '', emoji: myPing.reactions[reactor] });
+      }
+    }
+  }
+  items.sort((a, b) => b.ts - a.ts);
+  list.innerHTML = '';
+  if (!items.length){ list.innerHTML = '<div class="notif-empty">아직 알림이 없어요 🔔</div>'; return; }
+  for (const it of items.slice(0, 50)){
+    const mem = getMember(it.who);
+    const av = mem ? mem.avatar : '';
+    const row = document.createElement('div'); row.className = 'notif-row';
+    row.innerHTML = `<div class="nr-avatar"><img src="${av}" alt="${it.who}" onerror="this.style.display='none'">${it.emoji ? `<span class="nr-emoji">${it.emoji}</span>` : ''}</div>
+      <div class="nr-body"><div class="nr-text">${it.text}</div>${it.sub ? `<div class="nr-sub">${it.sub}</div>` : ''}</div>
+      <div class="nr-time">${timeAgo(it.ts)}</div>`;
+    list.appendChild(row);
+  }
+}
+
+// ========== 가족 · 초대 ==========
+function getFamilyName(){ return loadLocal('familyName', '우리가족 ✌️'); }
+function getInviteLink(){ return location.origin + location.pathname; }
+window.openFamily = function(){
+  showScreen('family');
+  renderFamily();
+};
+function renderFamily(){
+  document.getElementById('famLink').textContent = getInviteLink();
+  document.getElementById('famName').textContent = getFamilyName();
+  document.getElementById('famCount').textContent = MEMBERS.length;
+  const list = document.getElementById('famList');
+  list.innerHTML = '';
+  for (const m of MEMBERS){
+    const row = document.createElement('div'); row.className = 'fam-row';
+    row.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
+      <div><div class="fr-name">${m.id}</div>${m.id === currentMember ? '<div class="fr-me">나</div>' : ''}</div>`;
+    list.appendChild(row);
+  }
+}
+window.shareInvite = async function(){
+  const url = getInviteLink();
+  const data = { title: '핑 - 가족 생존신고', text: getFamilyName() + ' 핑에 초대합니다!', url };
+  try {
+    if (navigator.share) { await navigator.share(data); }
+    else { await navigator.clipboard.writeText(url); showToast('초대 링크 복사됨 📋'); }
+  } catch(e){
+    try { await navigator.clipboard.writeText(url); showToast('초대 링크 복사됨 📋'); } catch(e2){}
+  }
+};
+window.editFamilyName = function(){
+  const cur = getFamilyName();
+  const next = prompt('가족 방 이름을 입력하세요', cur);
+  if (next && next.trim()){
+    saveLocal('familyName', next.trim());
+    renderFamily();
+    showToast('가족 이름 변경 완료');
+  }
+};
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('headerMenu');
+  const btn = document.getElementById('menuBtn');
+  if (menu && menu.classList.contains('show') && !menu.contains(e.target) && e.target !== btn){
+    menu.classList.remove('show');
+  }
+});
+
+// ========== 카운트다운 (업로드 시간대) ==========
+let countdownTimer = null;
+function fmt2(n){ return String(n).padStart(2,'0'); }
+function updateCountdown(){
+  const el = document.getElementById('countdown');
+  if (!el) return;
+  if (todayPings[currentMember]) {
+    el.classList.add('done');
+    el.innerHTML = '✅ 오늘 핑 완료! 내일 또 만나요';
+    return;
+  }
+  el.classList.remove('done');
+  const now = new Date();
+  const h = now.getHours();
+  let target, label;
+  if (h < 10) {
+    target = new Date(now); target.setHours(10, 0, 0, 0);
+    label = '오늘 핑 오픈까지 · 매일 10시 시작 📸';
+  } else {
+    target = new Date(now); target.setHours(24, 0, 0, 0);
+    label = '오늘 핑 마감까지 · 매일 10~24시 한 장 📸';
+  }
+  let diff = Math.max(0, Math.floor((target - now) / 1000));
+  const hh = fmt2(Math.floor(diff / 3600));
+  const mm = fmt2(Math.floor((diff % 3600) / 60));
+  const ss = fmt2(diff % 60);
+  el.innerHTML = `<div class="cd-time">${hh}:${mm}:${ss}</div><div class="cd-sub">${label}</div>`;
+}
+function startCountdown(){
+  updateCountdown();
+  if (!countdownTimer) countdownTimer = setInterval(updateCountdown, 1000);
+}
+
+// ========== 추억 캘린더 ==========
+let calYear, calMonth;
+function ymStr(y, m){ return `${y}-${String(m+1).padStart(2,'0')}`; }
+
+async function loadMonth(y, m){
+  const ym = ymStr(y, m);
+  const data = {};
+  const dim = new Date(y, m+1, 0).getDate();
+  // 1) 로컬 데이터
+  for (let d = 1; d <= dim; d++){
+    const date = `${ym}-${String(d).padStart(2,'0')}`;
+    const lp = loadLocal(`pings_${date}`, null);
+    if (lp && Object.keys(lp).length) data[date] = { ...lp };
+  }
+  // 2) Firebase 월 조회
+  if (firebaseReady){
+    try {
+      const q = query(collection(db, 'pings'),
+        where(documentId(), '>=', `${ym}-01`),
+        where(documentId(), '<=', `${ym}-31_`));
+      const snap = await getDocs(q);
+      snap.forEach(docu => {
+        const id = docu.id, us = id.indexOf('_');
+        if (us < 0) return;
+        const date = id.slice(0, us), member = id.slice(us+1);
+        if (!data[date]) data[date] = {};
+        data[date][member] = docu.data();
+        const lp = loadLocal(`pings_${date}`, {});
+        lp[member] = docu.data();
+        saveLocal(`pings_${date}`, lp);
+      });
+    } catch(e){ console.warn('캘린더 월 조회 실패', e); }
+  }
+  return data;
+}
+
+async function renderCalendar(){
+  const y = calYear, m = calMonth;
+  document.getElementById('calMonthLabel').textContent = `${y}.${String(m+1).padStart(2,'0')}`;
+  const now = new Date();
+  const isCurrent = (y === now.getFullYear() && m === now.getMonth());
+  const future = (y > now.getFullYear() || (y === now.getFullYear() && m >= now.getMonth()));
+  document.getElementById('calNextBtn').disabled = future;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#aaa;padding:24px;font-size:13px">불러오는 중...</div>';
+
+  const data = await loadMonth(y, m);
+
+  const dates = Object.keys(data).filter(d => Object.keys(data[d]).length > 0);
+  const memoryCount = dates.length;
+  const allDays = dates.filter(d => Object.keys(data[d]).length >= 4).length;
+  const dim = new Date(y, m+1, 0).getDate();
+  const elapsed = isCurrent ? now.getDate() : dim;
+  document.getElementById('calMemoryCount').textContent = memoryCount;
+  document.getElementById('calAllDays').textContent = allDays;
+  document.getElementById('calRate').textContent = `참여율 ${elapsed ? Math.round(memoryCount/elapsed*100) : 0}%`;
+
+  grid.innerHTML = '';
+  const firstDay = new Date(y, m, 1).getDay();
+  for (let i = 0; i < firstDay; i++){
+    const e = document.createElement('div'); e.className = 'cal-cell empty'; grid.appendChild(e);
+  }
+  const todayStr = getToday();
+  for (let d = 1; d <= dim; d++){
+    const date = `${ymStr(y,m)}-${String(d).padStart(2,'0')}`;
+    const cell = document.createElement('div'); cell.className = 'cal-cell';
+    if (date === todayStr) cell.classList.add('today');
+    const dayPings = data[date];
+    if (dayPings && Object.keys(dayPings).length){
+      cell.classList.add('has-photo');
+      const memberKey = dayPings[currentMember] ? currentMember : Object.keys(dayPings)[0];
+      const url = dayPings[memberKey].photoURL;
+      const all = Object.keys(dayPings).length >= 4;
+      cell.innerHTML = `<img src="${url}" alt=""><span class="cal-day">${d}</span>${all ? '<span class="cal-allbadge">✨</span>' : ''}`;
+      cell.onclick = () => showDayDetail(date, dayPings);
+    } else {
+      cell.innerHTML = `<span class="cal-day">${d}</span>`;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+window.openCalendar = function(){
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  showScreen('calendar');
+  renderCalendar();
+};
+window.calPrevMonth = function(){
+  calMonth--; if (calMonth < 0){ calMonth = 11; calYear--; }
+  renderCalendar();
+};
+window.calNextMonth = function(){
+  const now = new Date();
+  if (calYear > now.getFullYear() || (calYear === now.getFullYear() && calMonth >= now.getMonth())) return;
+  calMonth++; if (calMonth > 11){ calMonth = 0; calYear++; }
+  renderCalendar();
+};
+window.showDayDetail = function(date, dayPings){
+  const [, m, d] = date.split('-').map(Number);
+  document.getElementById('dayTitle').textContent = `${m}월 ${d}일`;
+  const grid = document.getElementById('dayGrid'); grid.innerHTML = '';
+  for (const mem of MEMBERS){
+    const p = dayPings[mem.id]; if (!p) continue;
+    const item = document.createElement('div'); item.className = 'day-item';
+    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}`;
+    grid.appendChild(item);
+  }
+  document.getElementById('dayOverlay').classList.add('show');
+};
+window.closeDayDetail = function(e, force){
+  if (force || (e && e.target === document.getElementById('dayOverlay'))) {
+    document.getElementById('dayOverlay').classList.remove('show');
+  }
+};
+
+// ========== 가족 점수 + 함께찍기 ==========
+function buildTogetherChips(){
+  const wrap = document.getElementById('togetherChips');
+  wrap.innerHTML = '';
+  for (const m of MEMBERS){
+    if (m.id === currentMember) continue;
+    const chip = document.createElement('button');
+    chip.className = 'together-chip' + (togetherSelected.has(m.id) ? ' on' : '');
+    chip.innerHTML = `<img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">${m.id}`;
+    chip.onclick = () => toggleTogether(m.id, chip);
+    wrap.appendChild(chip);
+  }
+}
+function toggleTogether(id, chip){
+  if (togetherSelected.has(id)) { togetherSelected.delete(id); chip.classList.remove('on'); }
+  else { togetherSelected.add(id); chip.classList.add('on'); }
+}
+
+// 점수 규칙: 핑 +10, 함께찍기 1명당 +10, (전원 핑한 날) 모두 +5
+function pingPoints(ping){
+  let p = 10;
+  if (ping && ping.withMembers && ping.withMembers.length) p += 10 * ping.withMembers.length;
+  return p;
+}
+async function computeMonthScores(y, m){
+  const data = await loadMonth(y, m);
+  const scores = {}; MEMBERS.forEach(mm => scores[mm.id] = 0);
+  for (const date in data){
+    const dayPings = data[date];
+    const ids = Object.keys(dayPings);
+    for (const id of ids){ if (scores[id] !== undefined) scores[id] += pingPoints(dayPings[id]); }
+    if (ids.length >= 4){ MEMBERS.forEach(mm => { scores[mm.id] += 5; }); }
+  }
+  return scores;
+}
+
+// ========== 리더보드 / 권한 ==========
+window.openLeaderboard = function(){
+  showScreen('leaderboard');
+  renderLeaderboard();
+};
+async function renderLeaderboard(){
+  const now = new Date();
+  document.getElementById('lbMonth').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월`;
+  // 로딩 표시
+  document.getElementById('lbList').innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:13px">불러오는 중...</div>';
+  document.getElementById('lbCrown').innerHTML = '';
+  document.getElementById('lbHof').innerHTML = '';
+
+  const scores = await computeMonthScores(now.getFullYear(), now.getMonth());
+  const ranked = MEMBERS.slice().sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
+  const top = ranked[0], topScore = scores[top.id] || 0;
+
+  // 이번 달 결정권자
+  const crown = document.getElementById('lbCrown');
+  if (topScore > 0){
+    crown.innerHTML = `<div class="lbc-title">👑 이번 달 결정권자</div>
+      <div class="lbc-member"><img src="${top.avatar}" alt="${top.id}" onerror="this.style.display='none'">
+        <div><div class="lbc-name">${top.id}</div><div class="lbc-priv">여행지 · 외식 장소 결정권 획득! 🗺️🍽️</div></div></div>`;
+  } else {
+    crown.innerHTML = `<div class="lbc-empty">이번 달 첫 핑을 올려 점수를 쌓아보세요!</div>`;
+  }
+
+  // 순위 리스트
+  const list = document.getElementById('lbList'); list.innerHTML = '';
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+  ranked.forEach((m, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (i === 0 && topScore > 0 ? ' lead' : '');
+    row.innerHTML = `<span class="lb-rank">${medals[i] || (i+1)}</span>
+      <img class="lb-av" src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
+      <span class="lb-name">${m.id}</span><span class="lb-score">${scores[m.id] || 0}점</span>`;
+    list.appendChild(row);
+  });
+
+  // 지난달 명예의 전당
+  const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastScores = await computeMonthScores(pm.getFullYear(), pm.getMonth());
+  const lastRanked = MEMBERS.slice().sort((a, b) => (lastScores[b.id] || 0) - (lastScores[a.id] || 0));
+  const lastTop = lastRanked[0], lastTopScore = lastScores[lastTop.id] || 0;
+  const hof = document.getElementById('lbHof');
+  hof.innerHTML = `<div class="lb-hof-title">🏆 지난달 명예의 전당</div>` + (lastTopScore > 0
+    ? `<div class="lb-hof-row"><img src="${lastTop.avatar}" alt="${lastTop.id}" onerror="this.style.display='none'"><span>${pm.getMonth()+1}월 1등 — <b>${lastTop.id}</b> (${lastTopScore}점)</span></div>`
+    : `<div class="lb-hof-empty">아직 기록이 없어요</div>`);
+}
+
+// ========== 가족 앨범 ==========
+let albumCache = null;
+let albumTogetherOnly = false;
+
+async function loadAllPhotos(){
+  const map = {}; // date -> { member: ping }
+  // 로컬 캐시 전체
+  for (let i = 0; i < localStorage.length; i++){
+    const k = localStorage.key(i);
+    if (k && k.startsWith('ping_pings_')){
+      const date = k.slice('ping_pings_'.length);
+      try { const v = JSON.parse(localStorage.getItem(k)); if (v && Object.keys(v).length) map[date] = { ...v }; } catch(e){}
+    }
+  }
+  // Firebase 최근 12개월
+  if (firebaseReady){
+    try {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      const sd = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-01`;
+      const q = query(collection(db, 'pings'),
+        where(documentId(), '>=', sd),
+        where(documentId(), '<=', `${getToday()}_`));
+      const snap = await getDocs(q);
+      snap.forEach(docu => {
+        const id = docu.id, us = id.indexOf('_'); if (us < 0) return;
+        const date = id.slice(0, us), member = id.slice(us+1);
+        if (!map[date]) map[date] = {};
+        map[date][member] = docu.data();
+      });
+    } catch(e){ console.warn('앨범 조회 실패', e); }
+  }
+  return map;
+}
+
+window.openAlbum = function(){
+  albumCache = null; albumTogetherOnly = false;
+  document.getElementById('albumTabAll').classList.add('on');
+  document.getElementById('albumTabTogether').classList.remove('on');
+  showScreen('album');
+  renderAlbum();
+};
+window.albumSwitch = function(togetherOnly){
+  albumTogetherOnly = togetherOnly;
+  document.getElementById('albumTabAll').classList.toggle('on', !togetherOnly);
+  document.getElementById('albumTabTogether').classList.toggle('on', togetherOnly);
+  renderAlbum();
+};
+async function renderAlbum(){
+  const grid = document.getElementById('albumGrid');
+  grid.innerHTML = '<div class="album-empty">불러오는 중...</div>';
+  if (!albumCache) albumCache = await loadAllPhotos();
+  const map = albumCache;
+  const items = [];
+  Object.keys(map).sort().reverse().forEach(date => {
+    const dp = map[date];
+    for (const id of MEMBERS.map(m => m.id)){
+      const ping = dp[id]; if (!ping) continue;
+      if (albumTogetherOnly && !(ping.withMembers && ping.withMembers.length)) continue;
+      items.push({ date, member: id, ping });
+    }
+  });
+  document.getElementById('albumCount').textContent = items.length;
+  grid.innerHTML = '';
+  if (!items.length){
+    grid.innerHTML = `<div class="album-empty">${albumTogetherOnly ? '아직 함께 찍은 사진이 없어요 📸' : '아직 사진이 없어요'}</div>`;
+    return;
+  }
+  for (const it of items){
+    const cell = document.createElement('div'); cell.className = 'album-cell';
+    const badge = (it.ping.withMembers && it.ping.withMembers.length) ? '<span class="album-badge">👨‍👩‍👧‍👦</span>' : '';
+    cell.innerHTML = `<img src="${it.ping.photoURL}" alt=""><span class="album-day">${it.member}·${it.date.slice(5)}</span>${badge}`;
+    cell.onclick = () => showDayDetail(it.date, map[it.date]);
+    grid.appendChild(cell);
+  }
+}
+
+// ========== SETTINGS ==========
+window.saveSettings = function() {
+  const alarmTime = document.getElementById('alarmTime').value;
+  saveLocal('settings', { alarmTime });
+  scheduleSurvivalTimer();
+  showToast('설정 저장 완료');
+};
+
+window.resetApp = function() {
+  if (confirm('정말 로그아웃하시겠습니까?')) {
+    localStorage.removeItem('ping_member');
+    currentMember = null;
+    showScreen('onboarding');
+  }
+};
+
+// ========== SURVIVAL TIMER (F5) ==========
+function scheduleSurvivalTimer() {
+  const settings = loadLocal('settings', {});
+  const alarmTime = settings.alarmTime || '22:00';
+  const [h, m] = alarmTime.split(':').map(Number);
+
+  const now = new Date();
+  const alarm = new Date();
+  alarm.setHours(h, m, 0, 0);
+
+  if (alarm <= now) return; // Already past alarm time
+
+  const delay = alarm - now;
+  setTimeout(() => {
+    if (!todayPings[currentMember]) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('핑', { body: '핑 보내세요! 오늘의 생존신고가 아직이에요 📸', icon: '📸' });
+      }
+      showToast('⏰ 핑 보내세요!');
+    }
+  }, delay);
+}
+
+// ========== 홈 화면 설치 안내 ==========
+let deferredInstallPrompt = null;
+let installBannerDismissed = false; // 이번 방문에서만 숨김 (다음에 또 뜸 → 설치할 때까지)
+function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isInAppBrowser(){ return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|wadiz/i.test(navigator.userAgent); }
+function guideImageFor(){
+  if (isInAppBrowser()) return './install-inapp.png';
+  if (isIOS()) return './install-ios.png';
+  return './install-android.png';
+}
+function maybeShowInstall(){
+  if (isStandalone() || installBannerDismissed) return; // 설치 완료면 안 뜸
+  const banner = document.getElementById('installBanner');
+  const sub = document.getElementById('ibSub');
+  if (isInAppBrowser()) sub.textContent = '카톡 안에서는 설치가 안 돼요 → 방법 보기';
+  else if (isIOS()) sub.textContent = "공유 → '홈 화면에 추가' (방법 보기)";
+  else sub.textContent = '설치해야 알림도 받고 앱처럼 빨라요';
+  banner.classList.add('show');
+}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  maybeShowInstall();
+});
+window.addEventListener('appinstalled', () => {
+  const b = document.getElementById('installBanner'); if (b) b.classList.remove('show');
+  closeInstallGuide(null, true);
+  deferredInstallPrompt = null;
+});
+window.openInstallGuide = function(){
+  document.getElementById('igImg').src = guideImageFor();
+  // 안드로이드에서 즉시 설치 가능하면 '지금 설치' 버튼 노출
+  document.getElementById('igInstallBtn').style.display = deferredInstallPrompt ? '' : 'none';
+  document.getElementById('installGuide').classList.add('show');
+};
+window.closeInstallGuide = function(e, force){
+  if (force || (e && e.target === document.getElementById('installGuide'))) {
+    document.getElementById('installGuide').classList.remove('show');
+  }
+};
+window.installApp = async function(){
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  try { await deferredInstallPrompt.userChoice; } catch(e){}
+  deferredInstallPrompt = null;
+  document.getElementById('igInstallBtn').style.display = 'none';
+  document.getElementById('installGuide').classList.remove('show');
+  document.getElementById('installBanner').classList.remove('show');
+};
+window.dismissInstall = function(){
+  installBannerDismissed = true;
+  document.getElementById('installBanner').classList.remove('show');
+};
+
+// ========== INIT ==========
+async function init() {
+  // 포그라운드 푸시 수신 핸들러
+  initForegroundPush();
+  // 홈 화면 설치 안내 (아이폰 등 beforeinstallprompt 미지원 대비)
+  setTimeout(maybeShowInstall, 2500);
+  // Request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    try { await navigator.serviceWorker.register('./sw.js'); } catch(e) {}
+  }
+
+  // Splash screen
+  setTimeout(async () => {
+    currentMember = loadLocal('member', null);
+
+    if (currentMember) {
+      await loadTodayPings();
+      showScreen('feed');
+      startListening();
+      scheduleSurvivalTimer();
+    } else {
+      showScreen('onboarding');
+    }
+  }, 1200);
+}
+
+// Expose to global for onclick handlers
+window.showScreen = showScreen;
+window.openCamera = openCamera;
+
+init();
+</script>
+</body>
+</html>

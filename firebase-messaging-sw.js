@@ -25,5 +25,5 @@ messaging.onBackgroundMessage((payload) => {
 // 알림 클릭 시 앱 열기
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('https://yunagunwoo-netizen.github.io/ping/'));
+  event.waitUntil(clients.openWindow('https://www.ping.ai.kr/app.html'));
 });

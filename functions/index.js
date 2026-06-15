@@ -8,7 +8,7 @@ const {getMessaging} = require("firebase-admin/messaging");
 initializeApp();
 const db = getFirestore();
 
-const APP_URL = "https://yunagunwoo-netizen.github.io/ping/";
+const APP_URL = "https://www.ping.ai.kr/app.html";
 
 // 보낸 사람을 제외한 가족들의 FCM 토큰 목록
 async function getTokensExcept(exceptMemberId) {
