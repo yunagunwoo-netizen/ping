@@ -816,7 +816,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 <script type="module">
 // ========== FIREBASE SETUP ==========
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId, arrayUnion } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, onSnapshot, documentId, arrayUnion, runTransaction } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js';
@@ -1831,7 +1831,7 @@ function weekKey(dateStr){
 // 시즌(3개월) 단위 목표 — 점수는 한 시즌 동안 누적, 시즌마다 리셋
 const DUBI_GOALS = [
   { pt: 600,  icon: '🦴', name: '특별 간식 사주기',  detail: '육류 알레르기·눈물 걱정 없는 단일단백질/가수분해 간식 (연어·황태 등) — 예: 데이스포 헬시트릿 LID, 세이오앙 LID' },
-  { pt: 1500, icon: '🦮', name: '특별 산책 나들이',  detail: '광교호수공원·동천자연공원에서 뚜비랑 길게 산책' },
+  { pt: 1500, icon: '🦮', name: '특별 산책 나들이',  assign: true, detail: '달성 시점까지 점수가 가장 낮은 사람이 뚜비를 데리고 광교호수공원으로 특별 산책! 🐾' },
   { pt: 2700, icon: '☕', name: '애견카페 가기',     detail: '고기동 카페 그라운드 · 별똥구리 · 카페 댕스 (차로 가까움)' },
   { pt: 4200, icon: '🧸', name: '미용 + 새 장난감',  detail: '단골 미용(약 6만원) + 콩 KONG 워블러 / 노즈워크 매트 장난감' }
 ];
@@ -1943,13 +1943,54 @@ async function renderDubiGoal(){
     nextEl.innerHTML = `🎉 모든 보상 달성! 뚜비가 세상에서 제일 행복해요`;
   }
 
+  // 특별 산책 담당자: 달성 시점의 최저 점수자를 시즌별로 1회 스냅샷해서 고정
+  function lowestNames(){
+    const min = Math.min(...MEMBERS.map(m => scores[m.id] || 0));
+    return MEMBERS.filter(m => (scores[m.id] || 0) === min).map(m => m.id).join(' · ');
+  }
+  const assignGoal = goals.find(g => g.assign);
+  let walkAssignee = null;
+  if (assignGoal && total >= assignGoal.pt){
+    const akey = 'walkAssignee_' + season.key;
+    if (firebaseReady){
+      // Firebase에 시즌별 1회만 원자적으로 기록 → 모든 가족에게 동일한 담당자 보장
+      try {
+        const ref = doc(db, 'walkAssignee', season.key);
+        await runTransaction(db, async (tx) => {
+          const s = await tx.get(ref);
+          if (s.exists() && s.data().name){
+            walkAssignee = s.data().name;
+          } else {
+            walkAssignee = lowestNames();
+            tx.set(ref, { familyId: FAMILY_ID, season: season.key, name: walkAssignee, total, createdAt: new Date().toISOString() });
+          }
+        });
+        saveLocal(akey, walkAssignee); // 로컬 캐시(오프라인 대비)
+      } catch(e){
+        walkAssignee = loadLocal(akey, null) || lowestNames();
+      }
+    } else {
+      // 오프라인 폴백: 로컬 캐시
+      walkAssignee = loadLocal(akey, null);
+      if (!walkAssignee){ walkAssignee = lowestNames(); saveLocal(akey, walkAssignee); }
+    }
+  }
+
   // 보상 단계
   const tl = document.getElementById('dgTiers'); tl.innerHTML = '';
   for (const g of goals){
     const done = total >= g.pt;
     const it = document.createElement('div');
     it.className = 'dg-tier' + (done ? ' done' : '');
-    it.innerHTML = `<span class="dg-tier-ic">${g.icon}</span><div class="dg-tier-mid"><span class="dg-tier-name">${g.name}</span>${g.detail ? `<span class="dg-tier-detail">${g.detail}</span>` : ''}</div><span class="dg-tier-pt">${done ? '달성 ✓' : g.pt + '점'}</span>`;
+    let assignHtml = '';
+    if (g.assign){
+      if (walkAssignee){
+        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:5px 9px;display:inline-block">🚶 이번 산책 담당: ${walkAssignee}</div>`;
+      } else {
+        assignHtml = `<div style="margin-top:6px;font-size:11.5px;color:var(--gray400)">🚶 지금 최저 점수: <b>${lowestNames()}</b> · 달성하면 산책 담당이 돼요</div>`;
+      }
+    }
+    it.innerHTML = `<span class="dg-tier-ic">${g.icon}</span><div class="dg-tier-mid"><span class="dg-tier-name">${g.name}</span>${g.detail ? `<span class="dg-tier-detail">${g.detail}</span>` : ''}${assignHtml}</div><span class="dg-tier-pt">${done ? '달성 ✓' : g.pt + '점'}</span>`;
     tl.appendChild(it);
   }
 
