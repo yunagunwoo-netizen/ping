@@ -427,7 +427,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .tr-item img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;background:#fff;display:block}
 .tr-item .tr-name{font-size:12.5px;font-weight:700;color:var(--gray500);margin-top:8px;line-height:1.35;min-height:34px;display:flex;align-items:center;justify-content:center}
 .tr-item .tr-pick{margin-top:6px;background:var(--orange);color:#fff;font-weight:800;font-size:12px;padding:7px 0;border-radius:9px}
-.rw-img{width:200px;height:200px;object-fit:contain;margin:8px auto 6px;display:block;border-radius:18px;background:#FFF6E9}
+.rw-img{width:150px;height:150px;object-fit:contain;margin:6px auto 4px;display:block;border-radius:18px;background:#FFF6E9}
 .rw-pt{font-size:13px;font-weight:800;color:var(--orange)}
 .rw-name{font-size:19px;font-weight:900;color:var(--gray500);margin:4px 0 12px}
 .rw-detail{font-size:13.5px;line-height:1.7;color:var(--gray400);text-align:left;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;background:var(--cream);border-radius:14px;padding:13px 15px}
@@ -2420,7 +2420,8 @@ async function renderDubiGoal(){
       const choice = _pickChoice[g.pt];
       const meChooser = chooser && chooser.split(' · ').includes(currentMember);
       const pickBtn = `<button onclick="openTreatModal(${g.pt})" style="margin-top:12px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:12px;border:none">${eico('crown','👑')} ${g.chooseLabel || '대장이 고르기'}</button>`;
-      const candHtml = `<div class="rw-role" style="${grayRole};padding:10px 8px"><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${g.choices.map(c => `<div style="text-align:center"><img src="${c.img}" onerror="this.style.display='none'" style="width:96px;height:96px;object-fit:cover;border-radius:12px;display:block;border:1px solid var(--gray200)"><div style="font-size:11.5px;color:var(--gray500);margin-top:4px;font-weight:700">${c.name}</div></div>`).join('')}</div></div>`;
+      const candW = g.choices.length >= 3 ? 64 : 104;
+      const candHtml = `<div class="rw-role" style="${grayRole};padding:8px 6px"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:nowrap">${g.choices.map(c => `<div style="text-align:center"><img src="${c.img}" onerror="this.style.display='none'" style="width:${candW}px;height:${candW}px;object-fit:cover;border-radius:10px;display:block;border:1px solid var(--gray200)"><div style="font-size:11px;color:var(--gray500);margin-top:3px;font-weight:700">${c.name}</div></div>`).join('')}</div></div>`;
       if (choice){
         const ch = g.choices.find(x => x.id === choice.choiceId) || { name: choice.name, img: choice.img };
         assignHtml += `<div style="${orangeBadge}">${eico('crown','👑')} ${choice.name}</div>`;
