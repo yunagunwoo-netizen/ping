@@ -416,6 +416,17 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .rw-overlay.show{display:flex}
 .rw-card{background:#fff;border-radius:24px;max-width:340px;width:100%;padding:18px 20px 22px;text-align:center;position:relative;max-height:88vh;overflow-y:auto;animation:popIn .35s ease}
 .rw-x{position:absolute;top:12px;right:14px;border:none;background:var(--gray100);color:var(--gray500);width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer}
+.tr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:185;display:none;align-items:center;justify-content:center;padding:18px}
+.tr-overlay.show{display:flex}
+.tr-card{background:#fff;border-radius:24px;max-width:380px;width:100%;padding:20px 18px 22px;position:relative;max-height:88vh;overflow-y:auto;animation:popIn .35s ease}
+.tr-title{font-size:18px;font-weight:800;color:var(--orange);text-align:center}
+.tr-sub{font-size:12.5px;color:var(--gray400);text-align:center;margin:4px 0 16px}
+.tr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tr-item{background:var(--cream);border:2px solid transparent;border-radius:16px;padding:10px;cursor:pointer;text-align:center;transition:transform .12s,border-color .12s}
+.tr-item:active{transform:scale(.96)}
+.tr-item img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;background:#fff;display:block}
+.tr-item .tr-name{font-size:12.5px;font-weight:700;color:var(--gray500);margin-top:8px;line-height:1.35;min-height:34px;display:flex;align-items:center;justify-content:center}
+.tr-item .tr-pick{margin-top:6px;background:var(--orange);color:#fff;font-weight:800;font-size:12px;padding:7px 0;border-radius:9px}
 .rw-img{width:200px;height:200px;object-fit:contain;margin:8px auto 6px;display:block;border-radius:18px;background:#FFF6E9}
 .rw-pt{font-size:13px;font-weight:800;color:var(--orange)}
 .rw-name{font-size:19px;font-weight:900;color:var(--gray500);margin:4px 0 12px}
@@ -856,6 +867,16 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
   </div>
 
+  <!-- 간식 선택 모달 (대장 전용) -->
+  <div class="tr-overlay" id="treatModal" onclick="closeTreatModal(event)">
+    <div class="tr-card">
+      <button class="rw-x" onclick="closeTreatModal(event, true)">✕</button>
+      <div class="tr-title">🦴 뚜비 간식 고르기</div>
+      <div class="tr-sub">대장님, 뚜비에게 줄 간식을 하나 골라주세요</div>
+      <div class="tr-grid" id="treatGrid"></div>
+    </div>
+  </div>
+
   <!-- 커스텀 다이얼로그 -->
   <div class="dlg-overlay" id="dlgOverlay">
     <div class="dlg-card">
@@ -1068,7 +1089,7 @@ function showScreen(id) {
 
 // ===== 폰(안드로이드) 뒤로가기 버튼 처리 =====
 // 우선순위: 열린 모달 닫기 → 하위 화면이면 피드로 → 피드에서 한 번 더 누르면 종료
-const OVERLAY_IDS = ['dlgOverlay','commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','rewardModal','dayOverlay','installGuide','coachOverlay'];
+const OVERLAY_IDS = ['dlgOverlay','commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','treatModal','rewardModal','dayOverlay','installGuide','coachOverlay'];
 function _openOverlay(){
   for (const oid of OVERLAY_IDS){ const el = document.getElementById(oid); if (el && el.classList.contains('show')) return el; }
   const hm = document.getElementById('headerMenu'); if (hm && hm.classList.contains('show')) return hm;
@@ -2113,11 +2134,21 @@ function weekKey(dateStr){
 // 등수 없이 가족 점수를 모두 합쳐 뚜비 보상을 함께 달성!
 // 시즌(3개월) 단위 목표 — 점수는 한 시즌 동안 누적, 시즌마다 리셋
 const DUBI_GOALS = [
-  { pt: 600,  icon: '🦴', img: './reward-treat.png', name: '특별 간식 사주기',  detail: '육류 알레르기·눈물 걱정 없는 단일단백질/가수분해 간식 (연어·황태 등) — 예: 데이스포 헬시트릿 LID, 세이오앙 LID' },
+  { pt: 600,  icon: '🦴', img: './treat-1.png', name: '특별 간식 사주기',  detail: '로하이드 화이트 밀크스틱 (ANF) — 600점을 모으면 뚜비에게 특별 간식 사주기! 🦴' },
   { pt: 1500, icon: '🦮', img: './reward-walk.png', name: '특별 산책 나들이',  assign: true, detail: '달성 시점까지 점수가 가장 낮은 사람이 뚜비를 데리고 광교호수공원으로 특별 산책! 🐾' },
   { pt: 2700, icon: '☕', img: './reward-cafe.png', name: '애견카페 가기',     detail: '고기동 카페 그라운드 · 별똥구리 · 카페 댕스 (차로 가까움)' },
   { pt: 4200, icon: '🧸', img: './reward-groom.png', name: '뚜비 미용 (최종 목표)', assignTopBottom: true, detail: '가족이 함께 모은 최종 목표! 달성하면 뚜비 미용 → 점수 리셋, 새 미용 주기 시작. 👑 최고 점수자는 미용 스타일·새 장난감을 고르는 「오늘의 뚜비 대장」. 🚿 최저 점수자는 미용실 왕복 라이드 + 미용 후 1주 빗질·눈물자국 케어 담당.' }
 ];
+// 600점 특별 간식 후보 (대장이 사진 보고 직접 고름). img는 ./treat-*.png, link는 구매처 URL.
+// 알레르기 안전: 단일단백질/가수분해(연어·황태 등)
+const TREATS = [
+  { id: 't1', name: '로하이드 화이트 밀크스틱', img: './treat-1.png', link: 'https://www.coupang.com/vp/products/26695586?itemId=25938782884&vendorItemId=87921392708' },
+  { id: 't2', name: '세이오앙 LID 황태',          img: './treat-2.png', link: '' },
+  { id: 't3', name: '단일단백 연어 트릿',          img: './treat-3.png', link: '' },
+  { id: 't4', name: '가수분해 황태 간식',          img: './treat-4.png', link: '' }
+];
+// 간식 선택 관련 모듈 상태 (renderDubiGoal에서 채움 → 모달/선택에서 사용)
+let _seasonKey = null, _treatChooser = null, _treatChoice = null;
 // 현재 시즌(봄 3~5 / 여름 6~8 / 가을 9~11 / 겨울 12~2)의 (연,월) 목록과 이름
 function currentSeasonInfo(){
   const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
@@ -2328,6 +2359,32 @@ async function renderDubiGoal(){
     }
   }
 
+  // 600 특별 간식: 달성 시점 최고 점수자(대장)를 주기별 1회 스냅샷 → 그 대장이 간식을 직접 고름
+  _seasonKey = season.key; _treatChooser = null; _treatChoice = null;
+  const treatGoal = goals.find(g => g.treat);
+  if (treatGoal && total >= treatGoal.pt){
+    const tkey = 'treatChooser_' + season.key;
+    if (firebaseReady){
+      try {
+        const tref = doc(db, 'treatChooser', season.key);
+        await runTransaction(db, async (tx) => {
+          const s = await tx.get(tref);
+          if (s.exists() && s.data().name){ _treatChooser = s.data().name; }
+          else { _treatChooser = highestNames(); tx.set(tref, { familyId: FAMILY_ID, season: season.key, name: _treatChooser, total, createdAt: new Date().toISOString() }); }
+        });
+        saveLocal(tkey, _treatChooser);
+      } catch(e){ _treatChooser = loadLocal(tkey, null) || highestNames(); }
+    } else {
+      _treatChooser = loadLocal(tkey, null);
+      if (!_treatChooser){ _treatChooser = highestNames(); saveLocal(tkey, _treatChooser); }
+    }
+    const ckey = 'treatChoice_' + season.key;
+    if (firebaseReady){
+      try { const cs = await getDoc(doc(db, 'treatChoice', season.key)); _treatChoice = cs.exists() ? cs.data() : JSON.parse(loadLocal(ckey, 'null')); }
+      catch(e){ try { _treatChoice = JSON.parse(loadLocal(ckey, 'null')); } catch(_){} }
+    } else { try { _treatChoice = JSON.parse(loadLocal(ckey, 'null')); } catch(_){} }
+  }
+
   // 보상 단계 (아이콘 이미지 + 클릭 시 상세 모달)
   const tl = document.getElementById('dgTiers'); tl.innerHTML = '';
   const tied = Math.max(...MEMBERS.map(m => scores[m.id] || 0)) === Math.min(...MEMBERS.map(m => scores[m.id] || 0));
@@ -2357,6 +2414,33 @@ async function renderDubiGoal(){
       } else {
         assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 지금 순위라면 대장 <b>${highestNames()}</b> · ${eico('shower','🚿')} 케어 <b>${lowestNames()}</b></div>`;
         roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">지금 순위라면 ${eico('crown','👑')} 대장은 <b>${highestNames()}</b>, ${eico('shower','🚿')} 케어는 <b>${lowestNames()}</b>.<br>4200점을 달성하는 순간의 점수로 확정돼요.</div>`;
+      }
+    } else if (g.treat){
+      const grayRole = 'background:var(--gray100);color:var(--gray500)';
+      const orangeBadge = 'margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:5px 9px;display:inline-block';
+      const meChooser = _treatChooser && _treatChooser.split(' · ').includes(currentMember);
+      const buyBtn = (lnk) => lnk ? `<a href="${lnk}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;background:var(--navy);color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none">구매하러 가기 ↗</a>` : '';
+      const chooseBtn = `<button onclick="openTreatModal()" style="margin-top:12px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:12px;border:none">🦴 간식 고르기</button>`;
+      if (_treatChoice){
+        const t = TREATS.find(x => x.id === _treatChoice.treatId);
+        const timg = (t && t.img) || _treatChoice.img || g.img;
+        const tlink = (t && t.link) || _treatChoice.link || '';
+        assignHtml = `<div style="${orangeBadge}">🦴 대장 ${_treatChooser}님이 고른 간식: ${_treatChoice.name}</div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">🦴 대장 <b>${_treatChooser}</b>님이 고른 간식<br><img src="${timg}" onerror="this.style.display='none'" style="width:120px;height:120px;object-fit:cover;border-radius:14px;margin:8px auto 2px;display:block"><b style="color:var(--orange);font-size:14px">${_treatChoice.name}</b><br>${buyBtn(tlink)}${meChooser ? `<br><button onclick="openTreatModal()" style="margin-top:10px;background:none;border:none;color:var(--gray400);font-size:12px;text-decoration:underline">다른 간식으로 바꾸기</button>` : ''}</div>`;
+      } else if (_treatChooser){
+        if (meChooser){
+          assignHtml = `<div style="${orangeBadge}">🦴 ${currentMember}님(대장), 간식을 골라주세요!</div>`;
+          roleHtml = `<div class="rw-role">🎉 ${currentMember}님이 <b>대장</b>이에요!<br>뚜비에게 줄 간식을 직접 골라주세요 🦴${chooseBtn}</div>`;
+        } else {
+          assignHtml = `<div style="${preStyle}">🦴 간식은 대장 <b>${_treatChooser}</b>님이 골라요 (고르는 중)</div>`;
+          roleHtml = `<div class="rw-role" style="${grayRole}">🦴 간식은 대장 <b>${_treatChooser}</b>님이 고르는 중이에요</div>`;
+        }
+      } else if (tied){
+        assignHtml = `<div style="${preStyle}">🦴 600점을 모으면 1등 대장이 간식을 골라요 (지금은 모두 같은 점수)</div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">🦴 600점을 달성하는 순간, 점수가 가장 높은 대장이 뚜비 간식을 직접 골라요. 지금은 다 같은 점수예요!</div>`;
+      } else {
+        assignHtml = `<div style="${preStyle}">🦴 지금 순위라면 대장 <b>${highestNames()}</b>님이 간식을 골라요</div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">🦴 지금 순위라면 <b>${highestNames()}</b>님이 대장!<br>600점을 달성하는 순간의 최고 점수자가 간식을 골라요.</div>`;
       }
     }
     _rewardView.push({ img: g.img, icon: g.icon, name: g.name, pt: g.pt, done, detail: g.detail || '', roleHtml });
@@ -2414,6 +2498,30 @@ window.closeReward = function(e, force){
   if (force || (e && e.target === document.getElementById('rewardModal'))){
     document.getElementById('rewardModal').classList.remove('show');
   }
+};
+// ===== 600점 특별 간식: 대장이 사진 보고 직접 고르기 =====
+window.openTreatModal = function(){
+  const grid = document.getElementById('treatGrid');
+  grid.innerHTML = TREATS.map(t => `<div class="tr-item" onclick="selectTreat('${t.id}')"><img src="${t.img}" alt="${t.name}" onerror="this.src='./reward-treat.png'"><div class="tr-name">${t.name}</div><div class="tr-pick">이걸로 고르기</div></div>`).join('');
+  document.getElementById('treatModal').classList.add('show');
+};
+window.closeTreatModal = function(e, force){
+  if (force || (e && e.target === document.getElementById('treatModal'))){
+    document.getElementById('treatModal').classList.remove('show');
+  }
+};
+window.selectTreat = async function(id){
+  const t = TREATS.find(x => x.id === id); if (!t) return;
+  if (!(await uiDialog({ message: `뚜비 간식으로\n'${t.name}'\n이걸로 정할까요?`, okText: '이걸로!' }))) return;
+  const rec = { treatId: t.id, name: t.name, img: t.img, link: t.link || '', by: currentMember || '', at: new Date().toISOString() };
+  if (firebaseReady && _seasonKey){
+    try { await setDoc(doc(db, 'treatChoice', _seasonKey), { familyId: FAMILY_ID, season: _seasonKey, ...rec }); } catch(e){}
+  }
+  if (_seasonKey) saveLocal('treatChoice_' + _seasonKey, JSON.stringify(rec));
+  _treatChoice = rec;
+  closeTreatModal(null, true);
+  showToast(`간식 선택 완료: ${t.name} 🦴`);
+  renderDubiGoal();
 };
 
 // ========== 가족 앨범 ==========
