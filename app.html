@@ -90,6 +90,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ig-overlay.show{display:flex}
 .ig-card{background:#fff;border-radius:20px;width:100%;max-width:420px;max-height:94vh;overflow-y:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .35s ease;display:flex;flex-direction:column}
 .ig-img{display:block;margin:10px auto 0;max-width:92%;max-height:40vh;border-radius:14px;flex-shrink:0}
+.ig-img.tall{max-width:96%;max-height:72vh}
 .ig-actions{display:flex;gap:8px;padding:10px 12px;flex-shrink:0}
 .ig-actions button{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700}
 .ig-install{background:var(--orange);color:#fff}
@@ -898,11 +899,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       </div>
       <div class="ig-note" id="igIOSWarn">
         <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">아이폰은 사파리(Safari)에서 열어주세요</div></div>
-        <p>아이폰은 <b>Safari 브라우저</b>에서만 홈 화면에 추가할 수 있어요. 카톡·크롬 등 다른 앱에서 열렸다면, 주소창의 <b>ping.ai.kr</b>을 복사해 <b>Safari로 다시 열고</b> 아래 방법대로 설치해 주세요.</p>
-      </div>
-      <div class="ig-note" id="igIOS">
-        <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">아이폰(Safari) 설치 방법</div></div>
-        <div class="step">① 화면 <b>맨 아래 가운데 공유 버튼</b>(네모에 위 화살표 ⬆️)을 누르세요<br>② 메뉴를 아래로 내려 <b>'홈 화면에 추가'</b>를 누르세요<br>③ 오른쪽 위 <b>'추가'</b>를 누르면 끝! <img src="./ic-paw.png" class="eico" alt="🐾" onerror="this.replaceWith('🐾')"></div>
+        <p>아이폰은 <b>Safari 브라우저</b>에서만 홈 화면에 추가할 수 있어요. 카톡·크롬 등 다른 앱에서 열렸다면, 주소창의 <b>ping.ai.kr</b>을 복사해 <b>Safari로 다시 열고</b> 위 그림 순서대로 설치해 주세요.</p>
       </div>
       <div class="ig-actions">
         <button class="ig-install" id="igInstallBtn" style="display:none" onclick="installApp()">지금 설치</button>
@@ -2574,8 +2571,8 @@ window.openInstallGuide = function(){
   // 안드로이드(아이폰·인앱 제외)에서만 '안전하지 않은 앱' 안심 안내 노출
   const isAndroidWeb = !ios && !inApp;
   document.getElementById('igProtect').classList.toggle('show', isAndroidWeb);
-  // 아이폰: 단계 안내는 항상, Safari가 아니면 'Safari로 열기' 경고도 노출
-  document.getElementById('igIOS').classList.toggle('show', ios);
+  // 아이폰은 그림 가이드(install-ios.png)를 크게 보여주고, Safari가 아니면 'Safari로 열기' 경고 노출
+  document.getElementById('igImg').classList.toggle('tall', ios);
   document.getElementById('igIOSWarn').classList.toggle('show', ios && !isIOSSafari());
   // 안드로이드에서 즉시 설치 가능하면 '지금 설치' 버튼 노출
   document.getElementById('igInstallBtn').style.display = deferredInstallPrompt ? '' : 'none';
