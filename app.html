@@ -64,6 +64,11 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .feed-header .date{font-size:21px;font-weight:800}
 .feed-header .streak-badge{display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#FF6B35,#FF4D6D);color:#fff;padding:7px 13px;border-radius:18px;font-size:12.5px;font-weight:800;box-shadow:0 4px 12px rgba(255,77,109,.35)}
 .feed-subtitle{padding:4px 20px 16px;font-size:13px;color:var(--gray400)}
+.eico{width:1.15em;height:1.15em;display:inline-block;object-fit:contain;vertical-align:-0.22em}
+.streak-badge .eico{width:1.25em;height:1.25em;vertical-align:-0.28em}
+.dexw-ic .eico{width:26px;height:26px;vertical-align:middle}
+.sc-r .eico{vertical-align:middle}
+.cu-title .eico,.rw-role .eico{vertical-align:-0.18em}
 .week-card-banner{margin:0 16px 12px;background:#FFF6E9;border:1px solid #FBE2BC;border-radius:12px;padding:9px 12px;font-size:12.5px;color:var(--gray500);font-weight:600;text-align:center;cursor:pointer}
 .week-card-banner b{color:var(--orange)}
 .countdown{margin:12px 16px 2px;background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border-radius:16px;padding:14px 16px;text-align:center;box-shadow:var(--shadow)}
@@ -530,21 +535,21 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <div class="date" id="feedDate"></div>
       </div>
       <div class="feed-header-right">
-        <div class="streak-badge" id="familyStreak">🔥 0일째</div>
+        <div class="streak-badge" id="familyStreak"><img src="./ic-flame.png" class="eico" alt="🔥" onerror="this.replaceWith('🔥')"> 0일째</div>
         <button class="menu-btn" id="menuBtn" onclick="toggleHeaderMenu(event)">⋯</button>
         <div class="header-menu" id="headerMenu">
-          <button onclick="menuGo('notif')">🔔 알림</button>
-          <button onclick="menuGo('family')">👨‍👩‍👧‍👦 가족 · 초대</button>
-          <button onclick="menuGo('album')">📔 가족 앨범</button>
-          <button onclick="menuGo('lb')">🎯 뚜비 목표</button>
-          <button onclick="menuGo('cal')">📅 추억 캘린더</button>
-          <button onclick="menuGo('dex')">🐶 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/53</span></button>
+          <button onclick="menuGo('notif')"><img src="./ic-bell.png" class="eico" alt="🔔" onerror="this.replaceWith('🔔')"> 알림</button>
+          <button onclick="menuGo('family')"><img src="./ic-family.png" class="eico" alt="👨‍👩‍👧‍👦" onerror="this.replaceWith('👨‍👩‍👧‍👦')"> 가족 · 초대</button>
+          <button onclick="menuGo('album')"><img src="./ic-album.png" class="eico" alt="📔" onerror="this.replaceWith('📔')"> 가족 앨범</button>
+          <button onclick="menuGo('lb')"><img src="./ic-target.png" class="eico" alt="🎯" onerror="this.replaceWith('🎯')"> 뚜비 목표</button>
+          <button onclick="menuGo('cal')"><img src="./ic-calendar.png" class="eico" alt="📅" onerror="this.replaceWith('📅')"> 추억 캘린더</button>
+          <button onclick="menuGo('dex')"><img src="./ic-dubi.png" class="eico" alt="🐶" onerror="this.replaceWith('🐶')"> 뚜비 도감 <span class="hm-count"><span id="dexCount">0</span>/53</span></button>
         </div>
       </div>
     </div>
     <div class="countdown" id="countdown"></div>
     <div class="feed-subtitle" id="feedSubtitle">오늘의 가족 핑</div>
-    <button class="family-photo-btn" id="familyPhotoBtn" style="display:none" onclick="showFamilyPhoto()">📸 오늘의 가족사진 보기</button>
+    <button class="family-photo-btn" id="familyPhotoBtn" style="display:none" onclick="showFamilyPhoto()"><img src="./ic-camera.png" class="eico" alt="📸" onerror="this.replaceWith('📸')"> 오늘의 가족사진 보기</button>
     <div class="week-card-banner" id="weekCardBanner" style="display:none" onclick="showDubiDex()"></div>
     <div class="feed-grid" id="feedGrid"></div>
     <div class="nav-bar">
@@ -587,8 +592,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <span id="questionText"></span>
       </div>
       <div class="together-box">
-        <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> 🚶 뚜비랑 산책하며 찍었어요 <span>(주 1회 +50점)</span></label>
-        <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> 👨‍👩‍👧‍👦 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
+        <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> <img src="./ic-walk.png" class="eico" alt="🚶" onerror="this.replaceWith('🚶')"> 뚜비랑 산책하며 찍었어요 <span>(주 1회 +50점)</span></label>
+        <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> <img src="./ic-family.png" class="eico" alt="👨‍👩‍👧‍👦" onerror="this.replaceWith('👨‍👩‍👧‍👦')"> 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
       </div>
       <div class="comment-row">
         <input class="comment-input" id="commentInput" type="text" maxlength="20" placeholder="한줄 설명 (20자, 선택)">
@@ -605,7 +610,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div id="mypage" class="screen">
     <h2>마이페이지</h2>
     <div class="my-profile-card">
-      <div class="my-avatar" id="myAvatar">👤</div>
+      <div class="my-avatar" id="myAvatar"><img src="./ic-person.png" alt="👤" style="width:100%;height:100%;object-fit:contain" onerror="this.replaceWith('👤')"></div>
       <div class="my-info">
         <h3 id="myName">-</h3>
         <p id="myEmail">뚜비네 가족</p>
@@ -616,7 +621,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <h3>이번 주기 내 점수 · 뚜비 목표 ›</h3>
         <div><span class="sc-num" id="myMonthScore">0</span><span class="sc-unit"> 점</span></div>
       </div>
-      <div class="sc-r" id="myScoreRank">🏅</div>
+      <div class="sc-r" id="myScoreRank"><img src="./ic-medal.png" class="eico" alt="🏅" onerror="this.replaceWith('🏅')"></div>
     </div>
     <div class="streak-card">
       <h3>나의 연속 핑</h3>
@@ -788,10 +793,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <div class="fp-grid" id="fpGrid"></div>
       <div class="fp-dubi">
         <img id="fpDubi" src="./dubi-card-happy.png" alt="뚜비" onerror="this.style.display='none'">
-        <span>뚜비도 함께 🐾</span>
+        <span>뚜비도 함께 <img src="./ic-paw.png" class="eico" alt="🐾" onerror="this.replaceWith('🐾')"></span>
       </div>
-      <div class="fp-foot">오늘 가족 모두 핑 완료! 📸</div>
-      <div class="fp-hint">화면을 캡처해서 저장하세요 📷</div>
+      <div class="fp-foot">오늘 가족 모두 핑 완료! <img src="./ic-camera.png" class="eico" alt="📸" onerror="this.replaceWith('📸')"></div>
+      <div class="fp-hint">화면을 캡처해서 저장하세요 <img src="./ic-camera.png" class="eico" alt="📷" onerror="this.replaceWith('📷')"></div>
       <button class="fp-close" onclick="closeFamilyPhoto(event, true)">닫기</button>
     </div>
   </div>
@@ -800,10 +805,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div class="dex-overlay" id="dubiDexOverlay" onclick="closeDubiDex(event)">
     <div class="dex-modal">
       <div class="dex-modal-head">
-        <h3>🐶 뚜비 도감</h3>
+        <h3><img src="./ic-dubi.png" class="eico" alt="🐶" onerror="this.replaceWith('🐶')"> 뚜비 도감</h3>
         <span class="dex-prog">올해 <span id="dexProgNum">0</span>/53</span>
       </div>
-      <div class="dex-sub">한 주(7일) 동안 가족 모두 하루도 안 빠지고 올핑하면 그 주 카드 1장! 1년 53장, 놓친 주는 영영 잠겨요 🔒</div>
+      <div class="dex-sub">한 주(7일) 동안 가족 모두 하루도 안 빠지고 올핑하면 그 주 카드 1장! 1년 53장, 놓친 주는 영영 잠겨요 <img src="./ic-lock.png" class="eico" alt="🔒" onerror="this.replaceWith('🔒')"></div>
       <div class="dex-cal-head"><span id="dexMonthLabel">2026년</span></div>
       <div class="dex-week-grid" id="dexWeekGrid"></div>
       <div class="dex-monthstat" id="dexMonthStat"></div>
@@ -814,10 +819,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <!-- 뚜비 카드 획득 축하 -->
   <div class="cu-overlay" id="cardUnlockOverlay" onclick="closeCardUnlock(event)">
     <div class="cu-card">
-      <div class="cu-title">🎉 새 뚜비 카드 획득!</div>
+      <div class="cu-title"><img src="./ic-party.png" class="eico" alt="🎉" onerror="this.replaceWith('🎉')"> 새 뚜비 카드 획득!</div>
       <img class="cu-img" id="cuImg" src="" alt="뚜비 카드">
       <div class="cu-name" id="cuName">뚜비</div>
-      <div class="cu-sub">일주일 내내 온 가족이 핑했어요! 🎉</div>
+      <div class="cu-sub">일주일 내내 온 가족이 핑했어요! <img src="./ic-party.png" class="eico" alt="🎉" onerror="this.replaceWith('🎉')"></div>
       <div class="cu-btns">
         <button class="cu-dex" onclick="closeCardUnlock(event, true); showDubiDex();">도감 보기</button>
         <button class="cu-ok" onclick="closeCardUnlock(event, true)">확인</button>
@@ -833,7 +838,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <div class="coach-title" id="coachTitle"></div>
         <div class="coach-body" id="coachBody"></div>
       </div>
-      <button class="coach-ok" onclick="closeCoach(event, true)">좋아, 해볼게! 🐾</button>
+      <button class="coach-ok" onclick="closeCoach(event, true)">좋아, 해볼게! <img src="./ic-paw.png" class="eico" alt="🐾" onerror="this.replaceWith('🐾')"></button>
     </div>
   </div>
 
@@ -887,7 +892,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <img class="ig-img" id="igImg" src="./install-ios.png" alt="설치 방법">
       <div class="ig-note" id="igProtect">
         <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">"안전하지 않은 앱 차단됨"이 떠도 괜찮아요</div></div>
-        <p>바이러스가 아니에요. 홈 화면에 <b>웹앱</b>으로 추가될 때 뜨는 안내일 뿐이고, 핑은 아빠가 만든 <b>우리 가족 전용 앱</b>이라 안전해요 🔒</p>
+        <p>바이러스가 아니에요. 홈 화면에 <b>웹앱</b>으로 추가될 때 뜨는 안내일 뿐이고, 핑은 아빠가 만든 <b>우리 가족 전용 앱</b>이라 안전해요 <img src="./ic-lock.png" class="eico" alt="🔒" onerror="this.replaceWith('🔒')"></p>
         <div class="step">설치하려면 → <b>세부정보 더보기</b> 누르고 → <b>무시하고 설치</b>(또는 "어쨌든 설치")를 누르세요.<br>💡 <b>'확인'만 누르면 설치가 취소돼요!</b></div>
       </div>
       <div class="ig-actions">
@@ -1042,6 +1047,9 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2000);
 }
+
+// 이모지 → 일러스트 아이콘 인라인 헬퍼 (이미지 로드 실패 시 이모지로 폴백)
+function eico(name, fb){ return `<img src="./ic-${name}.png" class="eico" alt="${fb}" onerror="this.replaceWith('${fb}')">`; }
 
 let currentScreen = 'feed';
 function showScreen(id) {
@@ -1244,7 +1252,7 @@ function renderComments(){
   const p = todayPings[commentTarget];
   const list = document.getElementById('cmList'); list.innerHTML = '';
   const cs = (p && p.comments) || [];
-  if (!cs.length){ list.innerHTML = '<div class="cm-empty">첫 댓글을 남겨보세요 💬</div>'; return; }
+  if (!cs.length){ list.innerHTML = `<div class="cm-empty">첫 댓글을 남겨보세요 ${eico('speech','💬')}</div>`; return; }
   for (const c of cs){
     const mm = getMember(c.by); const av = mm ? mm.avatar : '';
     const t = c.at ? timeAgo(new Date(c.at).getTime()) : '';
@@ -1334,14 +1342,14 @@ function getFamilyStreak() {
 // ========== RENDER FEED ==========
 function renderFeed() {
   document.getElementById('feedDate').textContent = getTodayKR();
-  { const _h = new Date().getHours(); const _g = document.getElementById('fhGreet'); if (_g) _g.textContent = `${currentMember || '우리 가족'}님, ${_h < 11 ? '좋은 아침이에요' : _h < 18 ? '오늘도 반가워요' : '편안한 저녁이에요'} 🐾`; }
+  { const _h = new Date().getHours(); const _g = document.getElementById('fhGreet'); if (_g) _g.innerHTML = `${currentMember || '우리 가족'}님, ${_h < 11 ? '좋은 아침이에요' : _h < 18 ? '오늘도 반가워요' : '편안한 저녁이에요'} ${eico('paw','🐾')}`; }
 
   const familyStreak = getFamilyStreak();
-  document.getElementById('familyStreak').innerHTML = `🔥 ${familyStreak}일째`;
+  document.getElementById('familyStreak').innerHTML = `${eico('flame','🔥')} ${familyStreak}일째`;
 
   const uploadedCount = MEMBERS.filter(m => todayPings[m.id]).length;
-  document.getElementById('feedSubtitle').textContent =
-    uploadedCount === 4 ? '오늘 가족 모두 핑 완료! ✨' :
+  document.getElementById('feedSubtitle').innerHTML =
+    uploadedCount === 4 ? `오늘 가족 모두 핑 완료! ${eico('sparkle','✨')}` :
     `${uploadedCount}/4명 핑 완료`;
 
   // 뚜비 도감 버튼 카운트 갱신
@@ -1386,7 +1394,7 @@ function renderFeed() {
         </div>
         <div class="reactions-row">${reactionHTML}
           ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
-          <span class="reaction-chip" onclick="openComments('${m.id}')" style="cursor:pointer">💬 ${(ping.comments||[]).length || ''}</span>
+          <span class="reaction-chip" onclick="openComments('${m.id}')" style="cursor:pointer">${eico('speech','💬')} ${(ping.comments||[]).length || ''}</span>
         </div>`;
     } else {
       card.innerHTML = `
@@ -1399,7 +1407,7 @@ function renderFeed() {
         <div class="card-info">
           <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
         </div>
-        ${m.id !== currentMember ? `<button class="poke-btn" onclick="pokeMember('${m.id}')">👈 찌르기</button>` : ''}`;
+        ${m.id !== currentMember ? `<button class="poke-btn" onclick="pokeMember('${m.id}')">${eico('poke','👈')} 찌르기</button>` : ''}`;
     }
     grid.appendChild(card);
   }
@@ -1436,7 +1444,7 @@ function renderMyPage() {
   // 이번 시즌 내가 모은 점수 (등수 없이 — 뚜비를 위해 함께!)
   computeSeasonScores().then(scores => {
     document.getElementById('myMonthScore').textContent = scores[currentMember] || 0;
-    document.getElementById('myScoreRank').textContent = '🐾';
+    document.getElementById('myScoreRank').innerHTML = eico('paw','🐾');
   }).catch(() => {});
 }
 
@@ -1721,14 +1729,14 @@ async function renderDexCal(){
       cell.onclick=()=>openWeekZoom(w, label);
     } else if(ended){
       cell.classList.add('locked');
-      cell.innerHTML=`<div class="dexw-ic">🔒</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
+      cell.innerHTML=`<div class="dexw-ic">${eico('lock','🔒')}</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
     } else if(isCurrent){
       let cnt=0; for(const date of ds){ const dp=allData[date]; if(dp&&Object.keys(dp).length>=4) cnt++; }
       cell.classList.add('current');
-      cell.innerHTML=`<div class="dexw-ic">🔥</div><div class="dexw-wk">이번 주</div><div class="dexw-rng">개근 ${cnt}/7</div>`;
+      cell.innerHTML=`<div class="dexw-ic">${eico('flame','🔥')}</div><div class="dexw-wk">이번 주</div><div class="dexw-rng">개근 ${cnt}/7</div>`;
     } else {
       cell.classList.add('future');
-      cell.innerHTML=`<div class="dexw-ic">🎁</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
+      cell.innerHTML=`<div class="dexw-ic">${eico('gift','🎁')}</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
     }
     grid.appendChild(cell);
   }
@@ -1762,7 +1770,7 @@ async function updateWeekCardBanner(){
     const card = WEEK_CARDS[w];
     const done = loadLocal('weekCards', []).includes(`${y}:${w}`) || cnt >= 7;
     if (done){
-      el.innerHTML = `🎉 이번 주 개근 완성! <b>${card.name}</b> 카드 획득 — 도감 보기`;
+      el.innerHTML = `${eico('party','🎉')} 이번 주 개근 완성! <b>${card.name}</b> 카드 획득 — 도감 보기`;
     } else {
       el.innerHTML = `🐶 이번 주 개근 <b>${cnt}/7</b> · 남은 날 모두 핑하면 <b>${card.name}</b> 카드!`;
     }
@@ -1828,7 +1836,7 @@ async function renderNotifications(){
   }
   items.sort((a, b) => b.ts - a.ts);
   list.innerHTML = '';
-  if (!items.length){ list.innerHTML = '<div class="notif-empty">아직 알림이 없어요 🔔</div>'; return; }
+  if (!items.length){ list.innerHTML = `<div class="notif-empty">아직 알림이 없어요 ${eico('bell','🔔')}</div>`; return; }
   for (const it of items.slice(0, 50)){
     const mem = getMember(it.who);
     const av = mem ? mem.avatar : '';
@@ -1894,7 +1902,7 @@ function updateCountdown(){
   if (!el) return;
   if (todayPings[currentMember]) {
     el.classList.add('done');
-    el.innerHTML = '✅ 오늘 핑 완료! 내일 또 만나요';
+    el.innerHTML = `${eico('check','✅')} 오늘 핑 완료! 내일 또 만나요`;
     return;
   }
   el.classList.remove('done');
@@ -1903,10 +1911,10 @@ function updateCountdown(){
   let target, label;
   if (h < 10) {
     target = new Date(now); target.setHours(10, 0, 0, 0);
-    label = '오늘 핑 오픈까지 · 매일 10시 시작 📸';
+    label = `오늘 핑 오픈까지 · 매일 10시 시작 ${eico('camera','📸')}`;
   } else {
     target = new Date(now); target.setHours(24, 0, 0, 0);
-    label = '오늘 핑 마감까지 · 매일 10~24시 한 장 📸';
+    label = `오늘 핑 마감까지 · 매일 10~24시 한 장 ${eico('camera','📸')}`;
   }
   let diff = Math.max(0, Math.floor((target - now) / 1000));
   const hh = fmt2(Math.floor(diff / 3600));
@@ -1993,7 +2001,7 @@ async function renderCalendar(){
       const memberKey = dayPings[currentMember] ? currentMember : Object.keys(dayPings)[0];
       const url = dayPings[memberKey].photoURL;
       const all = Object.keys(dayPings).length >= 4;
-      cell.innerHTML = `<img src="${url}" alt=""><span class="cal-day">${d}</span>${all ? '<span class="cal-allbadge">✨</span>' : ''}`;
+      cell.innerHTML = `<img src="${url}" alt=""><span class="cal-day">${d}</span>${all ? `<span class="cal-allbadge">${eico('sparkle','✨')}</span>` : ''}`;
       cell.onclick = () => showDayDetail(date, dayPings);
     } else {
       cell.innerHTML = `<span class="cal-day">${d}</span>`;
@@ -2242,7 +2250,7 @@ async function renderDubiGoal(){
     nextEl.innerHTML = `다음 보상 <b>${next.icon} ${next.name}</b> 까지 <b>${next.pt - total}점</b>`;
   } else {
     bar.style.width = '100%';
-    nextEl.innerHTML = `🎉 모든 보상 달성! 뚜비가 세상에서 제일 행복해요`;
+    nextEl.innerHTML = `${eico('party','🎉')} 모든 보상 달성! 뚜비가 세상에서 제일 행복해요`;
   }
 
   // 특별 산책 담당자: 달성 시점의 최저 점수자를 시즌별로 1회 스냅샷해서 고정
@@ -2316,25 +2324,25 @@ async function renderDubiGoal(){
     let assignHtml = '', roleHtml = '';
     if (g.assign){
       if (walkAssignee){
-        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:5px 9px;display:inline-block">🚶 이번 산책 담당: ${walkAssignee}</div>`;
-        roleHtml = `<div class="rw-role">🚶 이번 산책은 <b>${walkAssignee}</b>님이 뚜비랑 다녀와요!</div>`;
+        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:5px 9px;display:inline-block">${eico('walk','🚶')} 이번 산책 담당: ${walkAssignee}</div>`;
+        roleHtml = `<div class="rw-role">${eico('walk','🚶')} 이번 산책은 <b>${walkAssignee}</b>님이 뚜비랑 다녀와요!</div>`;
       } else if (tied){
-        assignHtml = `<div style="${preStyle}">🚶 1500점을 모으는 순간, 점수가 가장 낮은 사람이 산책 담당! (지금은 모두 같은 점수)</div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">🚶 1500점을 모으는 순간, 그때 점수가 가장 낮은 사람이 뚜비 산책을 맡아요. 지금은 다 같은 점수예요!</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 1500점을 모으는 순간, 점수가 가장 낮은 사람이 산책 담당! (지금은 모두 같은 점수)</div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">${eico('walk','🚶')} 1500점을 모으는 순간, 그때 점수가 가장 낮은 사람이 뚜비 산책을 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
-        assignHtml = `<div style="${preStyle}">🚶 지금 순위라면 산책 담당은 <b>${lowestNames()}</b></div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">🚶 지금 순위라면 산책 담당은 <b>${lowestNames()}</b>.<br>1500점을 달성하는 순간의 최저 점수자로 정해져요.</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b>.<br>1500점을 달성하는 순간의 최저 점수자로 정해져요.</div>`;
       }
     } else if (g.assignTopBottom){
       if (groomTop){
-        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5">👑 뚜비 대장: ${groomTop}<br>🚿 미용 케어: ${groomBottom}</div>`;
-        roleHtml = `<div class="rw-role">👑 뚜비 대장: <b>${groomTop}</b><br>🚿 미용 케어 담당: <b>${groomBottom}</b></div>`;
+        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5">${eico('crown','👑')} 뚜비 대장: ${groomTop}<br>${eico('shower','🚿')} 미용 케어: ${groomBottom}</div>`;
+        roleHtml = `<div class="rw-role">${eico('crown','👑')} 뚜비 대장: <b>${groomTop}</b><br>${eico('shower','🚿')} 미용 케어 담당: <b>${groomBottom}</b></div>`;
       } else if (tied){
-        assignHtml = `<div style="${preStyle}">👑 점수 1등은 미용 스타일·장난감 고르기, 🚿 꼴찌는 케어 담당! (지금은 모두 같은 점수)</div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">4200점을 달성하는 순간, 점수 1등은 👑 미용 스타일·장난감을 고르고, 꼴찌는 🚿 미용실 왕복·케어를 맡아요. 지금은 다 같은 점수예요!</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 점수 1등은 미용 스타일·장난감 고르기, ${eico('shower','🚿')} 꼴찌는 케어 담당! (지금은 모두 같은 점수)</div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">4200점을 달성하는 순간, 점수 1등은 ${eico('crown','👑')} 미용 스타일·장난감을 고르고, 꼴찌는 ${eico('shower','🚿')} 미용실 왕복·케어를 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
-        assignHtml = `<div style="${preStyle}">👑 지금 순위라면 대장 <b>${highestNames()}</b> · 🚿 케어 <b>${lowestNames()}</b></div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">지금 순위라면 👑 대장은 <b>${highestNames()}</b>, 🚿 케어는 <b>${lowestNames()}</b>.<br>4200점을 달성하는 순간의 점수로 확정돼요.</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 지금 순위라면 대장 <b>${highestNames()}</b> · ${eico('shower','🚿')} 케어 <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">지금 순위라면 ${eico('crown','👑')} 대장은 <b>${highestNames()}</b>, ${eico('shower','🚿')} 케어는 <b>${lowestNames()}</b>.<br>4200점을 달성하는 순간의 점수로 확정돼요.</div>`;
       }
     }
     _rewardView.push({ img: g.img, icon: g.icon, name: g.name, pt: g.pt, done, detail: g.detail || '', roleHtml });
@@ -2347,7 +2355,7 @@ async function renderDubiGoal(){
 
   // 가족 기여 (등수 없이, 멤버 순서대로)
   const c = document.getElementById('dgContrib');
-  c.innerHTML = '<div class="dg-contrib-title">우리가 함께 모았어요 🐾</div><div class="dg-contrib-row">' +
+  c.innerHTML = '<div class="dg-contrib-title">우리가 함께 모았어요 ' + eico('paw','🐾') + '</div><div class="dg-contrib-row">' +
     MEMBERS.map(m => `<div class="dg-c"><img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'"><span>${m.id}</span><b>${scores[m.id] || 0}</b></div>`).join('') + '</div>';
 
   // 최종 목표 달성 → '미용 완료 · 새 주기 시작' 버튼 (수동 리셋)
@@ -2464,7 +2472,7 @@ async function renderAlbum(){
   }
   for (const it of items){
     const cell = document.createElement('div'); cell.className = 'album-cell';
-    const badge = it.ping.withDubi ? '<span class="album-badge">🚶</span>' : (it.ping.familyGathering ? '<span class="album-badge">👨‍👩‍👧‍👦</span>' : '');
+    const badge = it.ping.withDubi ? `<span class="album-badge">${eico('walk','🚶')}</span>` : (it.ping.familyGathering ? `<span class="album-badge">${eico('family','👨‍👩‍👧‍👦')}</span>` : '');
     cell.innerHTML = `<img src="${it.ping.photoURL}" alt=""><span class="album-day">${it.member}·${it.date.slice(5)}</span>${badge}`;
     cell.onclick = () => showDayDetail(it.date, map[it.date]);
     grid.appendChild(cell);
