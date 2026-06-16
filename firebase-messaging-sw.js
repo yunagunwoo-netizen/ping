@@ -15,10 +15,12 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   const n = payload.notification || {};
-  self.registration.showNotification(n.title || '핑', {
+  const d = payload.data || {};
+  self.registration.showNotification(n.title || '뚜비가 알려줘요 🐾', {
     body: n.body || '',
-    icon: './icon-192.png',
-    badge: './icon-192.png'
+    icon: d.icon || n.icon || './dubi-push.png',
+    badge: './dubi-push.png',
+    tag: 'dubi-coach'
   });
 });
 

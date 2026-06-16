@@ -1237,6 +1237,8 @@ async function savePing(memberId, photoDataURL, comment, withDubi, familyGatheri
       await setDoc(doc(db, 'pings', docId), pingData);
     } catch(e) { console.warn('Firebase 저장 실패 — 로컬에 저장됨', e); }
   }
+  // 서버 푸시용 가족 총점·미용주기 상태 갱신 (백그라운드)
+  pushCoachStateNow();
 }
 
 async function saveReaction(targetMember, emoji) {
@@ -2157,6 +2159,14 @@ function currentSeasonInfo(){
 // 점수는 cycle.startDate 부터 누적. 최종 목표(4200) 달성 → '미용 완료'로 새 주기 시작 → 0부터.
 let _cycle = null;
 let _rewardView = []; // 보상 모달용 캐시 (renderDubiGoal에서 채움)
+// 서버 푸시(coachReminder)가 점수 기반 상황을 알도록 가족 총점·미용주기를 기록
+async function writeCoachState(total, cyc){
+  if (!firebaseReady) return;
+  try { await setDoc(doc(db, 'coachState', 'current'), { familyId: FAMILY_ID, total, cycleStart: cyc.startDate, cycleN: cyc.n, updatedAt: new Date().toISOString() }, { merge: true }); } catch(e){}
+}
+async function pushCoachStateNow(){
+  try { const sc = await computeSeasonScores(); const t = MEMBERS.reduce((s,m)=>s+(sc[m.id]||0),0); const c = await getCycle(); await writeCoachState(t, c); } catch(e){}
+}
 function _defaultCycle(){
   const si = currentSeasonInfo();
   return { startDate: `${si.months[0][0]}-${String(si.months[0][1]+1).padStart(2,'0')}-01`, n: 1 };
@@ -2273,6 +2283,7 @@ async function renderDubiGoal(){
   const maxGoal = goals[goals.length - 1].pt;
 
   document.getElementById('dgTotal').textContent = total;
+  writeCoachState(total, cyc); // 서버 푸시용 상태 갱신
   document.getElementById('dgMascot').src = `./dubi-mood-${dubiMascotFor(total / maxGoal)}.png`;
 
   // 진행바: 현재 구간(직전 달성 보상 ~ 다음 보상) 채움
@@ -2763,39 +2774,107 @@ async function getWeekCardProgress(){
     return { cnt, left: 7 - cnt, card: WEEK_CARDS[w], already };
   } catch(e){ return null; }
 }
+function _coachPick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 async function computeCoachTip(memberId){
   const si = coachStreakInfo(memberId);
   const ws = await getWeekCoachStatus(memberId);
   const wc = await getWeekCardProgress();
-  // 1) 마일스톤 임박 (오늘 포함 2일 내 달성)
+  const hour = new Date().getHours();
+  const pingedToday = si.pingedToday;
+  // 가족 총점 + 미용주기 경과일
+  let total = 0, cycleDays = 0;
+  try {
+    const scores = await computeSeasonScores();
+    total = MEMBERS.reduce((s, m) => s + (scores[m.id] || 0), 0);
+    const cyc = await getCycle();
+    cycleDays = Math.max(0, Math.floor((new Date(getToday()) - new Date(cyc.startDate)) / 86400000));
+  } catch(e){}
+  // 내 마지막 핑 이후 경과일(잠수)
+  let dormant = 0;
+  try { const st = loadLocal('streaks', {}); const last = (st[memberId] || {}).lastPingDate; if (last){ dormant = Math.floor((new Date(getToday()) - new Date(last)) / 86400000); } else { dormant = 99; } } catch(e){}
+
+  // ① 마감 임박 (저녁인데 오늘 미핑)
+  if (!pingedToday && hour >= 20){
+    return _coachPick([
+      { title:'오늘 핑 마감이 다가와요 ⏰', body:'자정 지나면 오늘은 끝이에요. 뚜비가 막차 기다리듯 기다려요 🐾' },
+      { title:'깜빡하기 전에, 핑!', body:'곧 오늘 핑이 닫혀요. 뚜비랑 오늘 추억 남기는 거 잊지 마요! 📸' }
+    ]);
+  }
+  // 연속 마일스톤 임박 (기존)
   if (si.tier && si.daysMore !== null && si.daysMore <= 1){
-    if (!si.pingedToday){
-      return { title:`🔥 ${si.afterToday - 1}일 연속 중이에요!`, body:`오늘 핑하면 <b>${si.afterToday}일 연속</b>! ${si.daysMore > 0 ? `딱 ${si.daysMore}일만 더 하면 ` : ''}<b>${si.tier.days}일 보너스 +${si.tier.pt}점</b>이 코앞이에요 🐾` };
-    }
+    if (!pingedToday) return { title:`🔥 ${si.afterToday - 1}일 연속 중이에요!`, body:`오늘 핑하면 <b>${si.afterToday}일 연속</b>! ${si.daysMore > 0 ? `딱 ${si.daysMore}일만 더 하면 ` : ''}<b>${si.tier.days}일 보너스 +${si.tier.pt}점</b>이 코앞이에요 🐾` };
     return { title:`🔥 ${si.alive}일 연속 달리는 중!`, body:`${si.daysMore === 0 ? '오늘이면 ' : `${si.daysMore}일만 더 핑하면 `}<b>${si.tier.days}일 보너스 +${si.tier.pt}점</b>! 조금만 더 힘내요 🐾` };
   }
-  // 2) 이번 주 개근 카드 임박 (3일 이상 채웠고 아직 미완성)
+  // ② 3일 이상 핑 없음(잠수)
+  if (dormant >= 3){
+    return _coachPick([
+      { title:'뚜비가 보고 싶대요 🐶', body:`벌써 <b>${dormant}일째</b> 사진이 없어요. 오랜만에 뚜비랑 한 컷 어때요?` },
+      { title:'뚜비 행복도가 떨어지고 있어요 🥺', body:`${dormant}일 동안 조용했어요. 오늘 다시 핑으로 뚜비를 웃게 해줘요!` }
+    ]);
+  }
+  // ③ 연속핑 끊길 위기 (어제까지 연속인데 오늘 미핑)
+  if (!pingedToday && si.alive >= 2){
+    return _coachPick([
+      { title:'뚜비가 현관에서 기다려요 🐾', body:`오늘 안 찍으면 <b>${si.alive}일 연속</b>이 0이 돼요… 한 장만! 🥺` },
+      { title:`앗, ${si.alive}일 연속이 위험해요!`, body:'지금 핑하면 기록이 쭉 이어져요. 뚜비가 꼬리 흔들며 응원 중이에요 🐶' }
+    ]);
+  }
+  // ④ 미용주기 너무 길어짐
+  if (cycleDays >= 60 && total < 4200){
+    return _coachPick([
+      { title:'뚜비 털이 점점 길어져요 ✂️', body:`미용한 지 벌써 <b>${cycleDays}일째</b>… 4200점 같이 모아 뚜비 미용 보내줘요!` },
+      { title:'뚜비가 앞이 잘 안 보인대요 🙈', body:'눈을 덮은 털, 이제 정리할 때! 가족이 핑 모으면 뚜비가 시원해져요.' }
+    ]);
+  }
+  // ⑤ 애견카페 한 달 이상 못 감
+  if (cycleDays >= 30 && total < 2700){
+    return _coachPick([
+      { title:'뚜비가 카페 가고 싶대요 ☕', body:'애견카페 다녀온 지 한 달이 넘었어요. 2700점 모아 나들이 가요!' },
+      { title:'별똥구리·카페댕스가 뚜비를 기다려요 🐶', body:'같이 핑 모아서 뚜비 카페 데이트 어때요? 잔디밭이 부르고 있어요!' }
+    ]);
+  }
+  // ⑦ 산책 — 이번 주 산책 사진 아직
+  if (!ws.walked){
+    return _coachPick([
+      { title:'이번 주 뚜비 산책 사진 아직이에요 🚶', body:'산책하며 한 장 찍으면 가족 전체 <b>+50점</b>! 뚜비가 리드줄 물고 왔어요 🐾' },
+      { title:'날씨 좋은데 뚜비랑 산책? ☀️', body:'뚜비가 창밖만 보고 있어요. 산책하며 한 장 찍으면 보너스까지!' },
+      { title:'뚜비가 산책 가방을 물어왔어요 🎒', body:'오늘 뚜비랑 한 바퀴 어때요? 산책 사진은 주 1회 +50점이에요!' }
+    ]);
+  }
+  // ⑦ 산책 1500 임박/달성
+  if (total >= 1200 && total < 1500){
+    return { title:`특별 산책까지 ${1500 - total}점! 🦮`, body:'광교호수공원 산책이 코앞! 뚜비가 들떠서 빙글빙글 돌고 있어요 🐾' };
+  }
+  if (total >= 1500 && total < 1700){
+    return { title:'뚜비 특별 산책 준비됐어요! 🎉', body:'1500점 달성! 점수가 가장 낮은 분이 뚜비랑 호수공원 다녀와요 🐾' };
+  }
+  // ⑥ 간식 600 달성 직후
+  if (total >= 600 && total < 720){
+    return { title:'뚜비 간식이 잠금 해제됐어요! 🎉', body:'600점 달성! 로하이드 화이트 밀크스틱, 뚜비가 기다리고 있어요 🦴' };
+  }
+  // ⑥ 간식 600 모으는 중
+  if (total < 600){
+    return _coachPick([
+      { title:`특별 간식까지 ${600 - total}점! 🦴`, body:'조금만 더 모으면 뚜비 간식 GET! 뚜비가 입맛 다시는 중이에요 😋' },
+      { title:'뚜비가 간식 앞에서 기다려요 🥺', body:'오늘 핑 한 장이면 간식 목표에 한 걸음 더! 초롱초롱 보고 있어요 🐶' },
+      { title:'뚜비표 특별 간식 어때요? 🦴', body:'눈물·알레르기 걱정 없는 간식이 기다려요. 같이 점수 모아요!' }
+    ]);
+  }
+  // 개근 카드 임박 (기존)
   if (wc && !wc.already && wc.cnt >= 3 && wc.left > 0){
     return { title:`🐶 이번 주 개근 ${wc.cnt}/7!`, body:`남은 <b>${wc.left}일</b> 가족 모두 빠짐없이 핑하면 이번 주 <b>${wc.card.name}</b> 카드를 얻어요! 🐾` };
   }
-  // 3) 이번 주 산책 아직
-  if (!ws.walked){
-    return { title:`🚶 오늘 뚜비랑 산책 어때요?`, body:`산책하며 한 장 찍어 올리면 이번 주 <b>+50점</b>! 뚜비가 신나서 기다려요 🐾` };
-  }
-  // 3) 오늘 핑 아직
-  if (!si.pingedToday){
+  // 오늘 핑 아직 (일반)
+  if (!pingedToday){
     const extra = si.tier ? ` <b>${si.afterToday}일 연속</b>도 이어가요!` : '';
-    return { title:`📸 오늘 핑 아직이에요!`, body:`한 장이면 <b>+10점</b>.${extra} 가족이 기다리고 있어요 🐾` };
+    return { title:'📸 오늘 핑 아직이에요!', body:`한 장이면 <b>+10점</b>.${extra} 가족이 기다리고 있어요 🐾` };
   }
-  // 4) 이번 주 가족 모임 아직
+  // 가족 모임 (기존)
   if (!ws.gathered){
-    return { title:`👨‍👩‍👧‍👦 이번 주 가족 모임 사진!`, body:`온 가족이 모여 한 장 찍으면 <b>전원 +50점</b>! 뚜비도 끼워줘요 🐾` };
+    return { title:'👨‍👩‍👧‍👦 이번 주 가족 모임 사진!', body:'온 가족이 모여 한 장 찍으면 <b>전원 +50점</b>! 뚜비도 끼워줘요 🐾' };
   }
-  // 5) 오늘 할 일 끝 — 다음 목표 안내
-  if (si.tier){
-    return { title:`🎉 오늘도 완벽해요!`, body:`다음 목표는 <b>${si.tier.days}일 연속 +${si.tier.pt}점</b>! 뚜비가 응원해요 🐾` };
-  }
-  return null;
+  // 다 완료 — 응원
+  return { title:'🎉 오늘도 완벽해요!', body:'오늘 할 일 끝! 뚜비 행복도가 쑥쑥 올라가요. 내일도 함께해요 🐾' };
 }
 async function maybeShowCoach(){
   if (!currentMember) return;
