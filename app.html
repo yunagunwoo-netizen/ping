@@ -2420,21 +2420,25 @@ async function renderDubiGoal(){
       const choice = _pickChoice[g.pt];
       const meChooser = chooser && chooser.split(' · ').includes(currentMember);
       const pickBtn = `<button onclick="openTreatModal(${g.pt})" style="margin-top:12px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:12px;border:none">${eico('crown','👑')} ${g.chooseLabel || '대장이 고르기'}</button>`;
+      const candHtml = `<div class="rw-role" style="${grayRole};padding:10px 8px"><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${g.choices.map(c => `<div style="text-align:center"><img src="${c.img}" onerror="this.style.display='none'" style="width:96px;height:96px;object-fit:cover;border-radius:12px;display:block;border:1px solid var(--gray200)"><div style="font-size:11.5px;color:var(--gray500);margin-top:4px;font-weight:700">${c.name}</div></div>`).join('')}</div></div>`;
       if (choice){
         const ch = g.choices.find(x => x.id === choice.choiceId) || { name: choice.name, img: choice.img };
         assignHtml += `<div style="${orangeBadge}">${eico('crown','👑')} ${choice.name}</div>`;
         roleHtml += `<div class="rw-role" style="${grayRole}"><img src="${ch.img || g.img}" onerror="this.style.display='none'" style="width:170px;height:170px;object-fit:cover;border-radius:14px;margin:0 auto 8px;display:block"><b style="color:var(--orange);font-size:15px">${choice.name}</b>${meChooser ? `<br><button onclick="openTreatModal(${g.pt})" style="margin-top:8px;background:none;border:none;color:var(--gray400);font-size:12px;text-decoration:underline">바꾸기</button>` : ''}</div>`;
-      } else if (chooser){
-        if (meChooser){
-          assignHtml += `<div style="${orangeBadge}">${eico('crown','👑')} ${g.choosePrompt || '대장님이 골라주세요'}</div>`;
-          roleHtml += `<div class="rw-role">${eico('crown','👑')} 대장님이 고를 차례!${pickBtn}</div>`;
-        } else {
-          assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 대장 <b>${chooser}</b>님이 고르는 중</div>`;
-          roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 대장 <b>${chooser}</b>님이 고르는 중</div>`;
+      } else {
+        roleHtml += candHtml;
+        if (chooser){
+          if (meChooser){
+            assignHtml += `<div style="${orangeBadge}">${eico('crown','👑')} ${g.choosePrompt || '대장님이 골라주세요'}</div>`;
+            roleHtml += `<div class="rw-role">${eico('crown','👑')} 대장님이 고를 차례!${pickBtn}</div>`;
+          } else {
+            assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 대장 <b>${chooser}</b>님이 고르는 중</div>`;
+            roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 대장 <b>${chooser}</b>님이 고르는 중</div>`;
+          }
+        } else if (!g.assignTopBottom){
+          assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 달성 시 대장이 ${g.choosePreview || '골라요'}</div>`;
+          roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} ${g.pt}점 달성 순간의 대장이 ${g.choosePreview || '골라요'}</div>`;
         }
-      } else if (!g.assignTopBottom){
-        assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 달성 시 대장이 ${g.choosePreview || '골라요'}</div>`;
-        roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} ${g.pt}점 달성 순간의 대장이 ${g.choosePreview || '골라요'}</div>`;
       }
     }
     if (g.productImg){
@@ -2487,7 +2491,9 @@ window.openReward = function(i){
   img.src = v.img;
   document.getElementById('rwPt').textContent = v.done ? '✓ 달성 완료' : `${v.pt}점 목표`;
   document.getElementById('rwName').textContent = v.name;
-  document.getElementById('rwDetail').textContent = v.detail;
+  const dEl = document.getElementById('rwDetail');
+  dEl.textContent = v.detail;
+  dEl.style.display = v.detail ? '' : 'none';
   document.getElementById('rwRole').innerHTML = v.roleHtml || '';
   document.getElementById('rewardModal').classList.add('show');
 };
