@@ -1455,6 +1455,10 @@ window.openCamera = async function() {
     showToast('오늘은 이미 핑을 보냈어요!');
     return;
   }
+  if (new Date().getHours() < 10) {
+    showToast('핑은 오전 10시부터 보낼 수 있어요! (10시~자정)');
+    return;
+  }
   showScreen('camera');
   try {
     currentStream = await navigator.mediaDevices.getUserMedia({
@@ -1541,6 +1545,10 @@ window.cancelPreview = function() {
 };
 
 window.submitPing = async function() {
+  if (new Date().getHours() < 10) {
+    showToast('핑은 오전 10시부터 보낼 수 있어요! (10시~자정)');
+    return;
+  }
   const comment = document.getElementById('commentInput').value.trim();
   showLoading(true);
 
