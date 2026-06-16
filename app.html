@@ -896,6 +896,14 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <p>바이러스가 아니에요. 홈 화면에 <b>웹앱</b>으로 추가될 때 뜨는 안내일 뿐이고, 핑은 아빠가 만든 <b>우리 가족 전용 앱</b>이라 안전해요 <img src="./ic-lock.png" class="eico" alt="🔒" onerror="this.replaceWith('🔒')"></p>
         <div class="step">설치하려면 → <b>세부정보 더보기</b> 누르고 → <b>무시하고 설치</b>(또는 "어쨌든 설치")를 누르세요.<br>💡 <b>'확인'만 누르면 설치가 취소돼요!</b></div>
       </div>
+      <div class="ig-note" id="igIOSWarn">
+        <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">아이폰은 사파리(Safari)에서 열어주세요</div></div>
+        <p>아이폰은 <b>Safari 브라우저</b>에서만 홈 화면에 추가할 수 있어요. 카톡·크롬 등 다른 앱에서 열렸다면, 주소창의 <b>ping.ai.kr</b>을 복사해 <b>Safari로 다시 열고</b> 아래 방법대로 설치해 주세요.</p>
+      </div>
+      <div class="ig-note" id="igIOS">
+        <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">아이폰(Safari) 설치 방법</div></div>
+        <div class="step">① 화면 <b>맨 아래 가운데 공유 버튼</b>(네모에 위 화살표 ⬆️)을 누르세요<br>② 메뉴를 아래로 내려 <b>'홈 화면에 추가'</b>를 누르세요<br>③ 오른쪽 위 <b>'추가'</b>를 누르면 끝! <img src="./ic-paw.png" class="eico" alt="🐾" onerror="this.replaceWith('🐾')"></div>
+      </div>
       <div class="ig-actions">
         <button class="ig-install" id="igInstallBtn" style="display:none" onclick="installApp()">지금 설치</button>
         <button class="ig-close" onclick="closeInstallGuide(event, true)">닫기</button>
@@ -2531,7 +2539,9 @@ function scheduleSurvivalTimer() {
 let deferredInstallPrompt = null;
 let installBannerDismissed = false; // 이번 방문에서만 숨김 (다음에 또 뜸 → 설치할 때까지)
 function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
-function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+// iOS에서 '홈 화면에 추가'가 가능한 진짜 Safari인지 (크롬·파폭·엣지·인앱 제외)
+function isIOSSafari(){ return isIOS() && !/crios|fxios|edgios|opios|mercury/i.test(navigator.userAgent) && !isInAppBrowser(); }
 function isInAppBrowser(){ return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|wadiz/i.test(navigator.userAgent); }
 function guideImageFor(){
   if (isInAppBrowser()) return './install-inapp.png';
@@ -2543,6 +2553,7 @@ function maybeShowInstall(){
   const banner = document.getElementById('installBanner');
   const sub = document.getElementById('ibSub');
   if (isInAppBrowser()) sub.textContent = '카톡 안에서는 설치가 안 돼요 → 방법 보기';
+  else if (isIOS() && !isIOSSafari()) sub.textContent = '아이폰은 Safari에서 설치돼요 → 방법 보기';
   else if (isIOS()) sub.textContent = "공유 → '홈 화면에 추가' (방법 보기)";
   else sub.textContent = '설치해야 알림도 받고 앱처럼 빨라요';
   banner.classList.add('show');
@@ -2559,9 +2570,13 @@ window.addEventListener('appinstalled', () => {
 });
 window.openInstallGuide = function(){
   document.getElementById('igImg').src = guideImageFor();
+  const ios = isIOS(), inApp = isInAppBrowser();
   // 안드로이드(아이폰·인앱 제외)에서만 '안전하지 않은 앱' 안심 안내 노출
-  const isAndroidWeb = !isIOS() && !isInAppBrowser();
+  const isAndroidWeb = !ios && !inApp;
   document.getElementById('igProtect').classList.toggle('show', isAndroidWeb);
+  // 아이폰: 단계 안내는 항상, Safari가 아니면 'Safari로 열기' 경고도 노출
+  document.getElementById('igIOS').classList.toggle('show', ios);
+  document.getElementById('igIOSWarn').classList.toggle('show', ios && !isIOSSafari());
   // 안드로이드에서 즉시 설치 가능하면 '지금 설치' 버튼 노출
   document.getElementById('igInstallBtn').style.display = deferredInstallPrompt ? '' : 'none';
   document.getElementById('installGuide').classList.add('show');
