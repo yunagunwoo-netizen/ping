@@ -872,7 +872,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="tr-card">
       <button class="rw-x" onclick="closeTreatModal(event, true)">✕</button>
       <div class="tr-title" id="trTitle">어디로 갈까요?</div>
-      <div class="tr-sub">대장님이 한 곳을 골라주세요</div>
+      <div class="tr-sub" id="trSub">대장님이 하나를 골라주세요</div>
       <div class="tr-grid" id="treatGrid"></div>
     </div>
   </div>
@@ -2136,11 +2136,11 @@ function weekKey(dateStr){
 const DUBI_GOALS = [
   { pt: 600,  icon: '🦴', img: './treat-1.png', name: '특별 간식 사주기',  detail: '로하이드 화이트 밀크스틱 (ANF) — 600점을 모으면 뚜비에게 특별 간식 사주기! 🦴' },
   { pt: 1500, icon: '🦮', img: './reward-walk.png', name: '특별 산책 나들이',  assign: true, detail: '달성 시점까지 점수가 가장 낮은 사람이 뚜비를 데리고 광교호수공원으로 특별 산책! 🐾' },
-  { pt: 2700, icon: '☕', img: './reward-cafe.png', name: '애견카페 가기', choices: [ { id: 'byeolttong', name: '별똥구리', img: './cafe-1.png' }, { id: 'cafedance', name: '카페댕스', img: './cafe-2.png' } ],  detail: '' },
-  { pt: 4200, icon: '🧸', img: './reward-groom.png', name: '뚜비 미용 (최종 목표)', assignTopBottom: true, detail: '가족이 함께 모은 최종 목표! 달성하면 뚜비 미용 → 점수 리셋, 새 미용 주기 시작. 👑 최고 점수자는 미용 스타일·새 장난감을 고르는 「오늘의 뚜비 대장」. 🚿 최저 점수자는 미용실 왕복 라이드 + 미용 후 1주 빗질·눈물자국 케어 담당.' }
+  { pt: 2700, icon: '☕', img: './reward-cafe.png', name: '애견카페 가기', choices: [ { id: 'byeolttong', name: '별똥구리', img: './cafe-1.png' }, { id: 'cafedance', name: '카페댕스', img: './cafe-2.png' } ], chooseLabel: '대장이 카페 고르기', choosePrompt: '대장님, 어디로 갈까요?', choosePreview: '두 곳 중 한 곳을 골라요', chooseTitle: '애견카페 어디로?', chooseSub: '대장님이 한 곳을 골라주세요', choosePick: '여기로!',  detail: '' },
+  { pt: 4200, icon: '🧸', img: './reward-groom.png', name: '뚜비 미용 (최종 목표)', assignTopBottom: true, choices: [ { id: 'gomdori', name: '곰돌이컷', img: './groom-style-1.png' }, { id: 'baby', name: '베이비컷', img: './groom-style-2.png' }, { id: 'pantalon', name: '판타롱컷', img: './groom-style-3.png' } ], chooseLabel: '미용 스타일 고르기', choosePrompt: '대장님, 미용 스타일을 골라주세요!', chooseTitle: '뚜비 미용 스타일', chooseSub: '대장님이 뚜비 스타일을 골라주세요', choosePick: '이 스타일로!', detail: '가족이 함께 모은 최종 목표! 베르펫살롱에서 뚜비 미용 → 점수 리셋, 새 주기 시작. 👑 대장은 미용 스타일 결정, 🚗 꼴찌는 베르펫살롱 왕복 라이딩 + 미용 인증샷.' }
 ];
 // 대장 선택형 보상(애견카페 등) 모듈 상태 — 선택지는 각 목표의 choices 배열에 둠
-let _seasonKey = null, _pickGoal = null, _treatChooser = null, _treatChoice = null;
+let _seasonKey = null, _pickChooser = {}, _pickChoice = {};
 // 현재 시즌(봄 3~5 / 여름 6~8 / 가을 9~11 / 겨울 12~2)의 (연,월) 목록과 이름
 function currentSeasonInfo(){
   const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
@@ -2352,31 +2352,34 @@ async function renderDubiGoal(){
   }
 
   // 600 특별 간식: 달성 시점 최고 점수자(대장)를 주기별 1회 스냅샷 → 그 대장이 간식을 직접 고름
-  _seasonKey = season.key; _pickGoal = null; _treatChooser = null; _treatChoice = null;
-  const pickGoal = goals.find(g => g.choices && g.choices.length);
-  _pickGoal = pickGoal || null;
-  if (pickGoal && total >= pickGoal.pt){
-    const dkey = season.key + '_' + pickGoal.pt;
+  _seasonKey = season.key; _pickChooser = {}; _pickChoice = {};
+  for (const pg of goals.filter(g => g.choices && g.choices.length)){
+    if (total < pg.pt) continue;
+    const dkey = season.key + '_' + pg.pt;
     const tkey = 'pickChooser_' + dkey;
+    let chooser = null;
     if (firebaseReady){
       try {
         const tref = doc(db, 'pickChooser', dkey);
         await runTransaction(db, async (tx) => {
           const s = await tx.get(tref);
-          if (s.exists() && s.data().name){ _treatChooser = s.data().name; }
-          else { _treatChooser = highestNames(); tx.set(tref, { familyId: FAMILY_ID, season: dkey, name: _treatChooser, total, createdAt: new Date().toISOString() }); }
+          if (s.exists() && s.data().name){ chooser = s.data().name; }
+          else { chooser = highestNames(); tx.set(tref, { familyId: FAMILY_ID, season: dkey, name: chooser, total, createdAt: new Date().toISOString() }); }
         });
-        saveLocal(tkey, _treatChooser);
-      } catch(e){ _treatChooser = loadLocal(tkey, null) || highestNames(); }
+        saveLocal(tkey, chooser);
+      } catch(e){ chooser = loadLocal(tkey, null) || highestNames(); }
     } else {
-      _treatChooser = loadLocal(tkey, null);
-      if (!_treatChooser){ _treatChooser = highestNames(); saveLocal(tkey, _treatChooser); }
+      chooser = loadLocal(tkey, null);
+      if (!chooser){ chooser = highestNames(); saveLocal(tkey, chooser); }
     }
+    _pickChooser[pg.pt] = chooser;
     const ckey = 'pickChoice_' + dkey;
+    let choice = null;
     if (firebaseReady){
-      try { const cs = await getDoc(doc(db, 'pickChoice', dkey)); _treatChoice = cs.exists() ? cs.data() : JSON.parse(loadLocal(ckey, 'null')); }
-      catch(e){ try { _treatChoice = JSON.parse(loadLocal(ckey, 'null')); } catch(_){} }
-    } else { try { _treatChoice = JSON.parse(loadLocal(ckey, 'null')); } catch(_){} }
+      try { const cs = await getDoc(doc(db, 'pickChoice', dkey)); choice = cs.exists() ? cs.data() : JSON.parse(loadLocal(ckey, 'null')); }
+      catch(e){ try { choice = JSON.parse(loadLocal(ckey, 'null')); } catch(_){} }
+    } else { try { choice = JSON.parse(loadLocal(ckey, 'null')); } catch(_){} }
+    _pickChoice[pg.pt] = choice;
   }
 
   // 보상 단계 (아이콘 이미지 + 클릭 시 상세 모달)
@@ -2384,6 +2387,8 @@ async function renderDubiGoal(){
   const tied = Math.max(...MEMBERS.map(m => scores[m.id] || 0)) === Math.min(...MEMBERS.map(m => scores[m.id] || 0));
   const preStyle = 'margin-top:6px;font-size:11.5px;color:var(--gray400);line-height:1.5';
   _rewardView = [];
+  const orangeBadge = 'margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5;display:inline-block';
+  const grayRole = 'background:var(--gray100);color:var(--gray500)';
   goals.forEach((g, idx) => {
     const done = total >= g.pt;
     let assignHtml = '', roleHtml = '';
@@ -2393,42 +2398,43 @@ async function renderDubiGoal(){
         roleHtml = `<div class="rw-role">${eico('walk','🚶')} 이번 산책은 <b>${walkAssignee}</b>님이 뚜비랑 다녀와요!</div>`;
       } else if (tied){
         assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 1500점을 모으는 순간, 점수가 가장 낮은 사람이 산책 담당! (지금은 모두 같은 점수)</div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">${eico('walk','🚶')} 1500점을 모으는 순간, 그때 점수가 가장 낮은 사람이 뚜비 산책을 맡아요. 지금은 다 같은 점수예요!</div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">${eico('walk','🚶')} 1500점을 모으는 순간, 그때 점수가 가장 낮은 사람이 뚜비 산책을 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
         assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b></div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b>.<br>1500점을 달성하는 순간의 최저 점수자로 정해져요.</div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b>.<br>1500점을 달성하는 순간의 최저 점수자로 정해져요.</div>`;
       }
     } else if (g.assignTopBottom){
       if (groomTop){
-        assignHtml = `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:6px 9px;line-height:1.5">${eico('crown','👑')} 뚜비 대장: ${groomTop}<br>${eico('shower','🚿')} 미용 케어: ${groomBottom}</div>`;
-        roleHtml = `<div class="rw-role">${eico('crown','👑')} 뚜비 대장: <b>${groomTop}</b><br>${eico('shower','🚿')} 미용 케어 담당: <b>${groomBottom}</b></div>`;
+        assignHtml = `<div style="${orangeBadge}">${eico('crown','👑')} 대장 ${groomTop}: 미용 스타일 결정<br>🚗 ${groomBottom}: 베르펫살롱 라이딩 + 미용 인증샷</div>`;
+        roleHtml = `<div class="rw-role">${eico('crown','👑')} 대장 <b>${groomTop}</b>님이 미용 스타일을 정해요<br>🚗 <b>${groomBottom}</b>님이 베르펫살롱 왕복 라이딩 + 미용 인증샷!</div><div class="rw-role" style="${grayRole};padding:8px"><img src="./groom-salon.png" onerror="this.style.display='none'" style="width:100%;max-width:240px;height:130px;object-fit:cover;border-radius:12px;margin:0 auto 6px;display:block">📍 베르펫살롱</div>`;
       } else if (tied){
-        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 점수 1등은 미용 스타일·장난감 고르기, ${eico('shower','🚿')} 꼴찌는 케어 담당! (지금은 모두 같은 점수)</div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">4200점을 달성하는 순간, 점수 1등은 ${eico('crown','👑')} 미용 스타일·장난감을 고르고, 꼴찌는 ${eico('shower','🚿')} 미용실 왕복·케어를 맡아요. 지금은 다 같은 점수예요!</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 1등 대장은 미용 스타일 결정 · 🚗 꼴찌는 베르펫살롱 라이딩+인증샷 (지금은 모두 같은 점수)</div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">4200점 달성 순간, ${eico('crown','👑')} 1등 대장이 미용 스타일을 정하고, 🚗 꼴찌가 베르펫살롱 왕복 라이딩 + 미용 인증샷을 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
-        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 지금 순위라면 대장 <b>${highestNames()}</b> · ${eico('shower','🚿')} 케어 <b>${lowestNames()}</b></div>`;
-        roleHtml = `<div class="rw-role" style="background:var(--gray100);color:var(--gray500)">지금 순위라면 ${eico('crown','👑')} 대장은 <b>${highestNames()}</b>, ${eico('shower','🚿')} 케어는 <b>${lowestNames()}</b>.<br>4200점을 달성하는 순간의 점수로 확정돼요.</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 지금 순위라면 대장 <b>${highestNames()}</b> · 🚗 라이딩 <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">지금 순위라면 ${eico('crown','👑')} 대장은 <b>${highestNames()}</b>, 🚗 베르펫살롱 라이딩은 <b>${lowestNames()}</b>.<br>4200점 달성 순간의 점수로 확정돼요.</div>`;
       }
-    } else if (g.choices){
-      const grayRole = 'background:var(--gray100);color:var(--gray500)';
-      const orangeBadge = 'margin-top:6px;font-size:12px;font-weight:800;color:#fff;background:var(--orange);border-radius:8px;padding:5px 9px;display:inline-block';
-      const meChooser = _treatChooser && _treatChooser.split(' · ').includes(currentMember);
-      const pickBtn = `<button onclick="openTreatModal()" style="margin-top:12px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:12px;border:none">${eico('crown','👑')} 대장이 고르기</button>`;
-      if (_treatChoice){
-        const ch = g.choices.find(x => x.id === _treatChoice.choiceId) || { name: _treatChoice.name, img: _treatChoice.img };
-        assignHtml = `<div style="${orangeBadge}">${eico('crown','👑')} ${_treatChoice.name}</div>`;
-        roleHtml = `<div class="rw-role" style="${grayRole}"><img src="${ch.img || g.img}" onerror="this.style.display='none'" style="width:160px;height:160px;object-fit:cover;border-radius:14px;margin:0 auto 8px;display:block"><b style="color:var(--orange);font-size:15px">${_treatChoice.name}</b>${meChooser ? `<br><button onclick="openTreatModal()" style="margin-top:8px;background:none;border:none;color:var(--gray400);font-size:12px;text-decoration:underline">바꾸기</button>` : ''}</div>`;
-      } else if (_treatChooser){
+    }
+    if (g.choices){
+      const chooser = _pickChooser[g.pt];
+      const choice = _pickChoice[g.pt];
+      const meChooser = chooser && chooser.split(' · ').includes(currentMember);
+      const pickBtn = `<button onclick="openTreatModal(${g.pt})" style="margin-top:12px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:12px;border:none">${eico('crown','👑')} ${g.chooseLabel || '대장이 고르기'}</button>`;
+      if (choice){
+        const ch = g.choices.find(x => x.id === choice.choiceId) || { name: choice.name, img: choice.img };
+        assignHtml += `<div style="${orangeBadge}">${eico('crown','👑')} ${choice.name}</div>`;
+        roleHtml += `<div class="rw-role" style="${grayRole}"><img src="${ch.img || g.img}" onerror="this.style.display='none'" style="width:170px;height:170px;object-fit:cover;border-radius:14px;margin:0 auto 8px;display:block"><b style="color:var(--orange);font-size:15px">${choice.name}</b>${meChooser ? `<br><button onclick="openTreatModal(${g.pt})" style="margin-top:8px;background:none;border:none;color:var(--gray400);font-size:12px;text-decoration:underline">바꾸기</button>` : ''}</div>`;
+      } else if (chooser){
         if (meChooser){
-          assignHtml = `<div style="${orangeBadge}">${eico('crown','👑')} 대장님, 어디로 갈까요?</div>`;
-          roleHtml = `<div class="rw-role">${eico('crown','👑')} 대장님이 고를 차례!${pickBtn}</div>`;
+          assignHtml += `<div style="${orangeBadge}">${eico('crown','👑')} ${g.choosePrompt || '대장님이 골라주세요'}</div>`;
+          roleHtml += `<div class="rw-role">${eico('crown','👑')} 대장님이 고를 차례!${pickBtn}</div>`;
         } else {
-          assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 대장 <b>${_treatChooser}</b>님이 고르는 중</div>`;
-          roleHtml = `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 대장 <b>${_treatChooser}</b>님이 고르는 중</div>`;
+          assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 대장 <b>${chooser}</b>님이 고르는 중</div>`;
+          roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 대장 <b>${chooser}</b>님이 고르는 중</div>`;
         }
-      } else {
-        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 달성 시 대장이 두 곳 중 한 곳을 골라요</div>`;
-        roleHtml = `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} ${g.pt}점 달성 순간의 대장이 두 곳 중 한 곳을 골라요</div>`;
+      } else if (!g.assignTopBottom){
+        assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 달성 시 대장이 ${g.choosePreview || '골라요'}</div>`;
+        roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} ${g.pt}점 달성 순간의 대장이 ${g.choosePreview || '골라요'}</div>`;
       }
     }
     _rewardView.push({ img: g.img, icon: g.icon, name: g.name, pt: g.pt, done, detail: g.detail || '', roleHtml });
@@ -2487,12 +2493,15 @@ window.closeReward = function(e, force){
     document.getElementById('rewardModal').classList.remove('show');
   }
 };
-// ===== 대장 선택형 보상(애견카페 등): 대장이 사진 보고 한 곳 고르기 =====
-window.openTreatModal = function(){
-  if (!_pickGoal || !_pickGoal.choices) return;
+// ===== 대장 선택형 보상(애견카페·미용 스타일): 대장이 사진 보고 하나 고르기 =====
+let _pickPt = null;
+window.openTreatModal = function(pt){
+  const g = DUBI_GOALS.find(x => x.pt === pt); if (!g || !g.choices) return;
+  _pickPt = pt;
   const grid = document.getElementById('treatGrid');
-  grid.innerHTML = _pickGoal.choices.map(c => `<div class="tr-item" onclick="selectTreat('${c.id}')"><img src="${c.img}" alt="${c.name}" onerror="this.src='${_pickGoal.img}'"><div class="tr-name">${c.name}</div><div class="tr-pick">여기로!</div></div>`).join('');
-  const tt = document.getElementById('trTitle'); if (tt) tt.textContent = _pickGoal.name;
+  grid.innerHTML = g.choices.map(c => `<div class="tr-item" onclick="selectTreat('${c.id}')"><img src="${c.img}" alt="${c.name}" onerror="this.src='${g.img}'"><div class="tr-name">${c.name}</div><div class="tr-pick">${g.choosePick || '이걸로!'}</div></div>`).join('');
+  const tt = document.getElementById('trTitle'); if (tt) tt.textContent = g.chooseTitle || g.name;
+  const ts = document.getElementById('trSub'); if (ts) ts.textContent = g.chooseSub || '대장님이 하나를 골라주세요';
   document.getElementById('treatModal').classList.add('show');
 };
 window.closeTreatModal = function(e, force){
@@ -2501,16 +2510,16 @@ window.closeTreatModal = function(e, force){
   }
 };
 window.selectTreat = async function(id){
-  if (!_pickGoal) return;
-  const c = _pickGoal.choices.find(x => x.id === id); if (!c) return;
-  if (!(await uiDialog({ message: `'${c.name}'\n여기로 정할까요?`, okText: '여기로!' }))) return;
-  const dkey = _seasonKey + '_' + _pickGoal.pt;
+  const g = DUBI_GOALS.find(x => x.pt === _pickPt); if (!g) return;
+  const c = g.choices.find(x => x.id === id); if (!c) return;
+  if (!(await uiDialog({ message: `'${c.name}'\n이걸로 정할까요?`, okText: '이걸로!' }))) return;
+  const dkey = _seasonKey + '_' + g.pt;
   const rec = { choiceId: c.id, name: c.name, img: c.img, by: currentMember || '', at: new Date().toISOString() };
   if (firebaseReady && _seasonKey){
     try { await setDoc(doc(db, 'pickChoice', dkey), { familyId: FAMILY_ID, season: dkey, ...rec }); } catch(e){}
   }
   if (_seasonKey) saveLocal('pickChoice_' + dkey, JSON.stringify(rec));
-  _treatChoice = rec;
+  _pickChoice[g.pt] = rec;
   closeTreatModal(null, true);
   showToast(`${c.name}(으)로 정했어요!`);
   renderDubiGoal();
