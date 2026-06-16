@@ -3,7 +3,7 @@
   "description": "핑 가족 앱 FCM 푸시 발송 함수",
   "main": "index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "dependencies": {
     "firebase-admin": "^12.6.0",
