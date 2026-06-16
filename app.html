@@ -2138,7 +2138,7 @@ function weekKey(dateStr){
 const DUBI_GOALS = [
   { pt: 600,  icon: '🦴', img: './reward-treat.png', name: '특별 간식 사주기', productImg: './treat-1.png',  detail: '로하이드 화이트 밀크스틱 (ANF) — 600점을 모으면 뚜비에게 특별 간식 사주기! 🦴' },
   { pt: 1500, icon: '🦮', img: './reward-walk.png', name: '특별 산책 나들이',  assign: true, detail: '달성 시점까지 점수가 가장 낮은 사람이 뚜비를 데리고 광교호수공원으로 특별 산책! 🐾' },
-  { pt: 2700, icon: '☕', img: './reward-cafe.png', name: '애견카페 가기', choices: [ { id: 'byeolttong', name: '별똥구리', img: './cafe-1.png' }, { id: 'cafedance', name: '카페댕스', img: './cafe-2.png' } ], chooseLabel: '대장이 카페 고르기', choosePrompt: '대장님, 어디로 갈까요?', choosePreview: '두 곳 중 한 곳을 골라요', chooseTitle: '애견카페 어디로?', chooseSub: '대장님이 한 곳을 골라주세요', choosePick: '여기로!',  detail: '' },
+  { pt: 2700, icon: '☕', img: './reward-cafe.png', name: '애견카페 가기', choices: [ { id: 'byeolttong', name: '별똥구리', img: './cafe-1.png' }, { id: 'cafedance', name: '카페댕스', img: './cafe-2.png' } ], chooseLabel: '대장이 카페 고르기', choosePrompt: '대장님, 어디로 갈까요?', choosePreview: '한 곳을 골라요', chooseTitle: '애견카페 어디로?', chooseSub: '대장님이 한 곳을 골라주세요', choosePick: '여기로!',  detail: '' },
   { pt: 4200, icon: '🧸', img: './reward-groom.png', name: '뚜비 미용 (최종 목표)', assignTopBottom: true, choices: [ { id: 'gomdori', name: '곰돌이컷', img: './groom-style-1.png' }, { id: 'baby', name: '베이비컷', img: './groom-style-2.png' }, { id: 'pantalon', name: '판타롱컷', img: './groom-style-3.png' }, { id: 'summer', name: '썸머컷', img: './groom-style-4.png' } ], chooseLabel: '미용 스타일 고르기', choosePrompt: '대장님, 미용 스타일을 골라주세요!', chooseTitle: '뚜비 미용 스타일', chooseSub: '대장님이 뚜비 스타일을 골라주세요', choosePick: '이 스타일로!', detail: '베르펫살롱에서 미용 → 점수 리셋, 새 주기 시작' }
 ];
 // 대장 선택형 보상(애견카페 등) 모듈 상태 — 선택지는 각 목표의 choices 배열에 둠
@@ -2304,7 +2304,7 @@ async function renderDubiGoal(){
   // 특별 산책 담당자: 달성 시점의 최저 점수자를 시즌별로 1회 스냅샷해서 고정
   function lowestNames(){
     const min = Math.min(...MEMBERS.map(m => scores[m.id] || 0));
-    return MEMBERS.filter(m => (scores[m.id] || 0) === min).map(m => m.id).join(' · ');
+    return MEMBERS.filter(m => (scores[m.id] || 0) === min).map(m => m.id).join('·');
   }
   const assignGoal = goals.find(g => g.assign);
   let walkAssignee = null;
@@ -2337,7 +2337,7 @@ async function renderDubiGoal(){
   // 최종 미용 보상: 최고/최저 점수자 역할을 달성 시점에 1회 스냅샷(가족 공통, 고정)
   function highestNames(){
     const max = Math.max(...MEMBERS.map(m => scores[m.id] || 0));
-    return MEMBERS.filter(m => (scores[m.id] || 0) === max).map(m => m.id).join(' · ');
+    return MEMBERS.filter(m => (scores[m.id] || 0) === max).map(m => m.id).join('·');
   }
   const groomGoal = goals.find(g => g.assignTopBottom);
   let groomTop = null, groomBottom = null;
@@ -2411,8 +2411,8 @@ async function renderDubiGoal(){
         assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 1500점을 모으는 순간, 점수가 가장 낮은 사람이 산책 담당! (지금은 모두 같은 점수)</div>`;
         roleHtml = `<div class="rw-role" style="${grayRole}">${eico('walk','🚶')} 1500점을 모으는 순간, 그때 점수가 가장 낮은 사람이 뚜비 산책을 맡아요. 지금은 다 같은 점수예요!</div>`;
       } else {
-        assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b></div>`;
-        roleHtml = `<div class="rw-role" style="${grayRole}">${eico('walk','🚶')} 지금 순위라면 산책 담당은 <b>${lowestNames()}</b>.<br>1500점을 달성하는 순간의 최저 점수자로 정해져요.</div>`;
+        assignHtml = `<div style="${preStyle}">${eico('walk','🚶')} 지금 순위 산책: <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">${eico('walk','🚶')} 지금 순위 산책 담당: <b>${lowestNames()}</b></div>`;
       }
     } else if (g.assignTopBottom){
       if (groomTop){
@@ -2422,14 +2422,14 @@ async function renderDubiGoal(){
         assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 대장 스타일 결정 · 🚗 꼴찌 라이딩+인증샷 (지금은 동점)</div>`;
         roleHtml = `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 대장이 스타일 결정 · 🚗 꼴찌는 라이딩+인증샷 (지금은 다 같은 점수)</div>`;
       } else {
-        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 대장 <b>${highestNames()}</b> · 🚗 라이딩 <b>${lowestNames()}</b></div>`;
-        roleHtml = `<div class="rw-role" style="${grayRole}">지금 순위 ${eico('crown','👑')} 대장 <b>${highestNames()}</b> · 🚗 라이딩 <b>${lowestNames()}</b></div>`;
+        assignHtml = `<div style="${preStyle}">${eico('crown','👑')} 대장 <b>${highestNames()}</b><br>🚗 라이딩 <b>${lowestNames()}</b></div>`;
+        roleHtml = `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 대장 <b>${highestNames()}</b><br>🚗 라이딩 <b>${lowestNames()}</b></div>`;
       }
     }
     if (g.choices){
       const chooser = _pickChooser[g.pt];
       const choice = _pickChoice[g.pt];
-      const meChooser = chooser && chooser.split(' · ').includes(currentMember);
+      const meChooser = chooser && chooser.split('·').includes(currentMember);
       const pickBtn = `<button onclick="openTreatModal(${g.pt})" style="margin-top:12px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:15px;padding:13px;border-radius:12px;border:none">${eico('crown','👑')} ${g.chooseLabel || '대장이 고르기'}</button>`;
       const candW = g.choices.length >= 3 ? 64 : 104;
       const candHtml = `<div class="rw-role" style="${grayRole};padding:8px 6px"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:nowrap">${g.choices.map(c => `<div style="text-align:center"><img src="${c.img}" onerror="this.style.display='none'" style="width:${candW}px;height:${candW}px;object-fit:cover;border-radius:10px;display:block;border:1px solid var(--gray200)"><div style="font-size:11px;color:var(--gray500);margin-top:3px;font-weight:700">${c.name}</div></div>`).join('')}</div></div>`;
@@ -2449,7 +2449,7 @@ async function renderDubiGoal(){
           }
         } else if (!g.assignTopBottom){
           assignHtml += `<div style="${preStyle}">${eico('crown','👑')} 달성 시 대장이 ${g.choosePreview || '골라요'}</div>`;
-          roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} ${g.pt}점 달성 순간의 대장이 ${g.choosePreview || '골라요'}</div>`;
+          roleHtml += `<div class="rw-role" style="${grayRole}">${eico('crown','👑')} 달성 시 대장이 ${g.choosePreview || '골라요'}</div>`;
         }
       }
     }
