@@ -168,8 +168,15 @@ input,textarea{font-family:inherit;border:none;outline:none}
 #camera{background:#000;z-index:60}
 .camera-top{position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .camera-top button{color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3);backdrop-filter:blur(8px)}
-#videoPreview{width:100%;height:100%;object-fit:cover}
-.camera-bottom{position:absolute;bottom:0;left:0;right:0;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;z-index:2}
+#videoPreview{width:100%;height:100%;object-fit:cover;transform-origin:center center}
+.camera-top .cam-top-right{display:flex;gap:10px}
+.camera-top button.on{background:#fff;color:var(--orange)}
+.cam-zoom{position:absolute;left:0;right:0;bottom:130px;bottom:calc(130px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2;padding:0 40px}
+.cam-zoom span{color:#fff;font-size:12px;font-weight:600;background:rgba(0,0,0,.35);padding:3px 12px;border-radius:12px;backdrop-filter:blur(8px)}
+.cam-zoom input[type=range]{width:72%;max-width:240px;accent-color:#fff;height:24px}
+.camera-bottom{position:absolute;bottom:0;left:0;right:0;padding:24px 40px;padding-bottom:calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;z-index:2}
+.cam-side-btn{width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:#fff;border-radius:14px;background:rgba(0,0,0,.3);backdrop-filter:blur(8px)}
+.cam-side-btn.placeholder{background:transparent;backdrop-filter:none;pointer-events:none}
 .shutter-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.4);transition:all .15s}
 .shutter-btn:active{transform:scale(.9);background:#ddd}
 
@@ -177,8 +184,6 @@ input,textarea{font-family:inherit;border:none;outline:none}
 #preview{background:#000;z-index:70}
 .preview-img{width:100%;flex:1;object-fit:contain;background:#000}
 .preview-bottom{background:var(--cream);border-radius:var(--radius) var(--radius) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-.preview-bottom .question-box{background:var(--gray100);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px;color:var(--gray500)}
-.preview-bottom .question-box strong{color:var(--orange);display:block;margin-bottom:4px;font-size:12px}
 .comment-input{width:100%;padding:12px 16px;background:#fff;border-radius:var(--radius-sm);font-size:14px;box-shadow:var(--shadow);margin-bottom:12px}
 .comment-input::placeholder{color:var(--gray300)}
 .preview-actions{display:flex;gap:10px}
@@ -587,23 +592,33 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <button onclick="closeCamera()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
-      <button onclick="flipCamera()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-      </button>
+      <div class="cam-top-right">
+        <button id="torchBtn" onclick="toggleTorch()" style="display:none" title="플래시">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+        </button>
+        <button onclick="flipCamera()" title="카메라 전환">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="cam-zoom" id="camZoom" style="display:none">
+      <span id="zoomLabel">1.0x</span>
+      <input type="range" id="zoomSlider" min="1" max="4" step="0.1" value="1" oninput="applyZoom(parseFloat(this.value))">
     </div>
     <div class="camera-bottom">
+      <button class="cam-side-btn" onclick="pickFromGallery()" title="갤러리에서 선택">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
       <button class="shutter-btn" onclick="capturePhoto()"></button>
+      <span class="cam-side-btn placeholder"></span>
     </div>
+    <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="onGalleryPick(this)">
   </div>
 
   <!-- PREVIEW -->
   <div id="preview" class="screen">
     <img class="preview-img" id="previewImg" src="">
     <div class="preview-bottom">
-      <div class="question-box" id="questionBox" style="display:none">
-        <strong>오늘의 질문</strong>
-        <span id="questionText"></span>
-      </div>
       <div class="together-box">
         <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> <img src="./ic-walk.png" class="eico" alt="🚶" onerror="this.replaceWith('🚶')"> 뚜비랑 산책하며 찍었어요 <span>(주 1회 +50점)</span></label>
         <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> <img src="./ic-family.png" class="eico" alt="👨‍👩‍👧‍👦" onerror="this.replaceWith('👨‍👩‍👧‍👦')"> 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
@@ -1019,30 +1034,15 @@ const MEMBERS = [
   { id: '건우', emoji: '👦', color: '#D4F5D4', avatar: './avatar-gunwoo.png' }
 ];
 
-const QUESTIONS = [
-  "오늘 가장 맛있었던 것은?","지금 기분을 날씨로 표현하면?","오늘 가장 웃긴 순간은?",
-  "지금 듣고 싶은 노래는?","오늘 가장 힘들었던 순간은?","내일 가장 기대되는 것은?",
-  "지금 먹고 싶은 간식은?","오늘 새로 알게 된 것은?","지금 창밖 풍경을 한 단어로?",
-  "오늘 가장 고마웠던 사람은?","지금 가고 싶은 곳은?","오늘 나에게 점수를 준다면?",
-  "가장 최근에 웃은 이유는?","지금 하고 싶은 것 하나만?","오늘 점심 뭐 먹었어?",
-  "가장 기억에 남는 꿈은?","지금 가장 보고 싶은 사람은?","오늘 가장 많이 한 행동은?",
-  "지금 신고 있는 양말 색깔은?","올해 꼭 하고 싶은 것 하나는?","오늘 들은 가장 좋은 말은?",
-  "지금 주머니에 뭐가 있어?","오늘 가장 오래 본 것은?","나를 동물로 표현하면?",
-  "오늘 가장 맛없었던 것은?","지금 옆에 있는 물건 하나는?","이번 주말에 하고 싶은 것은?",
-  "오늘 가장 예뻤던 것은?","최근에 빠진 취미가 있다면?","지금 배고파? 1~10점으로!",
-  "오늘 가장 집중한 것은?","가족에게 하고 싶은 한마디는?","오늘 가장 피곤한 신체 부위는?",
-  "지금 마시고 싶은 음료는?","오늘 본 가장 귀여운 것은?","내가 요리한다면 뭘 만들까?",
-  "지금 기분을 색깔로 표현하면?","오늘 가장 바빴던 시간은?","최근에 감동받은 것은?",
-  "지금 자신감 레벨 1~10은?","오늘 가장 맘에 든 내 모습은?","가족 여행 간다면 어디로?",
-  "지금 떠오르는 단어 세 개는?","오늘 아침에 가장 먼저 한 것은?","10년 후 나는 뭘 하고 있을까?",
-  "지금 가장 갖고 싶은 것은?","오늘 하루를 이모지 하나로?","가족 중 오늘 가장 보고 싶은 사람은?",
-  "지금 눈앞에 보이는 글자는?","오늘 하루 수고한 나에게 한마디!"
-];
-
 let currentMember = null;
 let currentStream = null;
 let facingMode = 'environment';
 let capturedBlob = null;
+let videoTrack = null;
+let hwZoom = false;
+let zoomMin = 1, zoomMax = 4, currentZoom = 1;
+let torchOn = false;
+let _pinchStart = null, _pinchStartZoom = 1;
 let reactionTargetMember = null;
 let todayPings = {}; // { memberId: { photoURL, comment, reactions, createdAt } }
 let streaks = {}; // { memberId: { current, best, lastPingDate } }
@@ -1059,11 +1059,6 @@ function getTodayKR() {
   const d = new Date();
   const days = ['일','월','화','수','목','금','토'];
   return `${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
-}
-
-function getDailyQuestion() {
-  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
-  return QUESTIONS[dayOfYear % QUESTIONS.length];
 }
 
 function getMember(id) { return MEMBERS.find(m => m.id === id); }
@@ -1210,7 +1205,6 @@ async function savePing(memberId, photoDataURL, comment, withDubi, familyGatheri
     withDubi: !!withDubi,
     familyGathering: !!familyGathering,
     reactions: {},
-    question: getDailyQuestion(),
     createdAt: new Date().toISOString()
   };
 
@@ -1478,6 +1472,70 @@ function renderMyPage() {
 }
 
 // ========== CAMERA ==========
+// Detect zoom/torch capabilities of the active track and set up UI
+function setupCamControls(stream) {
+  videoTrack = (stream && stream.getVideoTracks) ? stream.getVideoTracks()[0] : null;
+  const video = document.getElementById('videoPreview');
+  if (video) video.style.transform = '';
+  currentZoom = 1;
+  let caps = {};
+  try { caps = (videoTrack && videoTrack.getCapabilities) ? videoTrack.getCapabilities() : {}; } catch(e) { caps = {}; }
+
+  // Zoom: prefer hardware, fall back to digital
+  const slider = document.getElementById('zoomSlider');
+  const zoomWrap = document.getElementById('camZoom');
+  if (caps.zoom && typeof caps.zoom.max === 'number' && caps.zoom.max > (caps.zoom.min || 0)) {
+    hwZoom = true;
+    zoomMin = caps.zoom.min || 1;
+    zoomMax = caps.zoom.max;
+    currentZoom = zoomMin;
+    const step = caps.zoom.step || Math.max((zoomMax - zoomMin) / 20, 0.1);
+    if (slider) { slider.min = zoomMin; slider.max = zoomMax; slider.step = step; slider.value = currentZoom; }
+  } else {
+    hwZoom = false;
+    zoomMin = 1; zoomMax = 4; currentZoom = 1;
+    if (slider) { slider.min = 1; slider.max = 4; slider.step = 0.1; slider.value = 1; }
+  }
+  if (zoomWrap) zoomWrap.style.display = '';
+  applyZoom(currentZoom);
+
+  // Torch (rear camera only, where supported)
+  torchOn = false;
+  const torchBtn = document.getElementById('torchBtn');
+  if (torchBtn) {
+    torchBtn.classList.remove('on');
+    torchBtn.style.display = (caps.torch && facingMode === 'environment') ? '' : 'none';
+  }
+}
+
+window.applyZoom = function(z) {
+  if (isNaN(z)) return;
+  z = Math.max(zoomMin, Math.min(zoomMax, z));
+  currentZoom = z;
+  const video = document.getElementById('videoPreview');
+  if (hwZoom && videoTrack) {
+    try { videoTrack.applyConstraints({ advanced: [{ zoom: z }] }); } catch(e) {}
+    if (video) video.style.transform = '';
+  } else if (video) {
+    video.style.transform = 'scale(' + z + ')';
+  }
+  const sl = document.getElementById('zoomSlider'); if (sl) sl.value = z;
+  const zl = document.getElementById('zoomLabel'); if (zl) zl.textContent = z.toFixed(1) + 'x';
+};
+
+window.toggleTorch = async function() {
+  if (!videoTrack) return;
+  torchOn = !torchOn;
+  try {
+    await videoTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
+    const b = document.getElementById('torchBtn'); if (b) b.classList.toggle('on', torchOn);
+  } catch(e) {
+    torchOn = false;
+    const b = document.getElementById('torchBtn'); if (b) b.classList.remove('on');
+    showToast('플래시를 사용할 수 없어요');
+  }
+};
+
 window.openCamera = async function() {
   if (todayPings[currentMember]) {
     showToast('오늘은 이미 핑을 보냈어요!');
@@ -1494,31 +1552,38 @@ window.openCamera = async function() {
       audio: false
     });
     document.getElementById('videoPreview').srcObject = currentStream;
+    setupCamControls(currentStream);
   } catch(e) {
     showToast('카메라를 사용할 수 없습니다');
     closeCamera();
   }
 };
 
+function stopCameraStream() {
+  if (videoTrack && torchOn) { try { videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {} }
+  if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
+  videoTrack = null; torchOn = false; currentZoom = 1;
+  const v = document.getElementById('videoPreview'); if (v) v.style.transform = '';
+  const tb = document.getElementById('torchBtn'); if (tb) tb.classList.remove('on');
+}
+
 window.closeCamera = function() {
-  if (currentStream) {
-    currentStream.getTracks().forEach(t => t.stop());
-    currentStream = null;
-  }
+  stopCameraStream();
   showScreen('feed');
 };
 
 window.flipCamera = async function() {
   facingMode = facingMode === 'environment' ? 'user' : 'environment';
-  if (currentStream) {
-    currentStream.getTracks().forEach(t => t.stop());
-  }
+  if (videoTrack && torchOn) { try { videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {} }
+  torchOn = false;
+  if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); }
   try {
     currentStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
       audio: false
     });
     document.getElementById('videoPreview').srcObject = currentStream;
+    setupCamControls(currentStream);
   } catch(e) {
     showToast('카메라 전환 실패');
   }
@@ -1527,45 +1592,181 @@ window.flipCamera = async function() {
 window.capturePhoto = function() {
   const video = document.getElementById('videoPreview');
   const canvas = document.getElementById('captureCanvas');
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) { showToast('카메라 준비 중이에요'); return; }
 
-  // Resize to max 1080px
-  const size = Math.min(video.videoWidth, video.videoHeight, 1080);
-  canvas.width = size;
-  canvas.height = size;
+  const side0 = Math.min(vw, vh);
+  // Hardware zoom is already baked into the frame; only digital zoom needs an extra crop
+  const z = hwZoom ? 1 : (currentZoom || 1);
+  const side = side0 / z;
+  const out = Math.min(Math.round(side0), 1080);
 
+  canvas.width = out;
+  canvas.height = out;
   const ctx = canvas.getContext('2d');
-  // Center crop to square
-  const sx = (video.videoWidth - size) / 2;
-  const sy = (video.videoHeight - size) / 2;
+  ctx.clearRect(0, 0, out, out);
+
+  const sx = (vw - side) / 2;
+  const sy = (vh - side) / 2;
 
   // Mirror if front camera
   if (facingMode === 'user') {
-    ctx.translate(size, 0);
+    ctx.translate(out, 0);
     ctx.scale(-1, 1);
   }
 
-  ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+  ctx.drawImage(video, sx, sy, side, side, 0, 0, out, out);
 
   canvas.toBlob(blob => {
     capturedBlob = blob;
-    const url = URL.createObjectURL(blob);
-    document.getElementById('previewImg').src = url;
-
-    // Show question
-    const q = getDailyQuestion();
-    document.getElementById('questionText').textContent = q;
-    document.getElementById('questionBox').style.display = 'block';
+    document.getElementById('previewImg').src = URL.createObjectURL(blob);
     document.getElementById('commentInput').value = '';
-
-    if (currentStream) {
-      currentStream.getTracks().forEach(t => t.stop());
-      currentStream = null;
-    }
+    stopCameraStream();
     const _wd = document.getElementById('withDubiChk'); if (_wd) _wd.checked = false;
     const _fg = document.getElementById('gatherChk'); if (_fg) _fg.checked = false;
     showScreen('preview');
   }, 'image/jpeg', 0.7);
 };
+
+// ===== Gallery pick (only photos taken TODAY are allowed) =====
+window.pickFromGallery = function() {
+  const inp = document.getElementById('galleryInput');
+  if (inp) inp.click();
+};
+
+window.onGalleryPick = async function(input) {
+  const file = input && input.files && input.files[0];
+  if (input) input.value = '';
+  if (!file) return;
+  if (!file.type || file.type.indexOf('image/') !== 0) { showToast('이미지 파일만 올릴 수 있어요'); return; }
+
+  showLoading(true);
+  let buf = null;
+  try { buf = await file.arrayBuffer(); } catch(e) { showLoading(false); showToast('파일을 읽을 수 없어요'); return; }
+
+  // Verify the photo was taken today (EXIF first, then file timestamp)
+  const pd = parseExifDate(buf);
+  const now = new Date();
+  let dateOk = false;
+  if (pd) {
+    dateOk = (pd.y === now.getFullYear() && pd.mo === (now.getMonth() + 1) && pd.d === now.getDate());
+  } else if (file.lastModified) {
+    const lm = new Date(file.lastModified);
+    dateOk = (lm.getFullYear() === now.getFullYear() && lm.getMonth() === now.getMonth() && lm.getDate() === now.getDate());
+  }
+  if (!dateOk) {
+    showLoading(false);
+    await uiDialog({
+      message: pd
+        ? '오늘 찍은 사진이 아니에요. 📷\n핑은 오늘 찍은 사진만 올릴 수 있어요.'
+        : '촬영 날짜를 확인할 수 없는 사진이에요. 📷\n카메라로 직접 찍어서 올려주세요.',
+      okText: '확인', cancelText: '닫기'
+    });
+    return;
+  }
+
+  // Passed the date check → run through the same square-crop pipeline
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = function() {
+    const canvas = document.getElementById('captureCanvas');
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const out = Math.min(side, 1080);
+    canvas.width = out;
+    canvas.height = out;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, out, out);
+    const sx = (img.naturalWidth - side) / 2;
+    const sy = (img.naturalHeight - side) / 2;
+    ctx.drawImage(img, sx, sy, side, side, 0, 0, out, out);
+    canvas.toBlob(function(blob) {
+      capturedBlob = blob;
+      document.getElementById('previewImg').src = URL.createObjectURL(blob);
+      document.getElementById('commentInput').value = '';
+      stopCameraStream();
+      const _wd = document.getElementById('withDubiChk'); if (_wd) _wd.checked = false;
+      const _fg = document.getElementById('gatherChk'); if (_fg) _fg.checked = false;
+      URL.revokeObjectURL(url);
+      showLoading(false);
+      showScreen('preview');
+    }, 'image/jpeg', 0.7);
+  };
+  img.onerror = function() { URL.revokeObjectURL(url); showLoading(false); showToast('이미지를 불러올 수 없어요'); };
+  img.src = url;
+};
+
+// Minimal EXIF reader → returns {y,mo,d} from DateTimeOriginal/DateTime, or null
+function parseExifDate(buf) {
+  try {
+    const view = new DataView(buf);
+    if (view.getUint16(0) !== 0xFFD8) return null; // not a JPEG
+    const len = view.byteLength;
+    let offset = 2;
+    while (offset + 4 < len) {
+      const marker = view.getUint16(offset);
+      if (marker === 0xFFE1) { // APP1
+        const exifStart = offset + 4;
+        if (view.getUint32(exifStart) !== 0x45786966) { // 'Exif'
+          const sz = view.getUint16(offset + 2); if (sz < 2) break; offset += 2 + sz; continue;
+        }
+        const tiff = exifStart + 6;
+        const little = view.getUint16(tiff) === 0x4949;
+        const g16 = (o) => view.getUint16(o, little);
+        const g32 = (o) => view.getUint32(o, little);
+        if (g16(tiff + 2) !== 0x002A) return null;
+        const readIFD = (dirStart) => {
+          const out = { exifPtr: 0, dt: null };
+          if (dirStart + 2 > len) return out;
+          const entries = g16(dirStart);
+          for (let i = 0; i < entries; i++) {
+            const e = dirStart + 2 + i * 12;
+            if (e + 12 > len) break;
+            const tag = g16(e);
+            if (tag === 0x8769) { out.exifPtr = tiff + g32(e + 8); }
+            else if (tag === 0x9003 || tag === 0x9004 || tag === 0x0132) {
+              const count = g32(e + 4);
+              const valOff = count <= 4 ? (e + 8) : (tiff + g32(e + 8));
+              let s = '';
+              for (let j = 0; j < count - 1 && valOff + j < len; j++) s += String.fromCharCode(view.getUint8(valOff + j));
+              // DateTimeOriginal (0x9003) wins; otherwise keep first found
+              if (tag === 0x9003 || !out.dt) out.dt = s;
+            }
+          }
+          return out;
+        };
+        const ifd0 = tiff + g32(tiff + 4);
+        const r0 = readIFD(ifd0);
+        let dateStr = null;
+        if (r0.exifPtr) { const re = readIFD(r0.exifPtr); dateStr = re.dt || r0.dt; }
+        else dateStr = r0.dt;
+        if (!dateStr) return null;
+        const m = dateStr.match(/^(\d{4}):(\d{2}):(\d{2})/);
+        if (!m) return null;
+        return { y: +m[1], mo: +m[2], d: +m[3] };
+      } else if ((marker & 0xFF00) === 0xFF00 && marker !== 0xFFFF && marker !== 0xFFD9) {
+        const sz = view.getUint16(offset + 2); if (sz < 2) break; offset += 2 + sz;
+      } else { offset++; }
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+// Pinch-to-zoom on the camera preview
+(function() {
+  const v = document.getElementById('videoPreview');
+  if (!v) return;
+  const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  v.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) { _pinchStart = dist(e.touches); _pinchStartZoom = currentZoom; }
+  }, { passive: true });
+  v.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2 && _pinchStart) {
+      e.preventDefault();
+      applyZoom(_pinchStartZoom * (dist(e.touches) / _pinchStart));
+    }
+  }, { passive: false });
+  v.addEventListener('touchend', function(e) { if (e.touches.length < 2) _pinchStart = null; }, { passive: true });
+})();
 
 window.cancelPreview = function() {
   capturedBlob = null;
