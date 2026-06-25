@@ -117,9 +117,17 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ping-card .card-info{padding:10px 12px}
 .ping-card .card-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px}
 .ping-card .card-name .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
-.ping-card .card-comment{font-size:12px;color:var(--gray400);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ping-card .card-comment{font-size:13px;color:var(--gray500);margin-top:5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .ping-card .card-time{font-size:11px;color:var(--gray300);margin-top:4px}
-.ping-card .reactions-row{display:flex;gap:2px;padding:0 12px 10px;flex-wrap:wrap}
+.ping-card .reactions-row{display:flex;gap:2px;padding:0 12px 8px;flex-wrap:wrap}
+.ping-card .comment-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:0 12px 12px;padding:8px 10px;background:#FFF1E9;border:1px solid #FFE0CE;border-radius:10px;width:calc(100% - 24px);text-align:left}
+.ping-card .comment-btn:active{background:#FFE6D6}
+.ping-card .comment-btn .cb-top{font-size:12px;color:var(--gray500);font-weight:700;display:flex;align-items:center;gap:4px}
+.ping-card .comment-btn .cb-top .eico{width:15px;height:15px}
+.ping-card .comment-btn .cb-top b{color:var(--orange)}
+.ping-card .comment-btn .cb-preview{font-size:11px;color:var(--gray400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ping-card .comment-btn .cb-preview b{color:var(--gray500);font-weight:700}
+.ping-card .comment-btn .cb-empty{color:var(--gray300)}
 .reaction-chip{font-size:16px;padding:2px 6px;background:var(--gray100);border-radius:12px;transition:all .15s}
 .reaction-chip.mine{background:#FFE8DC}
 .reaction-chip:active{transform:scale(1.2)}
@@ -1407,18 +1415,28 @@ function renderFeed() {
       }).join('');
 
       const timeStr = ping.createdAt ? new Date(ping.createdAt).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'}) : '';
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      const cs = ping.comments || [];
+      const last = cs.length ? cs[cs.length - 1] : null;
+      const commentBtn = `
+        <button class="comment-btn" onclick="openComments('${m.id}')">
+          <span class="cb-top">${eico('speech','💬')} 댓글${cs.length ? ` <b>${cs.length}</b>` : ''}</span>
+          ${last
+            ? `<span class="cb-preview"><b>${esc(last.by)}</b> ${esc(last.text)}</span>`
+            : `<span class="cb-preview cb-empty">첫 댓글을 남겨보세요</span>`}
+        </button>`;
 
       card.innerHTML = `
         <div class="photo-area"><img src="${ping.photoURL}" alt="${m.id}의 핑"></div>
         <div class="card-info">
           <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
-          ${ping.comment ? `<div class="card-comment">${ping.comment}</div>` : ''}
+          ${ping.comment ? `<div class="card-comment">${esc(ping.comment)}</div>` : ''}
           <div class="card-time">${timeStr}</div>
         </div>
         <div class="reactions-row">${reactionHTML}
           ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
-          <span class="reaction-chip" onclick="openComments('${m.id}')" style="cursor:pointer">${eico('speech','💬')} ${(ping.comments||[]).length || ''}</span>
-        </div>`;
+        </div>
+        ${commentBtn}`;
     } else {
       card.innerHTML = `
         <div class="photo-area">
