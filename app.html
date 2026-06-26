@@ -142,7 +142,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .mic-btn.listening{background:#FFE8DC;animation:micpulse 1s infinite}
 @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.4)}50%{box-shadow:0 0 0 8px rgba(255,107,53,0)}}
 /* 댓글 모달 */
-.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:120;display:none;align-items:flex-end;justify-content:center}
+.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190;display:none;align-items:flex-end;justify-content:center}
 .cm-overlay.show{display:flex}
 .cm-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:84vh;display:flex;flex-direction:column;animation:fadeUp .3s ease}
 .cm-head{display:flex;align-items:center;gap:10px;padding:16px}
@@ -381,6 +381,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .day-item .di-actions button{flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:8px;border:none;cursor:pointer}
 .day-item .di-edit{background:var(--gray100);color:var(--gray500)}
 .day-item .di-del{background:#FCEBEB;color:#D8412F}
+.day-item .di-cmt-btn{background:#FFF1E9;color:var(--gray500)}
+.day-item .di-cmt-btn .eico{width:13px;height:13px;vertical-align:-2px}
 .day-close{display:block;width:100%;margin-top:14px;padding:11px;background:var(--gray100);color:var(--gray500);border-radius:12px;font-size:14px;font-weight:700}
 
 /* ========== 리더보드 / 권한 ========== */
@@ -1272,11 +1274,19 @@ async function saveReaction(targetMember, emoji) {
   }
 }
 
-// ========== 댓글 (말/글) ==========
+// ========== 댓글 (말/글) — 날짜 단위로 동작 (오늘+과거 모두) ==========
 let commentTarget = null;
-window.openComments = function(id){
-  const p = todayPings[id]; if (!p) return;
-  commentTarget = id;
+let commentDate = null;
+function resolvePing(date, member){
+  if (date === getToday()) return todayPings[member] || null;
+  if (typeof albumCache !== 'undefined' && albumCache && albumCache[date] && albumCache[date][member]) return albumCache[date][member];
+  const lp = loadLocal(`pings_${date}`, {});
+  return lp[member] || null;
+}
+window.openComments = function(id, date){
+  date = date || getToday();
+  const p = resolvePing(date, id); if (!p) return;
+  commentTarget = id; commentDate = date;
   const m = getMember(id);
   document.getElementById('cmPhoto').src = p.photoURL;
   document.getElementById('cmName').textContent = `${m ? m.id : id}의 핑`;
@@ -1285,7 +1295,7 @@ window.openComments = function(id){
   document.getElementById('commentsOverlay').classList.add('show');
 };
 function renderComments(){
-  const p = todayPings[commentTarget];
+  const p = resolvePing(commentDate, commentTarget);
   const list = document.getElementById('cmList'); list.innerHTML = '';
   const cs = (p && p.comments) || [];
   if (!cs.length){ list.innerHTML = `<div class="cm-empty">첫 댓글을 남겨보세요 ${eico('speech','💬')}</div>`; return; }
@@ -1303,23 +1313,32 @@ window.addComment = async function(){
   const input = document.getElementById('commentText');
   const text = (input.value || '').trim().slice(0, 20);
   if (!text || !commentTarget) return;
-  const today = getToday();
-  const p = todayPings[commentTarget]; if (!p) return;
+  const date = commentDate || getToday();
+  const p = resolvePing(date, commentTarget); if (!p) return;
   const c = { by: currentMember, text, at: new Date().toISOString() };
   if (!p.comments) p.comments = [];
   p.comments.push(c);
   // 로컬 저장
-  const localPings = loadLocal(`pings_${today}`, {});
+  const localPings = loadLocal(`pings_${date}`, {});
   localPings[commentTarget] = p;
-  saveLocal(`pings_${today}`, localPings);
+  saveLocal(`pings_${date}`, localPings);
+  // 메모리 캐시 동기화
+  if (date === getToday()) todayPings[commentTarget] = p;
+  if (typeof albumCache !== 'undefined' && albumCache && albumCache[date]) albumCache[date][commentTarget] = p;
   // Firebase 저장 (누적)
   if (firebaseReady){
-    try { await setDoc(doc(db, 'pings', `${today}_${commentTarget}`), { comments: arrayUnion(c) }, { merge: true }); }
+    try { await setDoc(doc(db, 'pings', `${date}_${commentTarget}`), { comments: arrayUnion(c) }, { merge: true }); }
     catch(e){ console.warn('댓글 저장 실패', e); }
   }
   input.value = '';
   renderComments();
-  renderFeed();
+  if (date === getToday()) renderFeed();
+  // 앨범 날짜 상세가 열려있으면 댓글 수 갱신
+  const dayOv = document.getElementById('dayOverlay');
+  if (dayOv && dayOv.classList.contains('show')){
+    const dd = (typeof albumCache !== 'undefined' && albumCache && albumCache[date]) ? albumCache[date] : loadLocal(`pings_${date}`, {});
+    showDayDetail(date, dd);
+  }
 };
 window.closeComments = function(e, force){
   if (force || (e && e.target === document.getElementById('commentsOverlay'))) {
@@ -2376,8 +2395,10 @@ window.showDayDetail = function(date, dayPings){
     const item = document.createElement('div'); item.className = 'day-item';
     const mine = mem.id === currentMember;
     const canReplace = mine && date === getToday();
-    const actions = mine ? `<div class="di-actions">${canReplace ? `<button class="di-edit" onclick="closeDayDetail(null,true);startEditPhoto()">📷 바꾸기</button>` : ''}<button class="di-edit" onclick="editPhotoCaption('${date}','${mem.id}')">✏️ 수정</button><button class="di-del" onclick="deletePhoto('${date}','${mem.id}')">🗑 삭제</button></div>` : '';
-    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}${actions}`;
+    const cs = (p.comments || []);
+    const cmtRow = `<div class="di-actions"><button class="di-edit di-cmt-btn" onclick="openComments('${mem.id}','${date}')">${eico('speech','💬')} 댓글${cs.length ? ` ${cs.length}` : ''}</button></div>`;
+    const ownRow = mine ? `<div class="di-actions">${canReplace ? `<button class="di-edit" onclick="closeDayDetail(null,true);startEditPhoto()">📷 바꾸기</button>` : ''}<button class="di-edit" onclick="editPhotoCaption('${date}','${mem.id}')">✏️ 수정</button><button class="di-del" onclick="deletePhoto('${date}','${mem.id}')">🗑 삭제</button></div>` : '';
+    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}${cmtRow}${ownRow}`;
     grid.appendChild(item);
   }
   document.getElementById('dayOverlay').classList.add('show');
