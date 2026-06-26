@@ -109,6 +109,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
 .ping-card:active{transform:scale(.98)}
 .ping-card .photo-area{position:relative;width:100%;aspect-ratio:1;background:var(--gray100);overflow:hidden}
+.ping-card .photo-area .card-avatar{position:absolute;top:7px;left:7px;width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);background:var(--gray100)}
+.ping-card .photo-area .card-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .ping-card .photo-area img{width:100%;height:100%;object-fit:cover}
 .ping-card .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--gray300);gap:8px}
 .ping-card .placeholder svg{width:48px;height:48px;opacity:.4}
@@ -1451,7 +1453,7 @@ function renderFeed() {
         </button>`;
 
       card.innerHTML = `
-        <div class="photo-area"><img src="${ping.photoURL}" alt="${m.id}의 핑"></div>
+        <div class="photo-area"><img src="${ping.photoURL}" alt="${m.id}의 핑"><div class="card-avatar"><img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'"></div></div>
         <div class="card-info">
           <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
           ${ping.comment ? `<div class="card-comment">${esc(ping.comment)}</div>` : ''}
