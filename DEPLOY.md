@@ -8,54 +8,55 @@
 ## 복붙용 프롬프트 (이걸 붙여넣으세요)
 
 ```
-핑 앱 배포해줘. 아래 순서로 진행해줘:
+핑 앱 변경분 배포 준비해줘. 아래 순서로:
 
-1. 핑 폴더에서 git 상태 확인(git status --short)하고 변경된 파일 보여줘.
-2. git add -A → git commit (커밋 메시지는 이번 변경 내용 한국어로 요약).
-   - git 사용자 정보 없으면 user.email "yunagunwoo@gmail.com", user.name "yunagunwoo"로 로컬 설정.
-   - 구글드라이브 마운트라 .lock/tmp_obj 권한 경고는 무시(커밋만 되면 정상).
-3. git push origin main 시도.
-   - 샌드박스엔 깃허브 인증이 없어서 push가 막히면, 나한테 PowerShell에서
-     "git push origin main" 직접 실행하라고 안내해줘.
-4. functions/ 폴더를 바꿨다면 firebase deploy --only functions 도 필요하다고 알려줘
-   (이건 내 PC에서 실행). 안 바꿨으면 생략.
-5. 배포 후 확인 방법 알려줘: 브라우저에서 https://www.ping.ai.kr/app.html?v=오늘날짜
-   로 캐시 우회 접속. 설치형 앱은 새로고침하면 최신(SW network-first).
+1. 코드 수정이 끝나면, 샌드박스에서 git commit/push는 하지 마.
+   (샌드박스 git이 구글드라이브에 .lock 파일을 남겨서 내 PC git이 막힘)
+2. 대신 "이제 PC에서 배포하세요" 하고 아래 PowerShell 명령을 그대로 줘.
+   커밋 메시지는 이번 변경 내용 한국어로 요약해서 넣어줘:
+
+   Get-ChildItem "C:\Users\ggyeo\내 드라이브\dev\핑\.git" -Recurse -Filter "*.lock" -Force | Remove-Item -Force
+   cd "C:\Users\ggyeo\내 드라이브\dev\핑"
+   git add -A
+   git commit -m "<이번 변경 요약>"
+   git push origin main
+
+3. functions/ 폴더를 바꿨다면 firebase deploy --only functions 도 필요하다고 알려줘
+   (이것도 내 PC에서 실행). 안 바꿨으면 생략.
+4. 배포 후 확인: 브라우저에서 https://www.ping.ai.kr/app.html?v=오늘날짜 로 캐시 우회 접속.
+   설치형 앱은 새로고침하면 최신(SW network-first).
 ```
 
 ---
 
 ## 배포 절차 메모 (참고용)
 
-**기본 배포 = git push.** PowerShell로 한 줄씩 (PowerShell은 `&&` 안 됨):
+**기본 배포 = git push.** PowerShell에서 아래를 한 줄씩 (PowerShell은 `&&` 안 됨).
+**첫 줄(모든 .lock 일괄 제거)을 항상 먼저** 실행하면 lock 에러를 예방할 수 있음:
 
 ```
+Get-ChildItem "C:\Users\ggyeo\내 드라이브\dev\핑\.git" -Recurse -Filter "*.lock" -Force | Remove-Item -Force
 cd "C:\Users\ggyeo\내 드라이브\dev\핑"
 git add -A
 git commit -m "변경 내용 요약"
 git push origin main
 ```
 
-> Claude가 샌드박스에서 이미 커밋해둔 경우, 위 `git add`/`git commit`은
-> "nothing to commit"이거나 lock 에러가 날 수 있는데 정상임 — `git push origin main`만 하면 됨.
+`git commit` 후 `[main ...]`, `git push` 후 `main -> main`이 보이면 성공.
+LF→CRLF 경고는 무시해도 됨(자동 줄바꿈 변환 안내).
 
-### `index.lock` File exists 에러가 날 때
+### lock 에러(`index.lock` / `HEAD.lock` File exists)가 날 때
 
-증상: `fatal: Unable to create '...​/.git/index.lock': File exists` +
-"Another git process seems to be running...". 구글드라이브 동기화로 lock 파일이
-안 지워지고 남아서 생김. 아래 한 줄로 정리(지워도 안전):
-
-```
-Remove-Item "C:\Users\ggyeo\내 드라이브\dev\핑\.git\index.lock" -ErrorAction SilentlyContinue
-```
-
-그래도 안 되면 HEAD.lock도 함께:
+증상: `fatal: Unable to create '...​/.git/...lock': File exists` +
+"Another git process seems to be running...". 원인은 Claude가 샌드박스에서
+git을 건드릴 때 구글드라이브로 동기화된 `.lock` 파일이 안 지워지고 남아서임.
+**해결 = 위 명령 첫 줄로 .git 안의 모든 `.lock`을 한 번에 제거** 후 다시 배포:
 
 ```
-Remove-Item "C:\Users\ggyeo\내 드라이브\dev\핑\.git\HEAD.lock" -ErrorAction SilentlyContinue
+Get-ChildItem "C:\Users\ggyeo\내 드라이브\dev\핑\.git" -Recurse -Filter "*.lock" -Force | Remove-Item -Force
 ```
 
-지운 뒤 `git status`로 확인하고 다시 배포.
+(개별 `index.lock`만 지우면 `HEAD.lock` 등이 또 막을 수 있으니 한 번에 제거가 확실함.)
 
 푸시되면 GitHub Pages가 `www.ping.ai.kr`에 자동 반영.
 
@@ -73,5 +74,5 @@ firebase deploy --only functions
 - 라이브 확인: `https://www.ping.ai.kr/app.html?v=날짜` (캐시 우회). 단 정적 기본값만 보임(JS 렌더 X).
 - 설치형 앱은 SW가 network-first라 새로고침 시 최신.
 - **단, `firebase-messaging-sw.js`·아이콘 파일명을 바꿨으면** 앱 재실행/재설치가 필요할 수 있음.
-- 푸시는 Claude 샌드박스에서 깃허브 인증이 안 돼 막힘 → 마지막 `git push`는 본인 PC에서.
-- 커밋 도중 `.git/index.lock` 등 "Operation not permitted" 경고는 구글드라이브 동기화 특성이라 커밋만 완료되면 무시 가능.
+- 커밋·푸시는 항상 **본인 PC에서** (샌드박스 git 인증 없음 + .lock 잔여 문제). Claude는 코드 수정까지만.
+- lock 에러가 나면 위 "lock 에러" 섹션의 **모든 .lock 일괄 제거** 명령을 먼저 실행.
