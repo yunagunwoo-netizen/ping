@@ -16,13 +16,14 @@
 /* ========== RESET & BASE ========== */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --orange:#FF6B35;--orange-light:#FF8F5E;--navy:#004E89;--cream:#FFF8F0;
-  --gray100:#F5F0EB;--gray200:#E8E0D8;--gray300:#C4B8AC;--gray400:#9E9189;
+  --orange:#FF6B35;--orange-light:#FF8F5E;--orange-deep:#C7471A;--navy:#004E89;--cream:#FFF8F0;
+  --gray100:#F5F0EB;--gray200:#E8E0D8;--gray300:#82756C;--gray400:#7C6F66;
   --gray500:#6B6159;--shadow:0 2px 12px rgba(0,0,0,.08);
   --radius:16px;--radius-sm:10px;
 }
 html,body{height:100%;font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:#2D2017;overflow:hidden}
 button{font-family:inherit;border:none;cursor:pointer;background:none}
+:focus-visible{outline:2px solid var(--navy);outline-offset:2px;border-radius:4px}
 input,textarea{font-family:inherit;border:none;outline:none}
 
 /* ========== APP SHELL ========== */
@@ -60,7 +61,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 #feed{padding:0}
 .feed-header{padding:18px 18px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .feed-header .fh-left{flex:1;min-width:0}
-.feed-header .fh-greet{font-size:12px;font-weight:800;color:var(--orange);margin-bottom:1px}
+.feed-header .fh-greet{font-size:12px;font-weight:800;color:var(--orange-deep);margin-bottom:1px}
 .feed-header .date{font-size:21px;font-weight:800}
 .feed-header .streak-badge{display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#FF6B35,#FF4D6D);color:#fff;padding:7px 13px;border-radius:18px;font-size:12.5px;font-weight:800;box-shadow:0 4px 12px rgba(255,77,109,.35)}
 .feed-subtitle{padding:4px 20px 16px;font-size:13px;color:var(--gray400)}
@@ -619,7 +620,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
     <div class="cam-zoom" id="camZoom" style="display:none">
       <span id="zoomLabel">1.0x</span>
-      <input type="range" id="zoomSlider" min="1" max="4" step="0.1" value="1" oninput="applyZoom(parseFloat(this.value))">
+      <input type="range" id="zoomSlider" aria-label="카메라 줌" min="1" max="4" step="0.1" value="1" oninput="applyZoom(parseFloat(this.value))">
     </div>
     <div class="camera-bottom">
       <button class="cam-side-btn" onclick="pickFromGallery()" title="갤러리에서 선택">
@@ -640,7 +641,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> <img src="./ic-family.png" class="eico" alt="👨‍👩‍👧‍👦" onerror="this.replaceWith('👨‍👩‍👧‍👦')"> 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
       </div>
       <div class="comment-row">
-        <input class="comment-input" id="commentInput" type="text" maxlength="20" placeholder="한줄 설명 (20자, 선택)">
+        <input class="comment-input" id="commentInput" type="text" aria-label="한줄 설명" maxlength="20" placeholder="한줄 설명 (20자, 선택)">
         <button class="mic-btn" type="button" onclick="dictate('commentInput',20)" title="음성으로 입력">🎤</button>
       </div>
       <div class="preview-actions">
@@ -806,7 +807,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       </div>
       <div class="cm-list" id="cmList"></div>
       <div class="cm-input-row">
-        <input id="commentText" type="text" maxlength="20" placeholder="댓글 (20자)">
+        <input id="commentText" type="text" aria-label="댓글" maxlength="20" placeholder="댓글 (20자)">
         <button class="mic-btn" type="button" onclick="dictate('commentText',20)" title="음성으로 입력">🎤</button>
         <button class="cm-send" onclick="addComment()">보내기</button>
       </div>
@@ -1721,25 +1722,43 @@ window.onGalleryPick = async function(input) {
   let buf = null;
   try { buf = await file.arrayBuffer(); } catch(e) { showLoading(false); showToast('파일을 읽을 수 없어요'); return; }
 
-  // Verify the photo was taken today (EXIF first, then file timestamp)
+  // Verify the photo was taken today.
+  // 1) EXIF 촬영정보 있으면 그대로 신뢰 (오늘 아니면 찍힌 날짜 보여주며 차단)
+  // 2) EXIF 없고 파일 날짜만 오늘 → 확신 불가 → "오늘 직접 찍었나요?" 양심 확인
+  // 3) EXIF 없고 파일 날짜도 오늘 아님/없음 → 차단
   const pd = parseExifDate(buf);
   const now = new Date();
-  let dateOk = false;
+  const sameDay = (y, mo, d) => (y === now.getFullYear() && mo === (now.getMonth() + 1) && d === now.getDate());
+
   if (pd) {
-    dateOk = (pd.y === now.getFullYear() && pd.mo === (now.getMonth() + 1) && pd.d === now.getDate());
-  } else if (file.lastModified) {
-    const lm = new Date(file.lastModified);
-    dateOk = (lm.getFullYear() === now.getFullYear() && lm.getMonth() === now.getMonth() && lm.getDate() === now.getDate());
-  }
-  if (!dateOk) {
+    if (!sameDay(pd.y, pd.mo, pd.d)) {
+      showLoading(false);
+      await uiDialog({
+        message: '오늘 찍은 사진이 아니에요. 📷\n이 사진은 ' + pd.mo + '월 ' + pd.d + '일에 찍혔어요.\n핑은 오늘 찍은 사진만 올릴 수 있어요.',
+        okText: '확인', cancelText: '닫기'
+      });
+      return;
+    }
+    // EXIF가 오늘 → 통과
+  } else {
+    const lm = file.lastModified ? new Date(file.lastModified) : null;
+    const lmToday = lm && sameDay(lm.getFullYear(), lm.getMonth() + 1, lm.getDate());
+    if (!lmToday) {
+      showLoading(false);
+      await uiDialog({
+        message: '촬영 날짜를 확인할 수 없는 사진이에요. 📷\n카메라로 직접 찍어서 올려주세요.',
+        okText: '확인', cancelText: '닫기'
+      });
+      return;
+    }
+    // 촬영정보(EXIF)가 없는 사진(스크린샷·전달받은 사진·편집본 등) → 가족 양심 확인
     showLoading(false);
-    await uiDialog({
-      message: pd
-        ? '오늘 찍은 사진이 아니에요. 📷\n핑은 오늘 찍은 사진만 올릴 수 있어요.'
-        : '촬영 날짜를 확인할 수 없는 사진이에요. 📷\n카메라로 직접 찍어서 올려주세요.',
-      okText: '확인', cancelText: '닫기'
+    const ok = await uiDialog({
+      message: '촬영 정보가 없는 사진이에요. 📷\n오늘 직접 찍은 사진이 맞나요?\n(스크린샷·전달받은 사진은 올릴 수 없어요)',
+      okText: '네, 오늘 찍었어요', cancelText: '취소'
     });
-    return;
+    if (!ok) return;
+    showLoading(true);
   }
 
   // Passed the date check → run through the same square-crop pipeline
