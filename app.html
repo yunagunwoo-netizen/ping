@@ -128,6 +128,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ping-card .comment-btn .cb-preview{font-size:11px;color:var(--gray400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ping-card .comment-btn .cb-preview b{color:var(--gray500);font-weight:700}
 .ping-card .comment-btn .cb-empty{color:var(--gray300)}
+.ping-card .own-actions{display:flex;gap:6px;margin:0 12px 12px}
+.ping-card .own-actions button{flex:1;padding:7px 4px;background:var(--gray100);border-radius:8px;font-size:11px;color:var(--gray500);font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px}
+.ping-card .own-actions button:active{background:var(--gray200)}
+.ping-card .own-actions .eico{width:13px;height:13px}
 .reaction-chip{font-size:16px;padding:2px 6px;background:var(--gray100);border-radius:12px;transition:all .15s}
 .reaction-chip.mine{background:#FFE8DC}
 .reaction-chip:active{transform:scale(1.2)}
@@ -588,7 +592,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <span>마이</span>
       </button>
     </div>
-    <button class="fab" id="fabBtn" onclick="openCamera()">
+    <button class="fab" id="fabBtn" onclick="startNewPing()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
     </button>
   </div>
@@ -637,7 +641,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
       </div>
       <div class="preview-actions">
         <button class="btn-cancel" onclick="cancelPreview()">다시 찍기</button>
-        <button class="btn-ping" onclick="submitPing()">핑!</button>
+        <button class="btn-ping" id="pingBtn" onclick="submitPing()">핑!</button>
       </div>
     </div>
   </div>
@@ -1051,6 +1055,7 @@ let hwZoom = false;
 let zoomMin = 1, zoomMax = 4, currentZoom = 1;
 let torchOn = false;
 let _pinchStart = null, _pinchStartZoom = 1;
+let editMode = false; // true면 새 핑이 아니라 오늘 내 사진 교체
 let reactionTargetMember = null;
 let todayPings = {}; // { memberId: { photoURL, comment, reactions, createdAt } }
 let streaks = {}; // { memberId: { current, best, lastPingDate } }
@@ -1436,7 +1441,11 @@ function renderFeed() {
         <div class="reactions-row">${reactionHTML}
           ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
         </div>
-        ${commentBtn}`;
+        ${commentBtn}
+        ${m.id === currentMember ? `<div class="own-actions">
+          <button onclick="startEditPhoto()">${eico('camera','📷')} 사진 바꾸기</button>
+          <button onclick="editPhotoCaption('${getToday()}','${m.id}')">✏️ 설명 수정</button>
+        </div>` : ''}`;
     } else {
       card.innerHTML = `
         <div class="photo-area">
@@ -1554,12 +1563,21 @@ window.toggleTorch = async function() {
   }
 };
 
+window.startNewPing = function() {
+  editMode = false;
+  openCamera();
+};
+window.startEditPhoto = function() {
+  if (!todayPings[currentMember]) { showToast('오늘 올린 핑이 없어요'); return; }
+  editMode = true;
+  openCamera();
+};
 window.openCamera = async function() {
-  if (todayPings[currentMember]) {
+  if (todayPings[currentMember] && !editMode) {
     showToast('오늘은 이미 핑을 보냈어요!');
     return;
   }
-  if (new Date().getHours() < 10) {
+  if (!editMode && new Date().getHours() < 10) {
     showToast('핑은 오전 10시부터 보낼 수 있어요! (10시~자정)');
     return;
   }
@@ -1586,9 +1604,32 @@ function stopCameraStream() {
 }
 
 window.closeCamera = function() {
+  editMode = false;
   stopCameraStream();
   showScreen('feed');
 };
+
+// 미리보기 진입 (새 핑이면 입력 초기화 / 교체모드면 기존 설명·보너스 숨김)
+function enterPreview() {
+  const ci = document.getElementById('commentInput');
+  const tg = document.querySelector('#preview .together-box');
+  const _wd = document.getElementById('withDubiChk');
+  const _fg = document.getElementById('gatherChk');
+  const pb = document.getElementById('pingBtn');
+  if (editMode) {
+    const p = todayPings[currentMember];
+    if (ci) ci.value = (p && p.comment) || '';
+    if (tg) tg.style.display = 'none';
+    if (pb) pb.textContent = '저장';
+  } else {
+    if (ci) ci.value = '';
+    if (tg) tg.style.display = '';
+    if (_wd) _wd.checked = false;
+    if (_fg) _fg.checked = false;
+    if (pb) pb.textContent = '핑!';
+  }
+  showScreen('preview');
+}
 
 window.flipCamera = async function() {
   facingMode = facingMode === 'environment' ? 'user' : 'environment';
@@ -1638,11 +1679,8 @@ window.capturePhoto = function() {
   canvas.toBlob(blob => {
     capturedBlob = blob;
     document.getElementById('previewImg').src = URL.createObjectURL(blob);
-    document.getElementById('commentInput').value = '';
     stopCameraStream();
-    const _wd = document.getElementById('withDubiChk'); if (_wd) _wd.checked = false;
-    const _fg = document.getElementById('gatherChk'); if (_fg) _fg.checked = false;
-    showScreen('preview');
+    enterPreview();
   }, 'image/jpeg', 0.7);
 };
 
@@ -1700,13 +1738,10 @@ window.onGalleryPick = async function(input) {
     canvas.toBlob(function(blob) {
       capturedBlob = blob;
       document.getElementById('previewImg').src = URL.createObjectURL(blob);
-      document.getElementById('commentInput').value = '';
       stopCameraStream();
-      const _wd = document.getElementById('withDubiChk'); if (_wd) _wd.checked = false;
-      const _fg = document.getElementById('gatherChk'); if (_fg) _fg.checked = false;
       URL.revokeObjectURL(url);
       showLoading(false);
-      showScreen('preview');
+      enterPreview();
     }, 'image/jpeg', 0.7);
   };
   img.onerror = function() { URL.revokeObjectURL(url); showLoading(false); showToast('이미지를 불러올 수 없어요'); };
@@ -1792,12 +1827,29 @@ window.cancelPreview = function() {
 };
 
 window.submitPing = async function() {
-  if (new Date().getHours() < 10) {
+  if (!editMode && new Date().getHours() < 10) {
     showToast('핑은 오전 10시부터 보낼 수 있어요! (10시~자정)');
     return;
   }
   const comment = document.getElementById('commentInput').value.trim();
   showLoading(true);
+
+  // 사진 교체 모드: 점수·리액션·댓글·시간은 그대로 두고 사진+설명만 갱신
+  if (editMode) {
+    try {
+      await updateMyPhoto(comment);
+      showLoading(false);
+      editMode = false;
+      capturedBlob = null;
+      showToast('사진을 바꿨어요 📷');
+      showScreen('feed');
+    } catch(e) {
+      showLoading(false);
+      showToast('교체 실패 — 다시 시도해주세요');
+      console.error(e);
+    }
+    return;
+  }
 
   try {
     // Convert blob to data URL for local storage
@@ -1824,6 +1876,39 @@ window.submitPing = async function() {
     console.error(e);
   }
 };
+
+// 오늘 내 사진 교체 (리액션·댓글·점수·시간 보존, 사진+설명만 갱신)
+async function updateMyPhoto(comment) {
+  const today = getToday();
+  const p = todayPings[currentMember];
+  if (!p) throw new Error('no ping to edit');
+  const dataURL = await new Promise((resolve) => {
+    const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(capturedBlob);
+  });
+  p.photoURL = dataURL;
+  p.comment = comment;
+  const lp = loadLocal(`pings_${today}`, {}); lp[currentMember] = p; saveLocal(`pings_${today}`, lp);
+  if (firebaseReady) {
+    try {
+      let url = dataURL;
+      if (capturedBlob) {
+        const photoRef = storageRef(storage, `families/${FAMILY_ID}/pings/${today}/${currentMember}.jpg`);
+        await uploadBytes(photoRef, capturedBlob);
+        url = await getDownloadURL(photoRef);
+        url = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now(); // 캐시 우회
+        p.photoURL = url;
+        lp[currentMember] = p; saveLocal(`pings_${today}`, lp);
+      }
+      await setDoc(doc(db, 'pings', `${today}_${currentMember}`), { photoURL: url, comment }, { merge: true });
+    } catch(e) { console.warn('사진 교체 저장 실패', e); }
+  }
+  todayPings[currentMember] = p;
+  if (typeof albumCache !== 'undefined' && albumCache && albumCache[today] && albumCache[today][currentMember]) {
+    albumCache[today][currentMember].photoURL = p.photoURL;
+    albumCache[today][currentMember].comment = comment;
+  }
+  renderFeed();
+}
 
 // ========== REACTIONS ==========
 window.openReactionPicker = function(targetId) {
@@ -2290,7 +2375,8 @@ window.showDayDetail = function(date, dayPings){
     const p = dayPings[mem.id]; if (!p) continue;
     const item = document.createElement('div'); item.className = 'day-item';
     const mine = mem.id === currentMember;
-    const actions = mine ? `<div class="di-actions"><button class="di-edit" onclick="editPhotoCaption('${date}','${mem.id}')">✏️ 수정</button><button class="di-del" onclick="deletePhoto('${date}','${mem.id}')">🗑 삭제</button></div>` : '';
+    const canReplace = mine && date === getToday();
+    const actions = mine ? `<div class="di-actions">${canReplace ? `<button class="di-edit" onclick="closeDayDetail(null,true);startEditPhoto()">📷 바꾸기</button>` : ''}<button class="di-edit" onclick="editPhotoCaption('${date}','${mem.id}')">✏️ 수정</button><button class="di-del" onclick="deletePhoto('${date}','${mem.id}')">🗑 삭제</button></div>` : '';
     item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}${actions}`;
     grid.appendChild(item);
   }
