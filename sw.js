@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ping-v2';
+const CACHE_NAME = 'ping-v3';
 const ASSETS = [
   './',
   './index.html',

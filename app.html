@@ -954,6 +954,11 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">아이폰은 사파리(Safari)에서 열어주세요</div></div>
         <p>아이폰은 <b>Safari 브라우저</b>에서만 홈 화면에 추가할 수 있어요. 카톡·크롬 등 다른 앱에서 열렸다면, 주소창의 <b>ping.ai.kr</b>을 복사해 <b>Safari로 다시 열고</b> 위 그림 순서대로 설치해 주세요.</p>
       </div>
+      <div class="ig-note" id="igAndroidWarn">
+        <div class="ig-note-head"><img class="dubi" src="./dubi-safe.png" alt="뚜비"><div class="nt">크롬(Chrome)에서 열어주세요</div></div>
+        <p>삼성 인터넷 등 다른 브라우저에서는 사진을 올릴 때 갤러리가 제각각 열려요. <b>크롬</b>에서 열면 사진 선택도 편하고 설치도 잘 돼요. 아래 <b>주소 복사</b>를 누르고 <b>크롬 주소창에 붙여넣어</b> 다시 열어주세요.</p>
+        <button onclick="copyAppUrl()" style="margin-top:8px;width:100%;background:var(--orange);color:#fff;font-weight:800;font-size:13px;padding:11px;border-radius:10px;border:none">🔗 주소 복사 (ping.ai.kr)</button>
+      </div>
       <div class="ig-actions">
         <button class="ig-install" id="igInstallBtn" style="display:none" onclick="installApp()">지금 설치</button>
         <button class="ig-close" onclick="closeInstallGuide(event, true)">닫기</button>
@@ -3017,6 +3022,9 @@ function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navig
 // iOS에서 '홈 화면에 추가'가 가능한 진짜 Safari인지 (크롬·파폭·엣지·인앱 제외)
 function isIOSSafari(){ return isIOS() && !/crios|fxios|edgios|opios|mercury/i.test(navigator.userAgent) && !isInAppBrowser(); }
 function isInAppBrowser(){ return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|wadiz/i.test(navigator.userAgent); }
+function isAndroid(){ return /android/i.test(navigator.userAgent); }
+// 진짜 크롬인지 (삼성인터넷·엣지·오페라·웨일·파폭·인앱 제외 — 이들은 사진 선택창이 제각각 열림)
+function isAndroidChrome(){ const ua = navigator.userAgent; return isAndroid() && /Chrome\//.test(ua) && !/SamsungBrowser|EdgA|OPR\/|YaBrowser|Whale|UCBrowser|Firefox|FxiOS/.test(ua) && !isInAppBrowser(); }
 function guideImageFor(){
   if (isInAppBrowser()) return './install-inapp.png';
   if (isIOS()) return './install-ios.png';
@@ -3029,6 +3037,7 @@ function maybeShowInstall(){
   if (isInAppBrowser()) sub.textContent = '카톡 안에서는 설치가 안 돼요 → 방법 보기';
   else if (isIOS() && !isIOSSafari()) sub.textContent = '아이폰은 Safari에서 설치돼요 → 방법 보기';
   else if (isIOS()) sub.textContent = "공유 → '홈 화면에 추가' (방법 보기)";
+  else if (isAndroid() && !isAndroidChrome()) sub.textContent = '크롬(Chrome)에서 열면 더 잘 돼요 → 방법 보기';
   else sub.textContent = '설치해야 알림도 받고 앱처럼 빨라요';
   banner.classList.add('show');
 }
@@ -3047,7 +3056,9 @@ window.openInstallGuide = function(){
   const ios = isIOS(), inApp = isInAppBrowser();
   // 안드로이드(아이폰·인앱 제외)에서만 '안전하지 않은 앱' 안심 안내 노출
   const isAndroidWeb = !ios && !inApp;
-  document.getElementById('igProtect').classList.toggle('show', isAndroidWeb);
+  const androidNonChrome = isAndroid() && !isAndroidChrome() && !inApp;
+  document.getElementById('igProtect').classList.toggle('show', isAndroidWeb && !androidNonChrome);
+  document.getElementById('igAndroidWarn').classList.toggle('show', androidNonChrome);
   // 아이폰은 그림 가이드(install-ios.png)를 크게 보여주고, Safari가 아니면 'Safari로 열기' 경고 노출
   document.getElementById('igImg').classList.toggle('tall', ios);
   document.getElementById('igIOSWarn').classList.toggle('show', ios && !isIOSSafari());
@@ -3072,6 +3083,11 @@ window.installApp = async function(){
 window.dismissInstall = function(){
   installBannerDismissed = true;
   document.getElementById('installBanner').classList.remove('show');
+};
+window.copyAppUrl = async function(){
+  const url = 'https://www.ping.ai.kr/app.html';
+  try { await navigator.clipboard.writeText(url); showToast('주소를 복사했어요! 크롬에 붙여넣어 열어주세요'); }
+  catch(e){ showToast('주소: www.ping.ai.kr (크롬에서 열어주세요)'); }
 };
 
 // ========== 뚜비 코칭 (보너스 기회 안내) ==========
@@ -3263,9 +3279,21 @@ async function init() {
     Notification.requestPermission();
   }
 
-  // Register service worker
+  // Register service worker (+ 새 버전 배포 시 자동 새로고침)
   if ('serviceWorker' in navigator) {
-    try { await navigator.serviceWorker.register('./sw.js'); } catch(e) {}
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      // 이미 제어 중이던 경우에만(=최초 설치가 아니라 업데이트일 때만) 새로고침
+      const _hadController = !!navigator.serviceWorker.controller;
+      let _reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!_hadController || _reloading) return; _reloading = true; location.reload();
+      });
+      // 앱을 다시 열 때마다 업데이트 확인 (백그라운드에 띄워둔 옛 버전 방지)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') { try { reg.update(); } catch(e) {} }
+      });
+    } catch(e) {}
   }
 
   // Splash screen
