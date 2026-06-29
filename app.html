@@ -109,11 +109,11 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .feed-grid{flex:1;overflow-y:auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;align-items:start}
 .ping-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s}
 .ping-card:active{transform:scale(.98)}
-.ping-card .photo-area{position:relative;width:100%;aspect-ratio:1;background:var(--gray100);overflow:hidden}
+.ping-card .photo-area{position:relative;width:100%;padding-top:100%;height:0;background:var(--gray100);overflow:hidden}
 .ping-card .photo-area .card-avatar{position:absolute;top:7px;left:7px;width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);background:var(--gray100)}
 .ping-card .photo-area .card-avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.ping-card .photo-area img{width:100%;height:100%;object-fit:cover}
-.ping-card .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--gray300);gap:8px}
+.ping-card .photo-area > img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.ping-card .placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray300);gap:8px}
 .ping-card .placeholder svg{width:48px;height:48px;opacity:.4}
 .ping-card .placeholder img.ph-av{width:54px;height:54px;border-radius:50%;object-fit:cover;opacity:.45;filter:grayscale(.25)}
 .ping-card .placeholder span{font-size:12px}
