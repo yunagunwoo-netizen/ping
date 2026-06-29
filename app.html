@@ -117,24 +117,27 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ping-card .placeholder svg{width:48px;height:48px;opacity:.4}
 .ping-card .placeholder img.ph-av{width:54px;height:54px;border-radius:50%;object-fit:cover;opacity:.45;filter:grayscale(.25)}
 .ping-card .placeholder span{font-size:12px}
-.ping-card .card-info{padding:10px 12px}
-.ping-card .card-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px}
-.ping-card .card-name .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
-.ping-card .card-comment{font-size:13px;color:var(--gray500);margin-top:5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
-.ping-card .card-time{font-size:11px;color:var(--gray300);margin-top:4px}
-.ping-card .reactions-row{display:flex;gap:2px;padding:0 12px 8px;flex-wrap:wrap}
-.ping-card .comment-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:0 12px 12px;padding:8px 10px;background:#FFF1E9;border:1px solid #FFE0CE;border-radius:10px;width:calc(100% - 24px);text-align:left}
-.ping-card .comment-btn:active{background:#FFE6D6}
-.ping-card .comment-btn .cb-top{font-size:12px;color:var(--gray500);font-weight:700;display:flex;align-items:center;gap:4px}
-.ping-card .comment-btn .cb-top .eico{width:15px;height:15px}
-.ping-card .comment-btn .cb-top b{color:var(--orange)}
-.ping-card .comment-btn .cb-preview{font-size:11px;color:var(--gray400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.ping-card .comment-btn .cb-preview b{color:var(--gray500);font-weight:700}
-.ping-card .comment-btn .cb-empty{color:var(--gray300)}
-.ping-card .own-actions{display:flex;gap:6px;margin:0 12px 12px}
-.ping-card .own-actions button{flex:1;padding:7px 4px;background:var(--gray100);border-radius:8px;font-size:11px;color:var(--gray500);font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px}
-.ping-card .own-actions button:active{background:var(--gray200)}
-.ping-card .own-actions .eico{width:13px;height:13px}
+.ping-card .card-info{padding:8px 10px}
+.ping-card .card-name{font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px}
+.ping-card .card-name .dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.ping-card .card-name .ci-time{margin-left:auto;font-size:10px;color:var(--gray400);font-weight:500}
+.ping-card .card-comment{font-size:12.5px;color:var(--gray500);margin-top:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
+.ping-card .card-foot{display:flex;align-items:center;gap:5px;margin-top:7px}
+.ping-card .card-foot .cf-btn{display:flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;color:var(--gray500);background:var(--gray100);border-radius:8px;padding:5px 9px;min-height:30px}
+.ping-card .card-foot .cf-btn .eico{width:14px;height:14px}
+.ping-card .card-foot .cf-btn:active{background:var(--gray200)}
+.ping-card .card-foot .cf-end{margin-left:auto}
+.ping-card .card-foot .reactions-inline{display:flex;gap:3px;flex-wrap:wrap;align-items:center;min-width:0}
+.ping-card .placeholder.pokeable{cursor:pointer}
+.ping-card .placeholder.pokeable:active{background:rgba(255,107,53,.07)}
+.ping-card .placeholder .poke-hint{font-size:11px;font-weight:700;color:var(--orange-deep);display:flex;align-items:center;gap:3px;margin-top:3px}
+.ping-card .placeholder .poke-hint .eico{width:13px;height:13px}
+.osheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:195;display:none;align-items:flex-end;justify-content:center}
+.osheet-overlay.show{display:flex}
+.osheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));animation:fadeUp .25s ease}
+.osheet button{width:100%;padding:15px;font-size:15px;font-weight:700;color:var(--gray500);background:none;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+.osheet button:active{background:var(--gray100)}
+.osheet .os-cancel{color:var(--gray400);font-weight:600;margin-top:2px}
 .reaction-chip{font-size:16px;padding:2px 6px;background:var(--gray100);border-radius:12px;transition:all .15s}
 .reaction-chip.mine{background:#FFE8DC}
 .reaction-chip:active{transform:scale(1.2)}
@@ -967,7 +970,14 @@ input,textarea{font-family:inherit;border:none;outline:none}
   </div>
 </div>
 
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v6</div>
+<div class="osheet-overlay" id="ownSheet" onclick="closeOwnSheet(event)">
+  <div class="osheet">
+    <button onclick="ownSheetAction('photo')">📷 사진 바꾸기</button>
+    <button onclick="ownSheetAction('caption')">✏️ 설명 수정</button>
+    <button class="os-cancel" onclick="closeOwnSheet()">취소</button>
+  </div>
+</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v7</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -1451,41 +1461,32 @@ function renderFeed() {
       const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
       const cs = ping.comments || [];
       const last = cs.length ? cs[cs.length - 1] : null;
-      const commentBtn = `
-        <button class="comment-btn" onclick="openComments('${m.id}')">
-          <span class="cb-top">${eico('speech','💬')} 댓글${cs.length ? ` <b>${cs.length}</b>` : ''}</span>
-          ${last
-            ? `<span class="cb-preview"><b>${esc(last.by)}</b> ${esc(last.text)}</span>`
-            : `<span class="cb-preview cb-empty">첫 댓글을 남겨보세요</span>`}
-        </button>`;
-
       card.innerHTML = `
         <div class="photo-area"><img src="${ping.photoURL}" alt="${m.id}의 핑"><div class="card-avatar"><img src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'"></div></div>
         <div class="card-info">
-          <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
+          <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}<span class="ci-time">${timeStr}</span></div>
           ${ping.comment ? `<div class="card-comment">${esc(ping.comment)}</div>` : ''}
-          <div class="card-time">${timeStr}</div>
-        </div>
-        <div class="reactions-row">${reactionHTML}
-          ${m.id !== currentMember ? `<span class="reaction-chip" onclick="openReactionPicker('${m.id}')" style="cursor:pointer">+</span>` : ''}
-        </div>
-        ${commentBtn}
-        ${m.id === currentMember ? `<div class="own-actions">
-          <button onclick="startEditPhoto()">${eico('camera','📷')} 사진 바꾸기</button>
-          <button onclick="editPhotoCaption('${getToday()}','${m.id}')">✏️ 설명 수정</button>
-        </div>` : ''}`;
+          <div class="card-foot">
+            <button class="cf-btn" onclick="openComments('${m.id}')">${eico('speech','💬')}<span>${cs.length || ''}</span></button>
+            <div class="reactions-inline">${reactionHTML}</div>
+            ${m.id !== currentMember
+              ? `<button class="cf-btn cf-end" onclick="openReactionPicker('${m.id}')">🙂<b>+</b></button>`
+              : `<button class="cf-btn cf-end" onclick="openOwnMenu()">⋯</button>`}
+          </div>
+        </div>`;
     } else {
+      const pokeable = m.id !== currentMember;
       card.innerHTML = `
         <div class="photo-area">
-          <div class="placeholder">
+          <div class="placeholder${pokeable ? ' pokeable' : ''}"${pokeable ? ` onclick="pokeMember('${m.id}')"` : ''}>
             <img class="ph-av" src="${m.avatar}" alt="${m.id}" onerror="this.style.display='none'">
             <span>아직 핑 안 옴</span>
+            ${pokeable ? `<span class="poke-hint">${eico('poke','👈')} 콕 찌르기</span>` : ''}
           </div>
         </div>
         <div class="card-info">
           <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
-        </div>
-        ${m.id !== currentMember ? `<button class="poke-btn" onclick="pokeMember('${m.id}')">${eico('poke','👈')} 찌르기</button>` : ''}`;
+        </div>`;
     }
     grid.appendChild(card);
   }
@@ -3089,6 +3090,14 @@ window.copyAppUrl = async function(){
   const url = 'https://www.ping.ai.kr/app.html';
   try { await navigator.clipboard.writeText(url); showToast('주소를 복사했어요! 크롬에 붙여넣어 열어주세요'); }
   catch(e){ showToast('주소: www.ping.ai.kr (크롬에서 열어주세요)'); }
+};
+// 내 카드 ⋯ 메뉴 (사진 바꾸기 / 설명 수정)
+window.openOwnMenu = function(){ document.getElementById('ownSheet').classList.add('show'); };
+window.closeOwnSheet = function(e){ if (!e || e.target === document.getElementById('ownSheet')) document.getElementById('ownSheet').classList.remove('show'); };
+window.ownSheetAction = function(which){
+  document.getElementById('ownSheet').classList.remove('show');
+  if (which === 'photo') startEditPhoto();
+  else editPhotoCaption(getToday(), currentMember);
 };
 
 // ========== 뚜비 코칭 (보너스 기회 안내) ==========
