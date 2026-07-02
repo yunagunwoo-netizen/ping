@@ -974,10 +974,19 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div class="osheet">
     <button onclick="ownSheetAction('photo')">📷 사진 바꾸기</button>
     <button onclick="ownSheetAction('caption')">✏️ 설명 수정</button>
+    <button onclick="ownSheetAction('bonus')">✅ 산책·모임 체크 수정</button>
     <button class="os-cancel" onclick="closeOwnSheet()">취소</button>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v7</div>
+<div class="dlg-overlay" id="bonusEditOverlay" onclick="closeBonusEdit(event)">
+  <div class="dlg-card">
+    <div class="dlg-msg">오늘 핑 체크 수정</div>
+    <label class="bonus-toggle"><input type="checkbox" id="bonusEditDubi"> <img src="./ic-walk.png" class="eico" alt="🚶" onerror="this.replaceWith('🚶')"> 뚜비랑 산책하며 찍었어요 <span>(주 1회 +50점)</span></label>
+    <label class="bonus-toggle"><input type="checkbox" id="bonusEditGather"> <img src="./ic-family.png" class="eico" alt="👨‍👩‍👧‍👦" onerror="this.replaceWith('👨‍👩‍👧‍👦')"> 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
+    <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
+  </div>
+</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v8</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -1118,7 +1127,7 @@ function showScreen(id) {
 
 // ===== 폰(안드로이드) 뒤로가기 버튼 처리 =====
 // 우선순위: 열린 모달 닫기 → 하위 화면이면 피드로 → 피드에서 한 번 더 누르면 종료
-const OVERLAY_IDS = ['dlgOverlay','commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','treatModal','rewardModal','dayOverlay','installGuide','coachOverlay'];
+const OVERLAY_IDS = ['dlgOverlay','commentsOverlay','reactionOverlay','familyPhotoOverlay','cardUnlockOverlay','dubiDexOverlay','treatModal','rewardModal','dayOverlay','installGuide','coachOverlay','bonusEditOverlay'];
 function _openOverlay(){
   for (const oid of OVERLAY_IDS){ const el = document.getElementById(oid); if (el && el.classList.contains('show')) return el; }
   const hm = document.getElementById('headerMenu'); if (hm && hm.classList.contains('show')) return hm;
@@ -3097,7 +3106,42 @@ window.closeOwnSheet = function(e){ if (!e || e.target === document.getElementBy
 window.ownSheetAction = function(which){
   document.getElementById('ownSheet').classList.remove('show');
   if (which === 'photo') startEditPhoto();
+  else if (which === 'bonus') openBonusEdit();
   else editPhotoCaption(getToday(), currentMember);
+};
+
+// 오늘 핑 체크(산책·가족모임) 수정 — 체크를 빼먹었거나 잘못 눌렀을 때
+window.openBonusEdit = function(){
+  const p = todayPings[currentMember];
+  if (!p){ showToast('오늘 핑을 먼저 올려주세요'); return; }
+  document.getElementById('bonusEditDubi').checked = !!p.withDubi;
+  document.getElementById('bonusEditGather').checked = !!p.familyGathering;
+  document.getElementById('bonusEditOverlay').classList.add('show');
+};
+window.closeBonusEdit = function(e){
+  if (!e || e.target === document.getElementById('bonusEditOverlay')) document.getElementById('bonusEditOverlay').classList.remove('show');
+};
+window.saveBonusEdit = async function(){
+  const overlay = document.getElementById('bonusEditOverlay');
+  const p = todayPings[currentMember];
+  if (!p){ overlay.classList.remove('show'); return; }
+  const withDubi = document.getElementById('bonusEditDubi').checked;
+  const familyGathering = document.getElementById('bonusEditGather').checked;
+  const today = getToday();
+  p.withDubi = withDubi; p.familyGathering = familyGathering;
+  const lp = loadLocal(`pings_${today}`, {}); lp[currentMember] = p; saveLocal(`pings_${today}`, lp);
+  if (firebaseReady){
+    try { await setDoc(doc(db, 'pings', `${today}_${currentMember}`), { withDubi, familyGathering }, { merge: true }); }
+    catch(e){ console.warn('체크 수정 저장 실패', e); }
+  }
+  if (typeof albumCache !== 'undefined' && albumCache && albumCache[today] && albumCache[today][currentMember]){
+    albumCache[today][currentMember].withDubi = withDubi;
+    albumCache[today][currentMember].familyGathering = familyGathering;
+  }
+  overlay.classList.remove('show');
+  renderFeed();
+  showToast('체크를 수정했어요');
+  pushCoachStateNow(); // 점수가 바뀔 수 있어 서버 코칭 상태 갱신
 };
 
 // ========== 뚜비 코칭 (보너스 기회 안내) ==========
