@@ -244,3 +244,56 @@ exports.deadlineReminder = onSchedule(
     console.log(`deadlineReminder: ${sent}건 발송`);
   },
 );
+
+// ===== 핑 사진 AI 검증 (산책·가족모임 체크 진위 확인) =====
+// 배포 전 필요: firebase functions:secrets:set GEMINI_KEY  (제미나이 API 키, ping-family 프로젝트에서)
+// 배포: firebase deploy --only functions:verifyPingPhoto
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
+const {defineSecret} = require("firebase-functions/params");
+const GEMINI_KEY = defineSecret("GEMINI_KEY");
+const VERIFY_MODEL = "gemini-2.5-flash";
+const GATHER_MIN_PEOPLE = 3; // 4인 가족 — 찍는 사람 제외 3명 이상 보이면 모임 인정
+
+exports.verifyPingPhoto = onCall(
+  {secrets: [GEMINI_KEY], region: "asia-northeast3", memory: "512MiB", timeoutSeconds: 60},
+  async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "로그인이 필요해요.");
+    const d = request.data || {};
+    const imageBase64 = d.imageBase64;
+    if (!imageBase64 || imageBase64.length > 4000000) {
+      throw new HttpsError("invalid-argument", "이미지가 없거나 너무 커요.");
+    }
+    const prompt = "Analyze this photo. Respond with ONLY a JSON object, no markdown: " +
+      "{\"dog\": true if a real live dog is visible in the photo else false, " +
+      "\"personCount\": number of distinct people visible (count faces or partial bodies, 0 if none), " +
+      "\"outdoor\": true if the photo appears to be taken outdoors else false}";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${VERIFY_MODEL}:generateContent?key=${GEMINI_KEY.value()}`;
+    const body = {
+      contents: [{parts: [
+        {inline_data: {mime_type: d.mimeType || "image/jpeg", data: imageBase64}},
+        {text: prompt},
+      ]}],
+      generationConfig: {responseMimeType: "application/json", temperature: 0},
+    };
+    let resp;
+    try {
+      resp = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    } catch (e) {
+      throw new HttpsError("internal", "제미나이 호출 실패: " + (e.message || e));
+    }
+    if (!resp.ok) throw new HttpsError("internal", `제미나이 오류 (HTTP ${resp.status})`);
+    const j = await resp.json();
+    let out = {};
+    try {
+      const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+      const txt = parts.map((p) => p.text || "").join("");
+      out = JSON.parse(txt.replace(/```json|```/g, "").trim());
+    } catch (e) {
+      throw new HttpsError("internal", "분석 결과를 읽지 못했어요.");
+    }
+    const dog = !!out.dog;
+    const personCount = Number(out.personCount) || 0;
+    const outdoor = !!out.outdoor;
+    return {dog, personCount, outdoor, walkOk: dog, gatherOk: personCount >= GATHER_MIN_PEOPLE};
+  },
+);

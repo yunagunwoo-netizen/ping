@@ -30,6 +30,10 @@ onboarding-prototype.html
 데이터구조_설계.md
 핑_서비스기획서.docx
 
+# API 키 파일 — 절대 커밋 금지
+AQ.*
+*key*.txt
+
 # 내부 전략·작업 문서 — 공개 배포 제외
 핑_릴스쇼츠_광고기획안.docx
 핑_제품_GTM_전략_업그레이드.docx

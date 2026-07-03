@@ -986,7 +986,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v8</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v9</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -996,6 +996,7 @@ import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, quer
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-functions.js';
 
 // 🔧 Firebase 설정 — 본인의 Firebase 프로젝트 정보로 교체하세요
 const firebaseConfig = {
@@ -1010,11 +1011,12 @@ const firebaseConfig = {
 // 🔔 FCM 웹푸시 공개키(VAPID) — Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 구성에서 생성해 붙여넣기
 const FCM_VAPID_KEY = "BCgnrgbnGqkRgx00n2oMw10kA617cNSzJHQh6j_7HC9fQJX4OzlUPwv51_xdBRdKeI898AzNvbpWsY80jzYNEkw";
 
-let db, storage, auth, messaging, firebaseReady = false;
+let db, storage, auth, messaging, fns, firebaseReady = false;
 try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   storage = getStorage(app);
+  fns = getFunctions(app, 'asia-northeast3'); // 사진 AI 검증 함수 리전
   if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
     auth = getAuth(app);
     // 익명 로그인 — 보안 규칙(인증된 사용자만)을 통과하기 위해 필요
@@ -1893,11 +1895,19 @@ window.submitPing = async function() {
   // 사진 교체 모드: 점수·리액션·댓글·시간은 그대로 두고 사진+설명만 갱신
   if (editMode) {
     try {
+      // 새 사진에 대해 기존 체크(산책·모임) 재검증 — 사진만 바꿔 체크를 유지하는 꼼수 방지
+      let notice = '';
+      const pv = todayPings[currentMember] || {};
+      if (pv.withDubi || pv.familyGathering) {
+        const ok = await verifyChecks(capturedBlob, !!pv.withDubi, !!pv.familyGathering);
+        if (ok.walk !== !!pv.withDubi || ok.gather !== !!pv.familyGathering) await persistFlags(ok.walk, ok.gather);
+        notice = ok.notice;
+      }
       await updateMyPhoto(comment);
       showLoading(false);
       editMode = false;
       capturedBlob = null;
-      showToast('사진을 바꿨어요 📷');
+      showToast(notice ? `사진을 바꿨어요 📷 · ${notice}` : '사진을 바꿨어요 📷');
       showScreen('feed');
     } catch(e) {
       showLoading(false);
@@ -1915,14 +1925,19 @@ window.submitPing = async function() {
       reader.readAsDataURL(capturedBlob);
     });
 
-    const withDubi = !!(document.getElementById('withDubiChk') && document.getElementById('withDubiChk').checked);
-    const gather = !!(document.getElementById('gatherChk') && document.getElementById('gatherChk').checked);
+    const wantWalk = !!(document.getElementById('withDubiChk') && document.getElementById('withDubiChk').checked);
+    const wantGather = !!(document.getElementById('gatherChk') && document.getElementById('gatherChk').checked);
+    // AI 검증: 체크가 사진 내용과 맞는지 확인 (검증 불가 시 그대로 통과)
+    const vr = await verifyChecks(capturedBlob, wantWalk, wantGather);
+    const withDubi = vr.walk, gather = vr.gather;
     await savePing(currentMember, dataURL, comment, withDubi, gather);
     showLoading(false);
     const tags = [];
     if (withDubi) tags.push('🚶 뚜비랑 산책');
     if (gather) tags.push('👨‍👩‍👧‍👦 가족 모임');
-    showToast(tags.length ? `핑! 📸 ${tags.join(' · ')} (보너스는 주 1회 반영돼요!)` : '핑! +10점 📸');
+    let doneMsg = tags.length ? `핑! 📸 ${tags.join(' · ')} (보너스는 주 1회 반영돼요!)` : '핑! +10점 📸';
+    if (vr.notice) doneMsg = `핑! 📸 ${vr.notice}`;
+    showToast(doneMsg);
     capturedBlob = null;
     togetherSelected = new Set();
     showScreen('feed');
@@ -3125,24 +3140,87 @@ window.saveBonusEdit = async function(){
   const overlay = document.getElementById('bonusEditOverlay');
   const p = todayPings[currentMember];
   if (!p){ overlay.classList.remove('show'); return; }
-  const withDubi = document.getElementById('bonusEditDubi').checked;
-  const familyGathering = document.getElementById('bonusEditGather').checked;
+  let withDubi = document.getElementById('bonusEditDubi').checked;
+  let familyGathering = document.getElementById('bonusEditGather').checked;
+  overlay.classList.remove('show');
+  // 새로 켜는 체크만 AI 검증 (이미 켜져 있던 건 재검증 안 함)
+  const needWalk = withDubi && !p.withDubi;
+  const needGather = familyGathering && !p.familyGathering;
+  let notice = '';
+  if (needWalk || needGather){
+    showLoading(true);
+    let blob = null;
+    try { const r = await fetch(p.photoURL); blob = await r.blob(); } catch(e){ console.warn('사진 로드 실패', e); }
+    const ok = await verifyChecks(blob, needWalk, needGather);
+    showLoading(false);
+    if (needWalk) withDubi = ok.walk;
+    if (needGather) familyGathering = ok.gather;
+    notice = ok.notice;
+  }
+  await persistFlags(withDubi, familyGathering);
+  renderFeed();
+  showToast(notice || '체크를 수정했어요');
+  pushCoachStateNow(); // 점수가 바뀔 수 있어 서버 코칭 상태 갱신
+};
+
+// 오늘 내 핑의 체크 플래그 저장 (로컬 + Firestore merge + albumCache)
+async function persistFlags(withDubi, familyGathering){
+  const p = todayPings[currentMember];
+  if (!p) return;
   const today = getToday();
   p.withDubi = withDubi; p.familyGathering = familyGathering;
   const lp = loadLocal(`pings_${today}`, {}); lp[currentMember] = p; saveLocal(`pings_${today}`, lp);
   if (firebaseReady){
     try { await setDoc(doc(db, 'pings', `${today}_${currentMember}`), { withDubi, familyGathering }, { merge: true }); }
-    catch(e){ console.warn('체크 수정 저장 실패', e); }
+    catch(e){ console.warn('체크 저장 실패', e); }
   }
   if (typeof albumCache !== 'undefined' && albumCache && albumCache[today] && albumCache[today][currentMember]){
     albumCache[today][currentMember].withDubi = withDubi;
     albumCache[today][currentMember].familyGathering = familyGathering;
   }
-  overlay.classList.remove('show');
-  renderFeed();
-  showToast('체크를 수정했어요');
-  pushCoachStateNow(); // 점수가 바뀔 수 있어 서버 코칭 상태 갱신
-};
+}
+
+// ===== AI 사진 검증 (체크 진위 확인 — verifyPingPhoto 함수 호출) =====
+// 검증용 축소 이미지(최대 768px jpeg) base64
+function _verifyBase64(blob){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const u = URL.createObjectURL(blob);
+    img.onload = () => {
+      try {
+        const MAX = 768;
+        const sc = Math.min(1, MAX / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * sc));
+        c.height = Math.max(1, Math.round(img.height * sc));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(u);
+        resolve(c.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      } catch(e){ URL.revokeObjectURL(u); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); reject(new Error('이미지 로드 실패')); };
+    img.src = u;
+  });
+}
+// wantWalk/wantGather 중 true인 것만 검사해 실제 허용 여부 반환.
+// 검증 불가(오프라인·함수 오류 등)면 체크 그대로 통과 — 핑 흐름을 막지 않는다.
+async function verifyChecks(blob, wantWalk, wantGather){
+  const pass = { walk: wantWalk, gather: wantGather, notice: '' };
+  if (!blob || (!wantWalk && !wantGather) || !firebaseReady || !fns) return pass;
+  let v;
+  try {
+    const imageBase64 = await _verifyBase64(blob);
+    const call = httpsCallable(fns, 'verifyPingPhoto');
+    v = (await call({ imageBase64, mimeType: 'image/jpeg' })).data;
+  } catch(e){ console.warn('사진 검증 실패 — 통과 처리', e); return pass; }
+  if (!v) return pass;
+  const walk = wantWalk && !!v.walkOk;
+  const gather = wantGather && !!v.gatherOk;
+  const ms = [];
+  if (wantWalk && !walk) ms.push('사진에서 뚜비를 못 찾아 산책 체크를 해제했어요 🐶');
+  if (wantGather && !gather) ms.push('가족 3명 이상이 안 보여 모임 체크를 해제했어요 👨‍👩‍👧‍👦');
+  return { walk, gather, notice: ms.join(' · ') };
+}
 
 // ========== 뚜비 코칭 (보너스 기회 안내) ==========
 // 이번 주(월~일) 내 산책 여부 / 가족 모임 여부
