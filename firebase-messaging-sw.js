@@ -13,19 +13,21 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// 서버가 데이터 전용(payload.data)으로 보냄 → SW가 알림을 직접 1회만 생성 (중복 방지)
 messaging.onBackgroundMessage((payload) => {
-  const n = payload.notification || {};
-  const d = payload.data || {};
-  self.registration.showNotification(n.title || '뚜비가 알려줘요 🐾', {
-    body: n.body || '',
-    icon: d.icon || n.icon || './dubi-push.png',
+  const data = payload.data || {};
+  self.registration.showNotification(data.title || '뚜비가 알려줘요 🐾', {
+    body: data.body || '',
+    icon: data.icon || './dubi-push.png',
     badge: './dubi-push.png',
-    tag: 'dubi-coach'
+    // 고정 tag 사용 안 함: 서로 다른 알림이 하나로 합쳐지는 것 방지
+    data: {link: data.link || 'https://www.ping.ai.kr/app.html'}
   });
 });
 
 // 알림 클릭 시 앱 열기
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('https://www.ping.ai.kr/app.html'));
+  const link = (event.notification.data && event.notification.data.link) || 'https://www.ping.ai.kr/app.html';
+  event.waitUntil(clients.openWindow(link));
 });

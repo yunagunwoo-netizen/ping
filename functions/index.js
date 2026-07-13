@@ -15,27 +15,28 @@ const FAMILY_ID = "kimfamily";
 const MEMBER_IDS = ["아빠", "엄마", "윤아", "건우"];
 const STREAK_TIERS = [{days: 3, pt: 15}, {days: 7, pt: 40}, {days: 14, pt: 80}, {days: 30, pt: 150}];
 
-// 푸시 메시지 공통 옵션(뚜비 아이콘 포함)
+// 푸시 메시지 공통 옵션(데이터 전용 — SW가 알림을 직접 생성 → 중복 방지)
 function pushMsg(token, title, body) {
   return {
     token,
-    notification: {title, body},
-    data: {icon: ICON},
-    webpush: {notification: {icon: ICON, badge: ICON}, fcmOptions: {link: APP_URL}},
+    data: {title, body, icon: ICON, link: APP_URL},
+    webpush: {fcmOptions: {link: APP_URL}},
   };
 }
 
 async function getTokensExcept(exceptMemberId) {
   const snap = await db.collection("fcmTokens").get();
-  const tokens = [];
+  const map = {};
   snap.forEach((d) => {
     const t = d.data().token;
-    if (d.id !== exceptMemberId && t) tokens.push(t);
+    if (t) map[d.id] = t;
   });
-  return tokens;
+  const exceptToken = map[exceptMemberId];
+  // 토큰 값 기준 중복 제거 + 발신자 토큰 값 제외 (한 기기가 여러 멤버로 등록돼도 1회만)
+  return [...new Set(Object.values(map))].filter((t) => t !== exceptToken);
 }
 
-// 핑이 올라오면 → 나머지 가족에게 푸시
+// 핑이 올라오면 → 나머지 가족에게 푸시 (데이터 전용, 토큰 값 중복 제거)
 exports.onPing = onDocumentCreated("pings/{pingId}", async (event) => {
   const snap = event.data;
   if (!snap) return;
@@ -45,9 +46,8 @@ exports.onPing = onDocumentCreated("pings/{pingId}", async (event) => {
   if (!tokens.length) return;
   await getMessaging().sendEachForMulticast({
     tokens,
-    notification: {title: "핑 도착 📸", body: `${member}님이 오늘의 핑을 올렸어요!`},
-    data: {icon: ICON},
-    webpush: {notification: {icon: ICON, badge: ICON}, fcmOptions: {link: APP_URL}},
+    data: {title: "핑 도착 📸", body: `${member}님이 오늘의 핑을 올렸어요!`, icon: ICON, link: APP_URL},
+    webpush: {fcmOptions: {link: APP_URL}},
   });
 });
 
@@ -198,10 +198,11 @@ exports.coachReminder = onSchedule(
     const todayStr = kstNow.toISOString().slice(0, 10);
     const fam = await loadFamilyContext(todayStr);
     const tokenByMember = await getTokenByMember();
+    const sentTokens = new Set();
     let sent = 0;
     for (const m of MEMBER_IDS) {
       const token = tokenByMember[m];
-      if (!token) continue;
+      if (!token || sentTokens.has(token)) continue; // 같은 기기 토큰 중복 발송 방지
       const s = streakOf(fam.datesByMember[m], todayStr);
       const tip = buildCoach({
         pingedToday: s.pingedToday, alive: s.alive, tier: s.tier, daysMore: s.daysMore, dormant: s.dormant,
@@ -209,6 +210,7 @@ exports.coachReminder = onSchedule(
         total: fam.total, cycleDays: fam.cycleDays, hasFam: fam.hasFam,
       });
       if (!tip) continue;
+      sentTokens.add(token);
       try { await getMessaging().send(pushMsg(token, tip.title, tip.body)); sent++; } catch (e) { console.warn("coach push 실패", e); }
     }
     console.log(`coachReminder: ${sent}건 발송`);
@@ -234,11 +236,13 @@ exports.deadlineReminder = onSchedule(
       {title: "오늘 핑 마감이 다가와요 ⏰", body: "자정 지나면 오늘은 끝이에요. 뚜비가 막차 기다리듯 기다려요 🐾"},
       {title: "깜빡하기 전에, 핑!", body: "곧 오늘 핑이 닫혀요. 뚜비랑 오늘 추억 남기는 거 잊지 마요! 📸"},
     ];
+    const sentTokens = new Set();
     let sent = 0;
     for (const m of MEMBER_IDS) {
       const token = tokenByMember[m];
-      if (!token || pingedToday.has(m)) continue;
+      if (!token || pingedToday.has(m) || sentTokens.has(token)) continue; // 같은 기기 토큰 중복 발송 방지
       const msg = pick(msgs);
+      sentTokens.add(token);
       try { await getMessaging().send(pushMsg(token, msg.title, msg.body)); sent++; } catch (e) { console.warn("deadline push 실패", e); }
     }
     console.log(`deadlineReminder: ${sent}건 발송`);
