@@ -905,11 +905,11 @@ input,textarea{font-family:inherit;border:none;outline:none}
     </div>
   </div>
 
-  <!-- 4일 올핑 보너스: 과거 미획득 카드 선택 -->
+  <!-- 한 주 7일 전원 올핑 완주 보너스: 과거 미획득 카드 선택 -->
   <div class="cu-overlay" id="catchupPickerOverlay" onclick="closeCatchupPicker(event)">
     <div class="catchup-picker">
       <h3>지난 뚜비카드 고르기</h3>
-      <div class="cp-sub">이번 주 가족 올핑 4회 달성 보너스예요.<br>아직 얻지 못한 지난 카드 1장을 골라주세요.</div>
+      <div class="cp-sub">이번 주 7일 모두 가족 올핑 완주 보너스예요.<br>아직 얻지 못한 지난 카드 1장을 골라주세요.</div>
       <div class="catchup-grid" id="catchupGrid"></div>
       <button class="catchup-close" onclick="closeCatchupPicker(event, true)">나중에 고를게요</button>
     </div>
@@ -1023,7 +1023,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v16</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v17</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -2154,7 +2154,8 @@ function updateDexButton(){
   const n=loadLocal('weekCards',[]).filter(k=>k.startsWith(yr+':')).length;
   const el=document.getElementById('dexCount'); if(el) el.textContent=n;
 }
-const WEEK_CARD_CATCHUP_THRESHOLD = 4;
+const WEEK_CARD_CATCHUP_THRESHOLD = 7;
+function weekCatchupTarget(y, w){ return weekDates(y,w).length === WEEK_CARD_CATCHUP_THRESHOLD ? WEEK_CARD_CATCHUP_THRESHOLD : 0; }
 function cardForWeekKey(key){
   const parts=String(key||'').split(':'); const w=parseInt(parts[1],10);
   return Number.isInteger(w) && WEEK_CARDS[w] ? WEEK_CARDS[w] : null;
@@ -2212,9 +2213,9 @@ function getCatchupCandidates(allData, y, currentW){
   }
   return out;
 }
-function hasPendingCatchup(wkKey){ const state=catchupState(); return !!state[wkKey] && !state[wkKey].claimed; }
-function setPendingCatchup(wkKey, y, w){ const state=catchupState(); if(!state[wkKey]){ state[wkKey]={y,w,claimed:false}; saveLocal('weekCatchup',state); } }
-// 올핑 시: 3회에 이번 주 카드, 4회에 과거 미획득 카드 1장 선택 보너스.
+function hasPendingCatchup(wkKey){ const state=catchupState(); return !!state[wkKey] && state[wkKey].target===WEEK_CARD_CATCHUP_THRESHOLD && !state[wkKey].claimed; }
+function setPendingCatchup(wkKey, y, w){ const state=catchupState(); const entry=state[wkKey]; if(!entry || (!entry.claimed && entry.target!==WEEK_CARD_CATCHUP_THRESHOLD)){ state[wkKey]={y,w,target:WEEK_CARD_CATCHUP_THRESHOLD,claimed:false}; saveLocal('weekCatchup',state); } }
+// 올핑 시: 3회에 이번 주 카드, 7일 모두 완주하면 과거 미획득 카드 1장 선택 보너스.
 async function maybeAwardWeekCard(){
   const t=getToday(); const y=parseInt(t.slice(0,4),10);
   const w=weekIndexOf(t);
@@ -2227,13 +2228,14 @@ async function maybeAwardWeekCard(){
   const wkKey=`${y}:${w}`;
   const earnedBefore=loadLocal('weekCards',[]); const newlyAwarded=!earnedBefore.includes(wkKey);
   addEarnedWeekCard(wkKey);
-  const bonusEligible=cnt>=WEEK_CARD_CATCHUP_THRESHOLD;
+  const catchupTarget=weekCatchupTarget(y,w);
+  const bonusEligible=catchupTarget>0 && cnt>=catchupTarget;
   let bonusUnlocked=false;
   if(bonusEligible && !hasPendingCatchup(wkKey) && getCatchupCandidates(allData,y,w).length){
     setPendingCatchup(wkKey,y,w); bonusUnlocked=true;
   }
-  // 3회 보상은 이미 안내했더라도, 4회 보너스가 생긴 즉시 배너를 갱신한다.
-  if(bonusUnlocked){ updateWeekCardBanner(); showToast('4일 올핑 보너스가 열렸어요! 지난 뚜비카드 1장을 골라주세요'); }
+  // 3회 보상은 이미 안내했더라도, 7일 완주 보너스가 생긴 즉시 배너를 갱신한다.
+  if(bonusUnlocked){ updateWeekCardBanner(); showToast('7일 올핑 완주 보너스가 열렸어요! 지난 뚜비카드 1장을 골라주세요'); }
   const seen=loadLocal('weekCardSeen',[]); if(seen.includes(wkKey)) return false;
   seen.push(wkKey); saveLocal('weekCardSeen',seen);
   if(newlyAwarded){
@@ -2246,7 +2248,7 @@ async function maybeAwardWeekCard(){
 
 window.openCatchupPicker = async function(){
   document.getElementById('cardUnlockOverlay').classList.remove('show');
-  const state=catchupState(); const pendingKey=Object.keys(state).find(key=>!state[key].claimed);
+  const state=catchupState(); const pendingKey=Object.keys(state).find(key=>state[key].target===WEEK_CARD_CATCHUP_THRESHOLD && !state[key].claimed);
   if(!pendingKey){ showToast('고를 수 있는 지난 카드가 없어요'); return; }
   const pending=state[pendingKey]; const allData=await loadYearData(pending.y);
   const candidates=getCatchupCandidates(allData,pending.y,pending.w);
@@ -2262,7 +2264,7 @@ window.selectCatchupCard = async function(pendingKey, targetW){
   if(!candidate){ showToast('이미 얻었거나 선택할 수 없는 카드예요'); window.closeCatchupPicker(null,true); return; }
   addEarnedWeekCard(candidate.key); state[pendingKey]={...pending,claimed:true,chosenKey:candidate.key,chosenAt:getToday()}; saveLocal('weekCatchup',state);
   setActiveDubiCard(candidate.card,candidate.key); renderActiveDubiCard();
-  window.closeCatchupPicker(null,true); showCardUnlock(candidate.card, '이번 주 가족 올핑 4회 보너스로 지난 카드를 골랐어요!');
+  window.closeCatchupPicker(null,true); showCardUnlock(candidate.card, '이번 주 7일 가족 올핑 완주 보너스로 지난 카드를 골랐어요!');
   renderFeed();
 };
 
@@ -2341,13 +2343,14 @@ async function updateWeekCardBanner(){
     const allData = {};
     for (const ym of months){ const [yy,mm] = ym.split('-').map(Number); Object.assign(allData, await loadMonth(yy, mm-1)); }
     let cnt = 0; for (const date of ds){ if (date > t) continue; const dp = allData[date]; if (dp && Object.keys(dp).length >= 4) cnt++; }
-    const card = WEEK_CARDS[w]; const target = weekCardTarget(y,w); const wkKey=`${y}:${w}`;
+    const card = WEEK_CARDS[w]; const target = weekCardTarget(y,w); const catchupTarget=weekCatchupTarget(y,w); const wkKey=`${y}:${w}`;
     const done = loadLocal('weekCards', []).includes(wkKey) || cnt >= target;
     const bonusPending = hasPendingCatchup(wkKey);
+    const catchupGuide = catchupTarget ? `<span style="color:var(--gray400)">🎁 7일 완주 → 지난 뚜비카드 1장 선택</span>` : '';
     if (done){
-      el.innerHTML = `${eico('party','🎉')} 이번 주 올핑 ${target}회 달성! <b>${card.name}</b> 카드 획득 — 도감 보기${bonusPending ? `<br><button class="week-catchup-cta" onclick="event.stopPropagation();openCatchupPicker()">🎁 지난 뚜비카드 1장 고르기</button>` : ''}`;
+      el.innerHTML = `${eico('party','🎉')} 이번 주 올핑 ${target}회 달성! <b>${card.name}</b> 카드 획득${bonusPending ? `<br><button class="week-catchup-cta" onclick="event.stopPropagation();openCatchupPicker()">🎁 지난 뚜비카드 1장 고르기</button>` : `<br>${catchupGuide}`}`;
     } else {
-      el.innerHTML = `🐶 이번 주 올핑 <b>${cnt}/${target}회</b> · ${target}회 달성하면 <b>${card.name}</b> 카드!${cnt>=WEEK_CARD_CATCHUP_THRESHOLD ? '<br>🎁 4회 달성 보너스: 지난 카드 1장 선택' : ''}`;
+      el.innerHTML = `🐶 이번 주 올핑 <b>${cnt}/${target}회</b> · ${target}회 달성하면 <b>${card.name}</b> 카드!${catchupGuide}`;
     }
     el.style.display = '';
   } catch(e){ el.style.display='none'; }
@@ -3429,8 +3432,8 @@ async function getWeekCardProgress(){
     for (const ym of months){ const [yy,mm] = ym.split('-').map(Number); Object.assign(allData, await loadMonth(yy, mm-1)); }
     let cnt = 0; for (const date of ds){ if (date > t) continue; const dp = allData[date]; if (dp && Object.keys(dp).length >= 4) cnt++; }
     const already = loadLocal('weekCards', []).includes(`${y}:${w}`);
-    const target = weekCardTarget(y,w);
-    return { cnt, left: Math.max(0, target - cnt), target, card: WEEK_CARDS[w], already };
+    const target = weekCardTarget(y,w); const bonusTarget=weekCatchupTarget(y,w);
+    return { cnt, left: Math.max(0, target - cnt), target, bonusTarget, bonusLeft: bonusTarget ? Math.max(0, bonusTarget - cnt) : 0, card: WEEK_CARDS[w], already };
   } catch(e){ return null; }
 }
 function _coachPick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
@@ -3522,6 +3525,10 @@ async function computeCoachTip(memberId){
   // 개근 카드 임박 (기존)
   if (wc && !wc.already && wc.cnt > 0 && wc.left > 0){
     return { title:`🐶 이번 주 올핑 ${wc.cnt}/${wc.target}회!`, body:`가족 올핑을 <b>${wc.left}번</b> 더 달성하면 이번 주 <b>${wc.card.name}</b> 카드를 얻어요! 🐾` };
+  }
+  // 3회 기본 카드를 얻은 뒤에는, 7일 완주 보너스를 별도로 안내한다.
+  if (wc && wc.already && wc.bonusTarget && wc.bonusLeft > 0){
+    return { title:`🎁 지난 뚜비카드 선택까지 ${wc.bonusLeft}일!`, body:`이번 주 가족이 <b>7일 모두 올핑</b>하면, 놓친 지난 뚜비카드 <b>1장</b>을 직접 고를 수 있어요!` };
   }
   // 오늘 핑 아직 (일반)
   if (!pingedToday){
