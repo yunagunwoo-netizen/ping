@@ -83,7 +83,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .countdown{margin:12px 16px 2px;background:transparent;color:var(--orange-deep);border-radius:16px;padding:14px 16px;text-align:center;box-shadow:none}
 .countdown .cd-time{font-size:30px;font-weight:900;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1.1;text-shadow:0 2px 5px rgba(255,248,240,.92)}
 .countdown .cd-sub{font-size:11px;opacity:1;margin-top:5px;font-weight:700;color:var(--gray500);text-shadow:0 1px 3px rgba(255,248,240,.92)}
-.countdown.done{margin:8px 16px 0;background:#ECFDF5;color:#059669;border-radius:13px;font-size:13.5px;font-weight:800;padding:10px 12px;line-height:1.3}
+.countdown.done{margin:8px 16px 0;background:transparent;color:#059669;border-radius:13px;font-size:13.5px;font-weight:800;padding:6px 12px;line-height:1.3;box-shadow:none;text-shadow:0 1px 3px rgba(255,255,255,.95)}
 
 /* ========== 홈 화면 설치 배너 ========== */
 .install-banner{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:12px 14px;display:none;align-items:center;gap:12px;z-index:150}
@@ -114,10 +114,11 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ig-note .ig-note-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .ig-note .ig-note-head .dubi{width:44px;height:auto;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.08))}
 .ig-note .ig-note-head .nt{margin-bottom:0}
-.feed-grid{flex:1 1 0;min-height:0;overflow:hidden;margin-top:0;padding:0 16px 12px;display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;align-items:flex-start}
-.ping-card{flex:0 0 calc((100% - 12px)/2);width:calc((100% - 12px)/2);background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .2s}
+.feed-grid{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-top:0;padding:0 16px 12px;display:flex;gap:12px;align-items:flex-start}
+.feed-column{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.ping-card{flex:none;width:100%;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .2s}
 .ping-card:active{transform:scale(.98)}
-.ping-card .photo-area{position:relative;width:100%;padding-top:78%;height:0;background:var(--gray100);overflow:hidden;border-radius:var(--radius) var(--radius) 0 0}
+.ping-card .photo-area{position:relative;width:100%;padding-top:88%;height:0;background:var(--gray100);overflow:hidden;border-radius:var(--radius) var(--radius) 0 0}
 .ping-card .photo-area .card-avatar{position:absolute;top:7px;left:7px;width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);background:var(--gray100)}
 .ping-card .photo-area .card-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .ping-card .photo-area > img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
@@ -140,7 +141,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .ping-card .placeholder.pokeable:active{background:rgba(255,107,53,.07)}
 .ping-card .placeholder .poke-hint{font-size:11px;font-weight:700;color:var(--orange-deep);display:flex;align-items:center;gap:3px;margin-top:3px}
 .ping-card .placeholder .poke-hint .eico{width:13px;height:13px}
-@media (max-height:760px){.feed-header{padding-top:12px}.feed-header .date{font-size:19px}.countdown{margin-top:6px;padding:8px 12px}.countdown .cd-time{font-size:26px}.countdown .cd-sub{margin-top:3px}.feed-subtitle{padding-bottom:7px}.week-card-banner{margin-top:3px;margin-bottom:5px;padding:5px 8px}.feed-grid{gap:9px;padding-bottom:8px}.ping-card{flex-basis:calc((100% - 9px)/2);width:calc((100% - 9px)/2)}.ping-card .photo-area{padding-top:70%}.ping-card .card-info{padding:5px 7px}.ping-card .card-foot{margin-top:4px}.ping-card .card-foot .cf-btn{min-height:26px;padding:3px 6px}}
+@media (max-height:760px){.feed-header{padding-top:12px}.feed-header .date{font-size:19px}.countdown{margin-top:6px;padding:8px 12px}.countdown .cd-time{font-size:26px}.countdown .cd-sub{margin-top:3px}.feed-subtitle{padding-bottom:7px}.week-card-banner{margin-top:3px;margin-bottom:5px;padding:5px 8px}.feed-grid,.feed-column{gap:9px}.feed-grid{padding-bottom:8px}.ping-card .photo-area{padding-top:76%}.ping-card .card-info{padding:5px 7px}.ping-card .card-foot{margin-top:4px}.ping-card .card-foot .cf-btn{min-height:26px;padding:3px 6px}}
 .osheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:195;display:none;align-items:flex-end;justify-content:center}
 .osheet-overlay.show{display:flex}
 .osheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));animation:fadeUp .25s ease}
@@ -273,7 +274,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 @media(max-width:360px){.reaction-picker{padding-left:10px;padding-right:10px}.reaction-options{grid-template-columns:repeat(4,58px);gap:8px}.reaction-options button img{width:44px;height:44px}}
 
 /* ========== 오늘의 가족사진 ========== */
-.family-photo-btn{display:block;width:100%;margin:0 0 14px;padding:13px;background:var(--orange);color:#fff;border-radius:14px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(255,107,53,.35);animation:fadeUp .4s ease}
+.family-photo-btn{display:block;width:100%;margin:0 0 8px;padding:8px 13px;background:transparent;color:var(--orange-deep);border-radius:14px;font-size:15px;font-weight:800;box-shadow:none;text-shadow:0 1px 3px rgba(255,248,240,.95);animation:fadeUp .4s ease}
 .fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
 .fp-overlay.show{display:flex}
 .fp-card{background:#fff;border-radius:20px;padding:16px 16px 14px;width:100%;max-width:360px;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:popIn .4s ease}
@@ -1025,7 +1026,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v24</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v26</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -1512,6 +1513,8 @@ function renderFeed() {
 
   const grid = document.getElementById('feedGrid');
   grid.innerHTML = '';
+  const columns = [document.createElement('div'), document.createElement('div')];
+  columns.forEach(column => column.className = 'feed-column');
 
   for (const m of MEMBERS) {
     const ping = todayPings[m.id];
@@ -1557,8 +1560,9 @@ function renderFeed() {
           <div class="card-name"><span class="dot" style="background:${m.color}"></span>${m.id}</div>
         </div>`;
     }
-    grid.appendChild(card);
+    columns[MEMBERS.indexOf(m) % 2].appendChild(card);
   }
+  columns.forEach(column => grid.appendChild(column));
 
   // Update FAB
   const fab = document.getElementById('fabBtn');
