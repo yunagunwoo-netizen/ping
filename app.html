@@ -59,7 +59,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 
 /* ========== FEED (Main) ========== */
 #feed{padding:0;isolation:isolate}
-#feed::before{content:'';position:absolute;top:-40px;right:-38px;width:255px;height:255px;background-image:var(--active-dubi-skin);background-repeat:no-repeat;background-size:contain;background-position:center;opacity:0;filter:saturate(.82);mix-blend-mode:multiply;pointer-events:none;z-index:0;mask-image:linear-gradient(to bottom,#000 0%,#000 58%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 58%,transparent 100%);transition:opacity .28s ease}
+#feed::before{content:'';position:absolute;top:-48px;right:-46px;width:345px;height:345px;background-image:var(--active-dubi-skin);background-repeat:no-repeat;background-size:contain;background-position:center;opacity:0;filter:saturate(.82);mix-blend-mode:multiply;pointer-events:none;z-index:0;mask-image:linear-gradient(to bottom,#000 0%,#000 65%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 65%,transparent 100%);transition:opacity .28s ease}
 #feed.has-dubi-skin::before{opacity:.55}
 #feed > :not(.active-dubi-card){position:relative;z-index:1}
 .feed-header{padding:18px 18px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -74,8 +74,9 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .dexw-ic .eico{width:26px;height:26px;vertical-align:middle}
 .sc-r .eico{vertical-align:middle}
 .cu-title .eico,.rw-role .eico{vertical-align:-0.18em}
-.week-card-banner{margin:5px 16px 8px;background:#FFF6E9;border:1px solid #FBE2BC;border-radius:10px;padding:6px 10px;font-size:11.5px;line-height:1.25;color:var(--gray500);font-weight:600;text-align:center;cursor:pointer;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}
+.week-card-banner{margin:5px 16px 8px;background:transparent;border:0;border-radius:0;padding:6px 10px;font-size:11.5px;line-height:1.25;color:var(--gray500);font-weight:600;text-align:center;cursor:pointer;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;text-shadow:0 1px 3px rgba(255,248,240,.96)}
 .week-card-banner b{color:var(--orange)}
+.has-dubi-skin .week-card-banner{margin-top:69px}
 .week-catchup-guide{display:block;margin-top:2px;color:var(--gray400)}
 .week-catchup-cta{display:inline-block;margin:6px 0 0;padding:6px 9px;border-radius:9px;background:var(--orange);color:#fff;font-size:11px;font-weight:800}
 /* 획득한 뚜비카드는 공간을 차지하지 않는 홈 배경 스킨으로 표시한다. */
@@ -185,7 +186,8 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .poke-btn:active{background:var(--gray200)}
 
 /* ========== FAB (Camera Button) ========== */
-.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,107,53,.4);z-index:50;transition:all .2s}
+.fab{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,107,53,.4);z-index:50;transition:all .2s}
+#feed.active + .fab{display:flex}
 .fab:active{transform:translateX(-50%) scale(.92)}
 .fab.disabled{background:var(--gray300);box-shadow:none;pointer-events:none}
 .fab svg{width:28px;height:28px}
@@ -628,10 +630,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
         <span>마이</span>
       </button>
     </div>
-    <button class="fab" id="fabBtn" onclick="startNewPing()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    </button>
   </div>
+  <button class="fab" id="fabBtn" onclick="startNewPing()" aria-label="핑 보내기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  </button>
 
   <!-- CAMERA -->
   <div id="camera" class="screen">
@@ -1028,7 +1030,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v30</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v32</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
