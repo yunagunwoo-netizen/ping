@@ -1030,7 +1030,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v32</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v33</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -1507,9 +1507,20 @@ function renderFeed() {
   const completeMsg = document.getElementById('familyCompleteMessage');
   if (uploadedCount === 4) {
     completeMsg.style.display = 'block';
-    if (loadLocal('familyPhotoSeen', '') !== getToday()) {
-      saveLocal('familyPhotoSeen', getToday());
-      maybeAwardWeekCard();
+    const today=getToday();
+    const rewardProcessed=loadLocal('familyPhotoSeen', '') === today;
+    const completionModalSeen=loadLocal('familyCompletionModalSeen', '') === today;
+    if (!completionModalSeen) {
+      // v32에서 보상 처리만 기록되고 팝업은 생략된 경우도, 이번 한 번은 확인 팝업을 보여준다.
+      saveLocal('familyCompletionModalSeen', today);
+      if (rewardProcessed) {
+        setTimeout(() => showFamilyPhoto(), 600);
+      } else {
+        saveLocal('familyPhotoSeen', today);
+        maybeAwardWeekCard()
+          .then(awarded => { if (!awarded) setTimeout(() => showFamilyPhoto(), 600); })
+          .catch(() => setTimeout(() => showFamilyPhoto(), 600));
+      }
     }
   } else {
     completeMsg.style.display = 'none';
@@ -2152,10 +2163,24 @@ const WEEK_CARDS = [
   _M(10), _G('rain','우산뚜비'), _G('birthday','생일뚜비'), _S(18), _S(19), _S(20), _M(11), _S(21), _G('gift','선물뚜비'), _M(12),
   _S(23), _S(22), _S(24)
 ];
-// 날짜 → 올해 주차(0~52): 1월1일부터 7일씩 블록
-function _doy(date){ const [y,m,d]=date.split('-').map(Number); return Math.floor((Date.UTC(y,m-1,d)-Date.UTC(y,0,1))/86400000)+1; }
-function weekIndexOf(date){ return Math.min(52, Math.floor((_doy(date)-1)/7)); }
-function weekDates(y, w){ const out=[]; for(let i=0;i<7;i++){ const dt=new Date(Date.UTC(y,0,1)); dt.setUTCDate(w*7+1+i); if(dt.getUTCFullYear()===y) out.push(dt.toISOString().slice(0,10)); } return out; }
+// 날짜 → 월요일 시작 주차(0~52): 매주 월요일 00:00에 새 주가 시작된다.
+function mondayStartUTC(date){
+  const [y,m,d]=String(date).split('-').map(Number); const dt=new Date(Date.UTC(y,m-1,d));
+  const weekday=dt.getUTCDay() || 7; dt.setUTCDate(dt.getUTCDate()-weekday+1); return dt;
+}
+function weekBaseUTC(y){
+  const dt=new Date(Date.UTC(y,0,1)); const weekday=dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate()-weekday+1); return dt;
+}
+function weekIndexOf(date){
+  const y=parseInt(String(date).slice(0,4),10); const base=weekBaseUTC(y); const start=mondayStartUTC(date);
+  return Math.max(0,Math.min(52,Math.floor((start.getTime()-base.getTime())/604800000)));
+}
+function weekDates(y, w){
+  const start=weekBaseUTC(y); start.setUTCDate(start.getUTCDate()+w*7); const out=[];
+  for(let i=0;i<7;i++){ const dt=new Date(start); dt.setUTCDate(start.getUTCDate()+i); if(dt.getUTCFullYear()===y) out.push(dt.toISOString().slice(0,10)); }
+  return out;
+}
 const WEEK_CARD_REQUIRED_ALL_PINGS = 3;
 function weekAllPingCount(allData, y, w){ return weekDates(y,w).reduce((count,date)=>{ const dp=allData[date]; return count + (dp&&Object.keys(dp).length>=4 ? 1 : 0); },0); }
 function weekCardTarget(y, w){ return Math.min(WEEK_CARD_REQUIRED_ALL_PINGS, weekDates(y,w).length); }
@@ -2539,7 +2564,8 @@ async function loadMonth(y, m){
   for (let d = 1; d <= dim; d++){
     const date = `${ym}-${String(d).padStart(2,'0')}`;
     const lp = loadLocal(`pings_${date}`, null);
-    if (!firebaseReady && lp && Object.keys(lp).length) data[date] = { ...lp };
+    // Firebase가 준비된 상태에서도, 방금 저장한 로컬 핑을 먼저 반영한다.
+    if (lp && Object.keys(lp).length) data[date] = { ...lp };
   }
   // 2) Firebase 월 조회
   if (firebaseReady){
