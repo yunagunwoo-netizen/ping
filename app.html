@@ -486,6 +486,9 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .rw-name{font-size:19px;font-weight:900;color:var(--gray500);margin:4px 0 12px}
 .rw-detail{font-size:13.5px;line-height:1.7;color:var(--gray400);text-align:left;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;background:var(--cream);border-radius:14px;padding:13px 15px}
 .rw-role{margin-top:10px;font-size:13px;font-weight:800;color:#fff;background:var(--orange);border-radius:12px;padding:11px 14px;line-height:1.6;text-align:left;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}
+.rw-card-select{display:block;width:100%;margin-top:10px;padding:12px;border-radius:12px;background:var(--orange);color:#fff;font-size:14px;font-weight:800}
+.rw-card-select:active{transform:scale(.98)}
+.rw-card-select:disabled{background:var(--gray200);color:var(--gray400);cursor:default}
 /* 커스텀 다이얼로그 (PWA에서 prompt/confirm 대체) */
 .dlg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:30px}
 .dlg-overlay.show{display:flex}
@@ -2342,7 +2345,7 @@ async function renderDexCal(){
       cell.classList.add('got'); got++;
       if(!earned.includes(wkKey)) earned.push(wkKey);
       cell.innerHTML=`<img src="${card.img}" alt=""><div class="dexw-wk">${card.name}</div><div class="dexw-rng">${label}</div>`;
-      cell.onclick=()=>openWeekZoom(w, label);
+      cell.onclick=()=>openWeekZoom(w, label, wkKey);
     } else if(ended){
       cell.classList.add('locked');
       cell.innerHTML=`<div class="dexw-ic">${eico('lock','🔒')}</div><div class="dexw-wk">${w+1}주차</div><div class="dexw-rng">${label}</div>`;
@@ -2362,17 +2365,30 @@ async function renderDexCal(){
   updateDexButton();
 }
 // 카드 크게 보기 (보상 모달 재사용)
-function openWeekZoom(w, label){
+function openWeekZoom(w, label, wkKey){
   const card=WEEK_CARDS[w];
   const img=document.getElementById('rwImg');
   img.style.display=''; img.onerror=function(){ this.style.display='none'; };
   img.src=card.img;
   document.getElementById('rwPt').textContent=`${w+1}주차 · ${label}`;
   document.getElementById('rwName').textContent=card.name;
-  document.getElementById('rwDetail').textContent='가족의 올핑 보상으로 얻은 특별한 뚜비 카드예요! 🐾';
-  document.getElementById('rwRole').innerHTML='';
+  const detail=document.getElementById('rwDetail');
+  detail.textContent='가족의 올핑 보상으로 얻은 특별한 뚜비 카드예요! 🐾';
+  detail.style.display='';
+  const isActive=getActiveDubiCard()?.key===wkKey;
+  document.getElementById('rwRole').innerHTML=`<button class="rw-card-select" onclick="selectActiveDubiCard('${wkKey}')"${isActive ? ' disabled' : ''}>${isActive ? '현재 메인에 표시 중인 카드예요' : '메인 카드로 사용하기'}</button>`;
   document.getElementById('rewardModal').classList.add('show');
 }
+window.selectActiveDubiCard = function(key){
+  const earned=loadLocal('weekCards',[]);
+  const card=cardForWeekKey(key);
+  if(!card || !earned.includes(key)){ showToast('획득한 카드만 메인에 표시할 수 있어요'); return; }
+  setActiveDubiCard(card,key);
+  renderActiveDubiCard();
+  document.getElementById('rewardModal').classList.remove('show');
+  renderDexCal();
+  showToast(`${card.name} 카드를 메인에 표시했어요!`);
+};
 // 피드 상단 '이번 주 개근 진행' 배너
 async function updateWeekCardBanner(){
   const el = document.getElementById('weekCardBanner'); if (!el) return;
