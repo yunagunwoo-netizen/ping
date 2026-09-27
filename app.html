@@ -204,7 +204,20 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .camera-top{position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .camera-top button{color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3);backdrop-filter:blur(8px)}
 #videoPreview{width:100%;height:100%;object-fit:cover;transform-origin:center center}
+.camera-grid{position:absolute;inset:0;display:none;pointer-events:none;z-index:1;background:linear-gradient(to right,transparent 33.15%,rgba(255,255,255,.52) 33.3%,rgba(255,255,255,.52) 33.65%,transparent 33.8%,transparent 66.15%,rgba(255,255,255,.52) 66.3%,rgba(255,255,255,.52) 66.65%,transparent 66.8%),linear-gradient(to bottom,transparent 33.15%,rgba(255,255,255,.52) 33.3%,rgba(255,255,255,.52) 33.65%,transparent 33.8%,transparent 66.15%,rgba(255,255,255,.52) 66.3%,rgba(255,255,255,.52) 66.65%,transparent 66.8%)}
+.camera-grid.show{display:block}
+.camera-level{position:absolute;top:50%;left:50%;width:92px;height:24px;transform:translate(-50%,-50%);pointer-events:none;z-index:2;display:none}
+.camera-level.show{display:block}
+.camera-level::before{content:'';position:absolute;left:0;right:0;top:11px;height:2px;border-radius:2px;background:rgba(255,255,255,.75);box-shadow:0 1px 3px rgba(0,0,0,.55);transform:rotate(var(--level-tilt,0deg));transition:transform .12s linear,background .12s}
+.camera-level::after{content:'';position:absolute;left:44px;top:4px;width:4px;height:16px;border-radius:3px;background:rgba(255,255,255,.8);box-shadow:0 1px 3px rgba(0,0,0,.55)}
+.camera-level.level::before{background:#7CFFB2}
+.camera-countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:3;color:#fff;font-size:92px;font-weight:900;text-shadow:0 3px 16px rgba(0,0,0,.5)}
+.camera-countdown.show{display:flex}
 .camera-top .cam-top-right{display:flex;gap:10px}
+.cam-assist{position:absolute;top:66px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3;padding:5px 7px;border-radius:16px;background:rgba(0,0,0,.28);backdrop-filter:blur(8px)}
+.cam-assist button{width:34px;height:30px;display:flex;align-items:center;justify-content:center;color:#fff;border-radius:10px;background:transparent}
+.cam-assist button.on{background:#fff;color:var(--orange)}
+.camera-tool-text{font-size:12px!important;font-weight:800}
 .camera-top button.on{background:#fff;color:var(--orange)}
 .cam-zoom{position:absolute;left:0;right:0;bottom:130px;bottom:calc(130px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2;padding:0 40px}
 .cam-zoom span{color:#fff;font-size:12px;font-weight:600;background:rgba(0,0,0,.35);padding:3px 12px;border-radius:12px;backdrop-filter:blur(8px)}
@@ -219,6 +232,23 @@ input,textarea{font-family:inherit;border:none;outline:none}
 #preview{background:#000;z-index:70}
 .preview-img{width:100%;flex:1;object-fit:contain;background:#000}
 .preview-bottom{background:var(--cream);border-radius:var(--radius) var(--radius) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.photo-quality-hint{display:none;align-items:center;gap:6px;margin:-2px 0 12px;padding:8px 10px;border-radius:10px;background:#FFF3E9;color:var(--orange-deep);font-size:12px;font-weight:700}
+.photo-quality-hint.show{display:flex}
+.photo-analysis{display:none;margin:-4px 0 12px;padding:9px 10px;border-radius:10px;font-size:11.5px;line-height:1.4;font-weight:700}
+.photo-analysis.show{display:block}
+.photo-analysis.good{background:#EAF9F0;color:#16845C}
+.photo-analysis.warn{background:#FFF3E9;color:#A65424}
+.photo-analysis.checking{background:var(--gray100);color:var(--gray400)}
+.photo-analysis .pa-title{display:block;font-size:12px;font-weight:800;margin-bottom:2px}
+.photo-analysis .pa-note{display:block;margin-top:2px;font-size:10.5px;font-weight:600;opacity:.82}
+.print-format{display:flex;align-items:center;gap:9px;margin:-4px 0 12px;padding:8px;border:1px solid #F4DDCB;border-radius:12px;background:#FFFDFC}
+.print-format-thumb{width:42px;aspect-ratio:1/1;flex-shrink:0;border:2px solid var(--orange);border-radius:6px;background:center/cover no-repeat #F4ECE6}
+.print-format-body{min-width:0;flex:1}
+.print-format-title{font-size:11.5px;font-weight:800;color:var(--gray500)}
+.print-format-sub{margin-top:1px;font-size:10px;color:var(--gray400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.print-format-options{display:flex;gap:4px;margin-top:5px}
+.print-format-options button{min-width:34px;padding:4px 6px;border-radius:7px;background:var(--gray100);color:var(--gray400);font-size:10px;font-weight:800}
+.print-format-options button.on{background:var(--orange);color:#fff}
 .comment-input{width:100%;padding:12px 16px;background:#fff;border-radius:var(--radius-sm);font-size:14px;box-shadow:var(--shadow);margin-bottom:12px}
 .comment-input::placeholder{color:var(--gray300)}
 .preview-actions{display:flex;gap:10px}
@@ -255,6 +285,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .setting-item label{font-size:14px;font-weight:600}
 .setting-item input[type="time"]{padding:4px 8px;border-radius:6px;background:var(--gray100);font-size:14px}
 .setting-item select{padding:4px 8px;border-radius:6px;background:var(--gray100);font-size:14px}
+.setting-item .setting-action{border:0;border-radius:6px;background:var(--orange);color:#fff;padding:7px 10px;font-size:13px;font-weight:700}
 .streak-card{background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
 .streak-card h3{font-size:14px;opacity:.85;margin-bottom:8px}
 .streak-card .streak-num{font-size:48px;font-weight:900;line-height:1}
@@ -412,6 +443,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .day-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
 .day-item .di-name{font-size:11px;font-weight:700;color:var(--gray500);padding:5px 8px}
 .day-item .di-cmt{font-size:11px;color:var(--gray400);padding:0 8px 7px;word-break:keep-all;overflow-wrap:anywhere}
+.day-item .di-print{margin:0 8px 7px;color:var(--orange-deep);font-size:10px;font-weight:800;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
 .day-item .di-actions{display:flex;gap:6px;padding:0 8px 8px}
 .day-item .di-actions button{flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:8px;border:none;cursor:pointer}
 .day-item .di-edit{background:var(--gray100);color:var(--gray500)}
@@ -522,6 +554,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
 .album-cell img{width:100%;height:100%;object-fit:cover;display:block}
 .album-cell .album-day{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .album-cell .album-badge{position:absolute;top:3px;right:4px;font-size:12px}
+.album-cell .album-print-badge{position:absolute;top:3px;left:4px;padding:2px 4px;border-radius:5px;background:rgba(41,33,29,.72);color:#fff;font-size:8px;font-weight:800;letter-spacing:-.2px}
 .album-empty{grid-column:1/-1;text-align:center;color:var(--gray400);padding:40px 0;font-size:13px}
 
 /* ========== 가족 (초대) ========== */
@@ -642,6 +675,9 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <!-- CAMERA -->
   <div id="camera" class="screen">
     <video id="videoPreview" autoplay playsinline></video>
+    <div class="camera-grid show" id="cameraGrid" aria-hidden="true"></div>
+    <div class="camera-level" id="cameraLevel" aria-hidden="true"></div>
+    <div class="camera-countdown" id="cameraCountdown" aria-live="assertive"></div>
     <div class="camera-top">
       <button onclick="closeCamera()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -654,6 +690,15 @@ input,textarea{font-family:inherit;border:none;outline:none}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
         </button>
       </div>
+    </div>
+    <div class="cam-assist" aria-label="촬영 보조 기능">
+      <button id="gridBtn" onclick="toggleCameraGrid()" class="on" title="구도 격자" aria-pressed="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+      </button>
+      <button id="levelBtn" onclick="toggleLevelGuide()" title="수평 안내" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="19" height="19"><path d="M3 15h18M7 11l2-2 2 2M13 11l2-2 2 2"/></svg>
+      </button>
+      <button id="timerBtn" onclick="cycleCameraTimer()" class="camera-tool-text" title="셀프 타이머" aria-label="셀프 타이머">0s</button>
     </div>
     <div class="cam-zoom" id="camZoom" style="display:none">
       <span id="zoomLabel">1.0x</span>
@@ -673,6 +718,22 @@ input,textarea{font-family:inherit;border:none;outline:none}
   <div id="preview" class="screen">
     <img class="preview-img" id="previewImg" src="">
     <div class="preview-bottom">
+      <div class="photo-quality-hint" id="photoQualityHint">✦ 고화질 앨범 원본도 함께 저장해요</div>
+      <div class="photo-analysis" id="photoAnalysis" aria-live="polite"></div>
+      <div class="print-format" id="printFormat">
+        <div class="print-format-thumb" id="printFormatThumb" aria-hidden="true"></div>
+        <div class="print-format-body">
+          <div class="print-format-title">굿즈 인화 구도 미리보기</div>
+          <div class="print-format-sub" id="printFormatSub">저장 사진은 바뀌지 않고, 굿즈 제작 때 중앙 구도를 참고해요</div>
+          <div class="print-format-options" role="group" aria-label="굿즈 인화 구도 선택">
+            <button type="button" data-print-format="square" onclick="setPrintFormat('square')">1:1</button>
+            <button type="button" data-print-format="portrait" onclick="setPrintFormat('portrait')">4:5</button>
+            <button type="button" data-print-format="landscape" onclick="setPrintFormat('landscape')">3:2</button>
+            <button type="button" id="printNudgePrev" onclick="adjustPrintCrop(-1)" style="display:none" aria-label="인화 구도 이전 방향으로 이동">←</button>
+            <button type="button" id="printNudgeNext" onclick="adjustPrintCrop(1)" style="display:none" aria-label="인화 구도 다음 방향으로 이동">→</button>
+          </div>
+        </div>
+      </div>
       <div class="together-box">
         <label class="bonus-toggle"><input type="checkbox" id="withDubiChk"> <img src="./ic-walk.png" class="eico" alt="🚶" onerror="this.replaceWith('🚶')"> 뚜비랑 산책하며 찍었어요 <span>(주 1회 +50점)</span></label>
         <label class="bonus-toggle"><input type="checkbox" id="gatherChk"> <img src="./ic-family.png" class="eico" alt="👨‍👩‍👧‍👦" onerror="this.replaceWith('👨‍👩‍👧‍👦')"> 온 가족이 모였어요 <span>(주 1회 · 가족 전체 +50점)</span></label>
@@ -717,6 +778,10 @@ input,textarea{font-family:inherit;border:none;outline:none}
       <div class="setting-item">
         <label>알림 시간</label>
         <input type="time" id="alarmTime" value="22:00" onchange="saveSettings()">
+      </div>
+      <div class="setting-item">
+        <label>푸시 알림</label>
+        <button class="setting-action" type="button" onclick="enablePushNotifications()">알림 켜기</button>
       </div>
     </div>
     <div class="nav-bar">
@@ -1104,9 +1169,9 @@ async function registerPush(){
   if (!FCM_VAPID_KEY || FCM_VAPID_KEY.startsWith('여기에')) return; // VAPID 키 미설정 시 건너뜀
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
   try {
-    let perm = Notification.permission;
-    if (perm === 'default') perm = await Notification.requestPermission();
-    if (perm !== 'granted') return;
+    // 권한 대화상자는 앱 시작 때 띄우지 않는다. iOS에서는 사용자가 직접
+    // '알림 켜기'를 선택한 경우에만 별도 동작으로 요청해야 한다.
+    if (Notification.permission !== 'granted') return;
     const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
     const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
     if (token){
@@ -1116,6 +1181,18 @@ async function registerPush(){
     }
   } catch(e){ console.warn('FCM 등록 실패', e); }
 }
+
+// 알림 권한은 사용자가 설정에서 직접 누를 때만 요청한다.
+window.enablePushNotifications = async function(){
+  if (!('Notification' in window)) { showToast('이 기기에서는 푸시 알림을 지원하지 않아요'); return; }
+  if (Notification.permission === 'denied') { showToast('아이폰 설정 또는 Safari 사이트 설정에서 알림을 허용해주세요'); return; }
+  if (Notification.permission === 'default') {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') { showToast('알림이 허용되지 않았어요'); return; }
+  }
+  await registerPush();
+  showToast('알림을 켰어요 🔔');
+};
 
 // ========== STATE ==========
 const FAMILY_ID = 'kimfamily';
@@ -1130,11 +1207,28 @@ let currentMember = null;
 let currentStream = null;
 let facingMode = 'environment';
 let capturedBlob = null;
+let capturedMasterBlob = null;
+let capturedPhotoMeta = null;
+let capturedPhotoQuality = null;
+let capturedPreviewObjectURL = null;
+let photoQualityToken = 0;
+let capturedPrintFormat = 'square';
+let capturedPrintCrop = { version: 1, aspect: '1:1', x: 0, y: 0, width: 1, height: 1, source: 'square-master' };
 let videoTrack = null;
 let hwZoom = false;
 let zoomMin = 1, zoomMax = 4, currentZoom = 1;
 let torchOn = false;
+let cameraOrientationTimer = null;
+let cameraOrientationRestarting = false;
 let _pinchStart = null, _pinchStartZoom = 1;
+let cameraGridEnabled = true;
+let cameraTimerSeconds = 0;
+let cameraTimerRunning = false;
+let cameraCountdownToken = 0;
+let captureBusy = false;
+let levelGuideEnabled = false;
+let levelGuideListening = false;
+let levelGuideSmoothed = 0;
 let editMode = false; // true면 새 핑이 아니라 오늘 내 사진 교체
 let reactionTargetMember = null;
 let todayPings = {}; // { memberId: { photoURL, comment, reactions, createdAt } }
@@ -1315,8 +1409,18 @@ async function savePing(memberId, photoDataURL, comment, withDubi, familyGatheri
     withDubi: !!withDubi,
     familyGathering: !!familyGathering,
     reactions: {},
+    photoPrintFormat: PRINT_FORMATS[capturedPrintFormat] ? capturedPrintFormat : 'square',
+    photoPrintCrop: { ...capturedPrintCrop },
     createdAt: new Date().toISOString()
   };
+  // 원본 메타는 Storage 원본 업로드까지 성공한 경우에만 기록한다.
+  // 오프라인/실패 시에는 가벼운 photoURL만 남겨, 이전 원본과 섞이지 않게 한다.
+  pingData.photoMasterURL = null;
+  pingData.photoQualityVersion = null;
+  pingData.photoMasterWidth = null;
+  pingData.photoMasterHeight = null;
+  pingData.photoMasterBytes = null;
+  pingData.photoPrintMaxCm = null;
 
   // Save locally first
   todayPings[memberId] = pingData;
@@ -1328,21 +1432,57 @@ async function savePing(memberId, photoDataURL, comment, withDubi, familyGatheri
   updateStreak(memberId);
 
   // Try Firebase
+  let masterSaved = false;
   if (firebaseReady) {
     try {
       const docId = `${today}_${memberId}`;
-      // Upload photo to Storage
+      // 기존 photoURL은 가벼운 미리보기로 유지하고, 고화질 원본은 별도 보관한다.
       if (capturedBlob) {
-        const photoRef = storageRef(storage, `families/${FAMILY_ID}/pings/${today}/${memberId}.jpg`);
-        await uploadBytes(photoRef, capturedBlob);
-        const url = await getDownloadURL(photoRef);
-        pingData.photoURL = url;
+        const uploaded = await uploadPhotoVariants(today, memberId, capturedBlob, capturedMasterBlob, capturedPhotoMeta);
+        pingData.photoURL = uploaded.previewURL;
+        pingData.photoMasterURL = uploaded.masterURL;
+        masterSaved = !!uploaded.masterURL;
+        if (uploaded.masterURL && capturedPhotoMeta) {
+          pingData.photoQualityVersion = 2;
+          pingData.photoMasterWidth = capturedPhotoMeta.width;
+          pingData.photoMasterHeight = capturedPhotoMeta.height;
+          pingData.photoMasterBytes = capturedPhotoMeta.bytes;
+          pingData.photoPrintMaxCm = capturedPhotoMeta.printMaxCm;
+        }
       }
       await setDoc(doc(db, 'pings', docId), pingData);
+      localPings[memberId] = pingData;
+      saveLocal(`pings_${today}`, localPings);
     } catch(e) { console.warn('Firebase 저장 실패 — 로컬에 저장됨', e); }
   }
   // 서버 푸시용 가족 총점·미용주기 상태 갱신 (백그라운드)
   pushCoachStateNow();
+  return masterSaved;
+}
+
+async function uploadPhotoVariants(date, memberId, previewBlob, masterBlob, meta) {
+  const basePath = `families/${FAMILY_ID}/pings/${date}/${memberId}`;
+  // 매 교체마다 새 경로를 만들어 Firestore 갱신 실패가 기존 사진을 덮어쓰지 않게 한다.
+  const assetId = Date.now();
+  const previewRef = storageRef(storage, `${basePath}/preview-${assetId}.jpg`);
+  await uploadBytes(previewRef, previewBlob, { contentType: 'image/jpeg', cacheControl: 'public,max-age=300' });
+  const previewURL = await getDownloadURL(previewRef);
+  let masterURL = null;
+  if (masterBlob && meta) {
+    try {
+      const masterRef = storageRef(storage, `${basePath}/master-${assetId}.jpg`);
+      await uploadBytes(masterRef, masterBlob, {
+        contentType: 'image/jpeg',
+        cacheControl: 'private,max-age=3600',
+        customMetadata: { role: 'print-master', width: String(meta.width), height: String(meta.height) }
+      });
+      masterURL = await getDownloadURL(masterRef);
+    } catch(e) {
+      // 미리보기 저장은 유지한다. 원본은 이전 사진을 가리키지 않도록 URL을 비워 둔다.
+      console.warn('고화질 원본 저장 실패 — 미리보기만 저장됨', e);
+    }
+  }
+  return { previewURL, masterURL };
 }
 
 async function saveReaction(targetMember, emoji) {
@@ -1622,6 +1762,198 @@ function renderMyPage() {
 }
 
 // ========== CAMERA ==========
+const PHOTO_MASTER_MAX_SIDE = 2048;
+const PHOTO_MASTER_MAX_BYTES = 4 * 1024 * 1024;
+const PHOTO_PREVIEW_MAX_SIDE = 720;
+
+function canvasToJpeg(canvas, quality) {
+  return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('사진을 만들 수 없어요')), 'image/jpeg', quality));
+}
+
+// 화면용 미리보기와 인화용 마스터를 같은 구도로 각각 만든다.
+// 원본 카메라 프레임이 작으면 억지로 키우지 않아 실제 가능한 인화 크기를 그대로 기록한다.
+async function makeSquarePhotoVariants(sourceWidth, sourceHeight, drawSquare) {
+  const sourceSide = Math.min(sourceWidth, sourceHeight);
+  if (!sourceSide) throw new Error('사진 크기를 확인할 수 없어요');
+  const canvas = document.getElementById('captureCanvas');
+  const render = async (side, quality) => {
+    canvas.width = side;
+    canvas.height = side;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, side, side);
+    drawSquare(ctx, side);
+    return canvasToJpeg(canvas, quality);
+  };
+  const masterSide = Math.min(Math.round(sourceSide), PHOTO_MASTER_MAX_SIDE);
+  const previewSide = Math.min(Math.round(sourceSide), PHOTO_PREVIEW_MAX_SIDE);
+  let masterBlob = await render(masterSide, 0.92);
+  if (masterBlob.size > PHOTO_MASTER_MAX_BYTES) masterBlob = await render(masterSide, 0.84);
+  const previewBlob = await render(previewSide, 0.72);
+  return {
+    masterBlob,
+    previewBlob,
+    meta: {
+      width: masterSide,
+      height: masterSide,
+      bytes: masterBlob.size,
+      printMaxCm: Math.max(1, Math.floor((masterSide / 300) * 2.54))
+    }
+  };
+}
+
+const PRINT_FORMATS = {
+  square: { label: '1:1', aspect: '1 / 1', crop: { x: 0, y: 0, width: 1, height: 1 } },
+  portrait: { label: '4:5', aspect: '4 / 5', crop: { x: .1, y: 0, width: .8, height: 1 } },
+  landscape: { label: '3:2', aspect: '3 / 2', crop: { x: 0, y: 1 / 6, width: 1, height: 2 / 3 } }
+};
+
+function createPrintCrop(format) {
+  const selected = PRINT_FORMATS[format] || PRINT_FORMATS.square;
+  return { version: 1, aspect: selected.label, ...selected.crop, source: 'square-master' };
+}
+
+function formatForCrop(crop, fallback = 'square') {
+  if (!crop || typeof crop !== 'object') return PRINT_FORMATS[fallback] ? fallback : 'square';
+  return Object.keys(PRINT_FORMATS).find(key => PRINT_FORMATS[key].label === crop.aspect) || (PRINT_FORMATS[fallback] ? fallback : 'square');
+}
+
+function renderPrintFormatPicker() {
+  const format = PRINT_FORMATS[capturedPrintFormat] || PRINT_FORMATS.square;
+  const wrap = document.getElementById('printFormat');
+  const thumb = document.getElementById('printFormatThumb');
+  const sub = document.getElementById('printFormatSub');
+  if (!wrap || !thumb || !sub) return;
+  wrap.style.display = capturedBlob ? 'flex' : 'none';
+  thumb.style.aspectRatio = format.aspect;
+  thumb.style.backgroundImage = capturedPreviewObjectURL ? `url("${capturedPreviewObjectURL}")` : '';
+  const crop = capturedPrintCrop || createPrintCrop(capturedPrintFormat);
+  thumb.style.backgroundSize = `${100 / crop.width}% ${100 / crop.height}%`;
+  thumb.style.backgroundPosition = `${crop.width < 1 ? (crop.x / (1 - crop.width)) * 100 : 50}% ${crop.height < 1 ? (crop.y / (1 - crop.height)) * 100 : 50}%`;
+  sub.textContent = capturedPrintFormat === 'square'
+    ? '저장 사진은 바뀌지 않고, 굿즈 제작 때 중앙 구도를 참고해요'
+    : `저장 사진은 바뀌지 않고, 굿즈 제작 때 중앙 ${format.label} 구도를 참고해요`;
+  wrap.querySelectorAll('[data-print-format]').forEach(btn => {
+    const selected = btn.dataset.printFormat === capturedPrintFormat;
+    btn.classList.toggle('on', selected);
+    btn.setAttribute('aria-pressed', String(selected));
+  });
+  const prev = document.getElementById('printNudgePrev');
+  const next = document.getElementById('printNudgeNext');
+  const movable = capturedPrintFormat !== 'square';
+  if (prev && next) {
+    prev.style.display = movable ? '' : 'none'; next.style.display = movable ? '' : 'none';
+    const vertical = capturedPrintFormat === 'landscape';
+    prev.textContent = vertical ? '↑' : '←'; next.textContent = vertical ? '↓' : '→';
+    prev.setAttribute('aria-label', vertical ? '인화 구도 위로 이동' : '인화 구도 왼쪽으로 이동');
+    next.setAttribute('aria-label', vertical ? '인화 구도 아래로 이동' : '인화 구도 오른쪽으로 이동');
+  }
+}
+
+window.setPrintFormat = function(format) {
+  if (!PRINT_FORMATS[format]) return;
+  capturedPrintFormat = format;
+  capturedPrintCrop = createPrintCrop(format);
+  renderPrintFormatPicker();
+};
+
+window.adjustPrintCrop = function(direction) {
+  const crop = capturedPrintCrop || createPrintCrop(capturedPrintFormat);
+  const step = .05;
+  if (capturedPrintFormat === 'portrait') crop.x = Math.max(0, Math.min(1 - crop.width, crop.x + direction * step));
+  else if (capturedPrintFormat === 'landscape') crop.y = Math.max(0, Math.min(1 - crop.height, crop.y + direction * step));
+  else return;
+  capturedPrintCrop = crop;
+  renderPrintFormatPicker();
+};
+
+async function analyzePhotoQuality(blob) {
+  if (!blob) return null;
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = url;
+    });
+    const side = Math.min(160, img.naturalWidth || 160, img.naturalHeight || 160);
+    if (side < 32) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = side; canvas.height = side;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, side, side);
+    const pixels = ctx.getImageData(0, 0, side, side).data;
+    const luma = new Uint8Array(side * side), histogram = new Uint32Array(256);
+    let sum = 0, shadowClip = 0, highlightClip = 0;
+    for (let i = 0, p = 0; p < pixels.length; i++, p += 4) {
+      const value = Math.round(pixels[p] * 0.2126 + pixels[p + 1] * 0.7152 + pixels[p + 2] * 0.0722);
+      luma[i] = value; histogram[value]++; sum += value;
+      if (value <= 18) shadowClip++;
+      if (value >= 245) highlightClip++;
+    }
+    const samples = luma.length;
+    const percentile = (ratio) => {
+      const target = Math.ceil(samples * ratio); let passed = 0;
+      for (let value = 0; value < 256; value++) { passed += histogram[value]; if (passed >= target) return value; }
+      return 255;
+    };
+    const mean = sum / samples, p10 = percentile(.10), p50 = percentile(.50), p90 = percentile(.90);
+    const spread = p90 - p10;
+    let laplacianEnergy = 0, laplacianSamples = 0;
+    for (let y = 1; y < side - 1; y += 2) for (let x = 1; x < side - 1; x += 2) {
+      const i = y * side + x;
+      laplacianEnergy += Math.abs(4 * luma[i] - luma[i - 1] - luma[i + 1] - luma[i - side] - luma[i + side]);
+      laplacianSamples++;
+    }
+    const blurEnergy = laplacianEnergy / Math.max(1, laplacianSamples);
+    const tooDark = mean < 45 || (shadowClip / samples > .28 && p50 < 65);
+    const tooBright = mean > 220 || (highlightClip / samples > .25 && p50 > 185);
+    let message = '';
+    if (tooDark) message = '조금 어두워요 · 밝은 곳에서 다시 찍어보세요';
+    else if (tooBright) message = '밝은 부분이 많아요 · 직사광선을 피해보세요';
+    else if (spread >= 40 && blurEnergy < 12) message = '선명도가 낮아 보여요 · 손을 잠깐 고정해보세요';
+    return message
+      ? { state: 'warn', title: '인화 전 사진 점검', message }
+      : { state: 'good', title: '인화 전 사진 점검', message: '밝기와 선명도가 무난해 보여요' };
+  } catch(e) {
+    console.warn('사진 품질 점검 생략', e);
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function renderPhotoQualityAnalysis() {
+  const analysis = document.getElementById('photoAnalysis');
+  if (!analysis) return;
+  if (capturedPhotoQuality) {
+    analysis.className = `photo-analysis show ${capturedPhotoQuality.state}`;
+    analysis.innerHTML = `<span class="pa-title">${capturedPhotoQuality.title}</span><span>${capturedPhotoQuality.message}</span><span class="pa-note">기기에서만 확인한 안내예요 · 사진은 그대로 보낼 수 있어요</span>`;
+  } else {
+    analysis.className = 'photo-analysis';
+    analysis.textContent = '';
+  }
+}
+
+function setCapturedPhotoVariants(variants) {
+  capturedMasterBlob = variants.masterBlob;
+  capturedBlob = variants.previewBlob;
+  capturedPhotoMeta = variants.meta;
+  capturedPhotoQuality = { state: 'checking', title: '인화 전 사진 점검', message: '기기에서 확인 중이에요' };
+  if (capturedPreviewObjectURL) URL.revokeObjectURL(capturedPreviewObjectURL);
+  capturedPreviewObjectURL = URL.createObjectURL(capturedBlob);
+  document.getElementById('previewImg').src = capturedPreviewObjectURL;
+  const token = ++photoQualityToken, blob = capturedBlob;
+  const run = async () => {
+    const result = await analyzePhotoQuality(blob);
+    if (token !== photoQualityToken || blob !== capturedBlob) return;
+    capturedPhotoQuality = result;
+    if (currentScreen === 'preview') renderPhotoQualityAnalysis();
+  };
+  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 300 });
+  else setTimeout(run, 0);
+}
+
 // Detect zoom/torch capabilities of the active track and set up UI
 function setupCamControls(stream) {
   videoTrack = (stream && stream.getVideoTracks) ? stream.getVideoTracks()[0] : null;
@@ -1656,7 +1988,86 @@ function setupCamControls(stream) {
     torchBtn.classList.remove('on');
     torchBtn.style.display = (caps.torch && facingMode === 'environment') ? '' : 'none';
   }
+  syncCameraAssistUI();
+  if (levelGuideEnabled) startLevelGuideListening();
 }
+
+function syncCameraAssistUI() {
+  const grid = document.getElementById('cameraGrid');
+  const gridBtn = document.getElementById('gridBtn');
+  if (grid) grid.classList.toggle('show', cameraGridEnabled);
+  if (gridBtn) { gridBtn.classList.toggle('on', cameraGridEnabled); gridBtn.setAttribute('aria-pressed', String(cameraGridEnabled)); }
+  const timerBtn = document.getElementById('timerBtn');
+  if (timerBtn) { timerBtn.textContent = cameraTimerSeconds ? `${cameraTimerSeconds}s` : '0s'; timerBtn.classList.toggle('on', !!cameraTimerSeconds); }
+  const level = document.getElementById('cameraLevel');
+  const levelBtn = document.getElementById('levelBtn');
+  if (level) level.classList.toggle('show', levelGuideEnabled);
+  if (levelBtn) { levelBtn.classList.toggle('on', levelGuideEnabled); levelBtn.setAttribute('aria-pressed', String(levelGuideEnabled)); }
+}
+
+window.toggleCameraGrid = function() {
+  cameraGridEnabled = !cameraGridEnabled;
+  saveLocal('cameraGridEnabled', cameraGridEnabled);
+  syncCameraAssistUI();
+};
+
+window.cycleCameraTimer = function() {
+  if (cameraTimerRunning) return;
+  cameraTimerSeconds = cameraTimerSeconds === 0 ? 3 : (cameraTimerSeconds === 3 ? 5 : 0);
+  syncCameraAssistUI();
+  showToast(cameraTimerSeconds ? `${cameraTimerSeconds}초 타이머` : '타이머 끔');
+};
+
+function levelGuideTilt(event) {
+  const angle = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : 0;
+  const beta = Number(event.beta), gamma = Number(event.gamma);
+  let tilt = gamma;
+  if (angle === 90) tilt = beta;
+  else if (angle === -90 || angle === 270) tilt = -beta;
+  else if (angle === 180) tilt = -gamma;
+  if (!Number.isFinite(tilt)) return;
+  levelGuideSmoothed = levelGuideSmoothed ? levelGuideSmoothed * 0.84 + tilt * 0.16 : tilt;
+  const clamped = Math.max(-30, Math.min(30, levelGuideSmoothed));
+  const level = document.getElementById('cameraLevel');
+  if (!level) return;
+  level.style.setProperty('--level-tilt', `${-clamped}deg`);
+  level.classList.toggle('level', Math.abs(levelGuideSmoothed) <= 2);
+}
+
+function stopLevelGuideListening() {
+  if (!levelGuideListening) return;
+  window.removeEventListener('deviceorientation', levelGuideTilt);
+  levelGuideListening = false;
+  levelGuideSmoothed = 0;
+}
+
+function startLevelGuideListening() {
+  if (!levelGuideEnabled || levelGuideListening || !('DeviceOrientationEvent' in window)) return;
+  window.addEventListener('deviceorientation', levelGuideTilt, { passive: true });
+  levelGuideListening = true;
+}
+
+window.toggleLevelGuide = async function() {
+  if (levelGuideEnabled) {
+    levelGuideEnabled = false;
+    stopLevelGuideListening();
+    syncCameraAssistUI();
+    return;
+  }
+  if (!('DeviceOrientationEvent' in window)) { showToast('이 기기에서는 수평 안내를 지원하지 않아요'); return; }
+  try {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      if (permission !== 'granted') { showToast('수평 안내 권한이 필요해요'); return; }
+    }
+    levelGuideEnabled = true;
+    startLevelGuideListening();
+    syncCameraAssistUI();
+    showToast('수평 안내를 켰어요');
+  } catch(e) {
+    showToast('수평 안내를 사용할 수 없어요');
+  }
+};
 
 window.applyZoom = function(z) {
   if (isNaN(z)) return;
@@ -1688,13 +2099,90 @@ window.toggleTorch = async function() {
 
 window.startNewPing = function() {
   editMode = false;
+  capturedPrintFormat = 'square';
+  capturedPrintCrop = createPrintCrop('square');
   openCamera();
 };
 window.startEditPhoto = function() {
   if (!todayPings[currentMember]) { showToast('오늘 올린 핑이 없어요'); return; }
   editMode = true;
+  capturedPrintFormat = PRINT_FORMATS[todayPings[currentMember].photoPrintFormat] ? todayPings[currentMember].photoPrintFormat : 'square';
+  capturedPrintFormat = formatForCrop(todayPings[currentMember].photoPrintCrop, capturedPrintFormat);
+  capturedPrintCrop = todayPings[currentMember].photoPrintCrop || createPrintCrop(capturedPrintFormat);
   openCamera();
 };
+async function startCameraStream() {
+  currentStream = await navigator.mediaDevices.getUserMedia({
+    // 브라우저가 지원하는 범위에서 더 큰 프레임을 우선 요청한다. 실제 저장 치수는 촬영 뒤 기록한다.
+    video: { facingMode, width: { ideal: 2560 }, height: { ideal: 1920 } },
+    audio: false
+  });
+  const video = document.getElementById('videoPreview');
+  video.srcObject = currentStream;
+  // Android Chrome is occasionally one frame behind after a device rotation.
+  // Wait for the new track metadata before applying controls to its preview.
+  if (!video.videoWidth || !video.videoHeight) {
+    await new Promise(resolve => video.addEventListener('loadedmetadata', resolve, { once: true }));
+  }
+  try { await video.play(); } catch(e) {}
+  setupCamControls(currentStream);
+}
+
+async function restartCameraAfterOrientationChange() {
+  if (currentScreen !== 'camera' || !currentStream || cameraOrientationRestarting) return;
+  cameraOrientationRestarting = true;
+  cameraCountdownToken++;
+  cameraTimerRunning = false;
+  const countdown = document.getElementById('cameraCountdown');
+  if (countdown) { countdown.classList.remove('show'); countdown.textContent = ''; }
+  try {
+    if (videoTrack && torchOn) { try { await videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {} }
+    currentStream.getTracks().forEach(t => t.stop());
+    currentStream = null;
+    videoTrack = null;
+    torchOn = false;
+    const video = document.getElementById('videoPreview');
+    if (video) { video.srcObject = null; video.style.transform = ''; }
+    await startCameraStream();
+  } catch(e) {
+    console.warn('화면 회전 뒤 카메라 재시작 실패', e);
+    showToast('화면을 세로로 돌린 뒤 카메라를 다시 열어주세요');
+  } finally {
+    cameraOrientationRestarting = false;
+  }
+}
+
+function scheduleCameraOrientationRestart() {
+  // 이 재시작은 Android Chrome의 회전 뒤 미리보기 보정용이다.
+  // iPhone에서는 새 getUserMedia 요청이 되어 권한 팝업을 되풀이할 수 있다.
+  if (!isAndroid()) return;
+  if (currentScreen !== 'camera' || !currentStream) return;
+  if (cameraOrientationTimer) clearTimeout(cameraOrientationTimer);
+  // Android may emit both window and Screen Orientation events while the track
+  // is still rotating. Debounce them so only the final orientation opens a track.
+  cameraOrientationTimer = setTimeout(() => {
+    cameraOrientationTimer = null;
+    restartCameraAfterOrientationChange();
+  }, 250);
+}
+
+window.addEventListener('orientationchange', scheduleCameraOrientationRestart);
+if (screen.orientation && screen.orientation.addEventListener) {
+  screen.orientation.addEventListener('change', scheduleCameraOrientationRestart);
+}
+
+async function showIOSCameraPermissionGuide() {
+  if (!isIOS() || loadLocal('iosCameraPermissionGuideSeen', false)) return true;
+  const confirmed = await uiDialog({
+    message: '아이폰 카메라 권한 안내\n\n권한 창이 반복되면 Safari에서 www.ping.ai.kr을 열어 주소창의 메뉴 → 웹 사이트 설정 → 카메라를 “허용”으로 바꿔주세요.\n\n카카오톡 등 앱 안의 브라우저와 홈 화면 앱은 Safari와 권한이 따로 보일 수 있어요.',
+    okText: '카메라 열기',
+    cancelText: '나중에'
+  });
+  if (!confirmed) return false;
+  saveLocal('iosCameraPermissionGuideSeen', true);
+  return true;
+}
+
 window.openCamera = async function() {
   if (todayPings[currentMember] && !editMode) {
     showToast('오늘은 이미 핑을 보냈어요!');
@@ -1704,14 +2192,19 @@ window.openCamera = async function() {
     showToast('핑은 오전 10시부터 보낼 수 있어요! (10시~자정)');
     return;
   }
+  if (!(await showIOSCameraPermissionGuide())) return;
+  const savedGrid = loadLocal('cameraGridEnabled', true);
+  cameraGridEnabled = typeof savedGrid === 'boolean' ? savedGrid : true;
+  syncCameraAssistUI();
   showScreen('camera');
+  // 촬영 미리보기에서 '다시 찍기'로 돌아온 경우 기존 스트림을 그대로 쓴다.
+  // iPhone이 같은 촬영 흐름 안에서 권한을 다시 묻게 하지 않는다.
+  if (currentStream) {
+    try { await document.getElementById('videoPreview').play(); } catch(e) {}
+    return;
+  }
   try {
-    currentStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
-      audio: false
-    });
-    document.getElementById('videoPreview').srcObject = currentStream;
-    setupCamControls(currentStream);
+    await startCameraStream();
   } catch(e) {
     showToast('카메라를 사용할 수 없습니다');
     closeCamera();
@@ -1719,6 +2212,13 @@ window.openCamera = async function() {
 };
 
 function stopCameraStream() {
+  cameraCountdownToken++;
+  cameraTimerRunning = false;
+  captureBusy = false;
+  const countdown = document.getElementById('cameraCountdown');
+  if (countdown) { countdown.classList.remove('show'); countdown.textContent = ''; }
+  stopLevelGuideListening();
+  if (cameraOrientationTimer) { clearTimeout(cameraOrientationTimer); cameraOrientationTimer = null; }
   if (videoTrack && torchOn) { try { videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {} }
   if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
   videoTrack = null; torchOn = false; currentZoom = 1;
@@ -1726,16 +2226,43 @@ function stopCameraStream() {
   const tb = document.getElementById('torchBtn'); if (tb) tb.classList.remove('on');
 }
 
+function clearCapturedPhotoVariants() {
+  photoQualityToken++;
+  capturedBlob = null;
+  capturedMasterBlob = null;
+  capturedPhotoMeta = null;
+  capturedPhotoQuality = null;
+  if (capturedPreviewObjectURL) URL.revokeObjectURL(capturedPreviewObjectURL);
+  capturedPreviewObjectURL = null;
+}
+
 window.closeCamera = function() {
   editMode = false;
+  clearCapturedPhotoVariants();
   stopCameraStream();
   showScreen('feed');
 };
+
+// iOS가 잠금/백그라운드 복귀 때 죽은 스트림을 되살리며 권한을 다시 묻지 않도록,
+// 열린 카메라는 즉시 종료하고 다음 촬영은 사용자가 다시 눌러 시작하게 한다.
+function closeCameraForBackground() {
+  if (!currentStream) return;
+  const inCameraFlow = currentScreen === 'camera' || currentScreen === 'preview';
+  editMode = false;
+  clearCapturedPhotoVariants();
+  stopCameraStream();
+  if (inCameraFlow) showScreen('feed');
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') closeCameraForBackground();
+});
+window.addEventListener('pagehide', closeCameraForBackground);
 
 // 미리보기 진입 (새 핑이면 입력 초기화 / 교체모드면 기존 설명·보너스 숨김)
 function enterPreview() {
   const ci = document.getElementById('commentInput');
   const tg = document.querySelector('#preview .together-box');
+  const qualityHint = document.getElementById('photoQualityHint');
   const _wd = document.getElementById('withDubiChk');
   const _fg = document.getElementById('gatherChk');
   const pb = document.getElementById('pingBtn');
@@ -1751,29 +2278,66 @@ function enterPreview() {
     if (_fg) _fg.checked = false;
     if (pb) pb.textContent = '핑!';
   }
+  if (qualityHint) {
+    if (capturedPhotoMeta) {
+      qualityHint.textContent = `✦ 고화질 앨범 원본 저장 · 최대 ${capturedPhotoMeta.printMaxCm}cm 인화`;
+      qualityHint.classList.add('show');
+    } else {
+      qualityHint.classList.remove('show');
+    }
+  }
+  renderPhotoQualityAnalysis();
+  renderPrintFormatPicker();
   showScreen('preview');
 }
 
 window.flipCamera = async function() {
+  cameraCountdownToken++;
+  cameraTimerRunning = false;
+  const countdown = document.getElementById('cameraCountdown');
+  if (countdown) { countdown.classList.remove('show'); countdown.textContent = ''; }
   facingMode = facingMode === 'environment' ? 'user' : 'environment';
   if (videoTrack && torchOn) { try { videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {} }
   torchOn = false;
   if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); }
   try {
-    currentStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1080 }, height: { ideal: 1080 } },
-      audio: false
-    });
-    document.getElementById('videoPreview').srcObject = currentStream;
-    setupCamControls(currentStream);
+    await startCameraStream();
   } catch(e) {
     showToast('카메라 전환 실패');
   }
 };
 
-window.capturePhoto = function() {
+async function runCameraCountdown(seconds) {
+  const countdown = document.getElementById('cameraCountdown');
+  const token = ++cameraCountdownToken;
+  for (let remaining = seconds; remaining > 0; remaining--) {
+    if (token !== cameraCountdownToken || currentScreen !== 'camera' || !currentStream) return false;
+    if (countdown) { countdown.textContent = remaining; countdown.classList.add('show'); }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  if (countdown) { countdown.classList.remove('show'); countdown.textContent = ''; }
+  return token === cameraCountdownToken && currentScreen === 'camera' && !!currentStream;
+}
+
+window.capturePhoto = async function() {
+  if (captureBusy || cameraTimerRunning) return;
+  captureBusy = true;
+  try {
+    if (cameraTimerSeconds) {
+      cameraTimerRunning = true;
+      const ready = await runCameraCountdown(cameraTimerSeconds);
+      cameraTimerRunning = false;
+      if (!ready) return;
+    }
+    await capturePhotoNow();
+  } finally {
+    captureBusy = false;
+    cameraTimerRunning = false;
+  }
+};
+
+async function capturePhotoNow() {
   const video = document.getElementById('videoPreview');
-  const canvas = document.getElementById('captureCanvas');
   const vw = video.videoWidth, vh = video.videoHeight;
   if (!vw || !vh) { showToast('카메라 준비 중이에요'); return; }
 
@@ -1781,31 +2345,25 @@ window.capturePhoto = function() {
   // Hardware zoom is already baked into the frame; only digital zoom needs an extra crop
   const z = hwZoom ? 1 : (currentZoom || 1);
   const side = side0 / z;
-  const out = Math.min(Math.round(side0), 1080);
-
-  canvas.width = out;
-  canvas.height = out;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, out, out);
-
   const sx = (vw - side) / 2;
   const sy = (vh - side) / 2;
-
-  // Mirror if front camera
-  if (facingMode === 'user') {
-    ctx.translate(out, 0);
-    ctx.scale(-1, 1);
-  }
-
-  ctx.drawImage(video, sx, sy, side, side, 0, 0, out, out);
-
-  canvas.toBlob(blob => {
-    capturedBlob = blob;
-    document.getElementById('previewImg').src = URL.createObjectURL(blob);
-    stopCameraStream();
+  showLoading(true);
+  try {
+    const variants = await makeSquarePhotoVariants(side, side, (ctx, out) => {
+      // Mirror if front camera
+      if (facingMode === 'user') { ctx.translate(out, 0); ctx.scale(-1, 1); }
+      ctx.drawImage(video, sx, sy, side, side, 0, 0, out, out);
+    });
+    setCapturedPhotoVariants(variants);
+    // 다시 찍기를 누르면 같은 스트림을 재사용한다. 전송·닫기·백그라운드에서만 종료한다.
     enterPreview();
-  }, 'image/jpeg', 0.7);
-};
+  } catch(e) {
+    console.error('촬영 사진 생성 실패', e);
+    showToast('사진을 만들 수 없어요. 다시 찍어주세요');
+  } finally {
+    showLoading(false);
+  }
+}
 
 // ===== Gallery pick (only photos taken TODAY are allowed) =====
 window.pickFromGallery = function() {
@@ -1865,25 +2423,24 @@ window.onGalleryPick = async function(input) {
   // Passed the date check → run through the same square-crop pipeline
   const img = new Image();
   const url = URL.createObjectURL(file);
-  img.onload = function() {
-    const canvas = document.getElementById('captureCanvas');
+  img.onload = async function() {
     const side = Math.min(img.naturalWidth, img.naturalHeight);
-    const out = Math.min(side, 1080);
-    canvas.width = out;
-    canvas.height = out;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, out, out);
     const sx = (img.naturalWidth - side) / 2;
     const sy = (img.naturalHeight - side) / 2;
-    ctx.drawImage(img, sx, sy, side, side, 0, 0, out, out);
-    canvas.toBlob(function(blob) {
-      capturedBlob = blob;
-      document.getElementById('previewImg').src = URL.createObjectURL(blob);
+    try {
+      const variants = await makeSquarePhotoVariants(img.naturalWidth, img.naturalHeight, (ctx, out) => {
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, out, out);
+      });
+      setCapturedPhotoVariants(variants);
       stopCameraStream();
       URL.revokeObjectURL(url);
       showLoading(false);
       enterPreview();
-    }, 'image/jpeg', 0.7);
+    } catch(e) {
+      URL.revokeObjectURL(url);
+      showLoading(false);
+      showToast('사진을 만들 수 없어요');
+    }
   };
   img.onerror = function() { URL.revokeObjectURL(url); showLoading(false); showToast('이미지를 불러올 수 없어요'); };
   img.src = url;
@@ -1963,7 +2520,12 @@ function parseExifDate(buf) {
 })();
 
 window.cancelPreview = function() {
-  capturedBlob = null;
+  clearCapturedPhotoVariants();
+  if (currentStream) {
+    showScreen('camera');
+    document.getElementById('videoPreview').play().catch(() => {});
+    return;
+  }
   openCamera();
 };
 
@@ -1986,11 +2548,14 @@ window.submitPing = async function() {
         if (ok.walk !== !!pv.withDubi || ok.gather !== !!pv.familyGathering) await persistFlags(ok.walk, ok.gather);
         notice = ok.notice;
       }
-      await updateMyPhoto(comment);
+      const masterSaved = await updateMyPhoto(comment);
       showLoading(false);
       editMode = false;
-      capturedBlob = null;
-      showToast(notice ? `사진을 바꿨어요 📷 · ${notice}` : '사진을 바꿨어요 📷');
+      clearCapturedPhotoVariants();
+      stopCameraStream();
+      let editDoneMsg = notice ? `사진을 바꿨어요 📷 · ${notice}` : '사진을 바꿨어요 📷';
+      if (!masterSaved) editDoneMsg += ' · 고화질 원본은 연결될 때 다시 저장돼요';
+      showToast(editDoneMsg);
       showScreen('feed');
     } catch(e) {
       showLoading(false);
@@ -2013,16 +2578,18 @@ window.submitPing = async function() {
     // AI 검증: 체크가 사진 내용과 맞는지 확인 (검증 불가 시 그대로 통과)
     const vr = await verifyChecks(capturedBlob, wantWalk, wantGather);
     const withDubi = vr.walk, gather = vr.gather;
-    await savePing(currentMember, dataURL, comment, withDubi, gather);
+    const masterSaved = await savePing(currentMember, dataURL, comment, withDubi, gather);
     showLoading(false);
     const tags = [];
     if (withDubi) tags.push('🚶 뚜비랑 산책');
     if (gather) tags.push('👨‍👩‍👧‍👦 가족 모임');
     let doneMsg = tags.length ? `핑! 📸 ${tags.join(' · ')} (보너스는 주 1회 반영돼요!)` : '핑! +10점 📸';
     if (vr.notice) doneMsg = `핑! 📸 ${vr.notice}`;
+    if (!masterSaved) doneMsg += ' · 고화질 원본은 연결될 때 다시 저장돼요';
     showToast(doneMsg);
-    capturedBlob = null;
+    clearCapturedPhotoVariants();
     togetherSelected = new Set();
+    stopCameraStream();
     showScreen('feed');
   } catch(e) {
     showLoading(false);
@@ -2040,28 +2607,67 @@ async function updateMyPhoto(comment) {
     const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(capturedBlob);
   });
   p.photoURL = dataURL;
+  // 새 미리보기를 먼저 보여 줄 때는 이전 사진의 원본 연결을 즉시 끊는다.
+  // 새 원본 업로드가 성공한 경우에만 아래에서 같은 revision의 메타를 다시 붙인다.
+  p.photoMasterURL = null;
+  p.photoQualityVersion = null;
+  p.photoMasterWidth = null;
+  p.photoMasterHeight = null;
+  p.photoMasterBytes = null;
+  p.photoPrintMaxCm = null;
+  p.photoPrintFormat = PRINT_FORMATS[capturedPrintFormat] ? capturedPrintFormat : 'square';
+  p.photoPrintCrop = { ...capturedPrintCrop };
   p.comment = comment;
   const lp = loadLocal(`pings_${today}`, {}); lp[currentMember] = p; saveLocal(`pings_${today}`, lp);
+  let masterSaved = false;
   if (firebaseReady) {
     try {
       let url = dataURL;
       if (capturedBlob) {
-        const photoRef = storageRef(storage, `families/${FAMILY_ID}/pings/${today}/${currentMember}.jpg`);
-        await uploadBytes(photoRef, capturedBlob);
-        url = await getDownloadURL(photoRef);
+        const uploaded = await uploadPhotoVariants(today, currentMember, capturedBlob, capturedMasterBlob, capturedPhotoMeta);
+        url = uploaded.previewURL;
         url = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now(); // 캐시 우회
         p.photoURL = url;
+        p.photoMasterURL = uploaded.masterURL ? uploaded.masterURL + (uploaded.masterURL.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now() : null;
+        masterSaved = !!uploaded.masterURL;
+        p.photoQualityVersion = uploaded.masterURL ? 2 : null;
+        p.photoMasterWidth = uploaded.masterURL && capturedPhotoMeta ? capturedPhotoMeta.width : null;
+        p.photoMasterHeight = uploaded.masterURL && capturedPhotoMeta ? capturedPhotoMeta.height : null;
+        p.photoMasterBytes = uploaded.masterURL && capturedPhotoMeta ? capturedPhotoMeta.bytes : null;
+        p.photoPrintMaxCm = uploaded.masterURL && capturedPhotoMeta ? capturedPhotoMeta.printMaxCm : null;
         lp[currentMember] = p; saveLocal(`pings_${today}`, lp);
       }
-      await setDoc(doc(db, 'pings', `${today}_${currentMember}`), { photoURL: url, comment }, { merge: true });
+      await setDoc(doc(db, 'pings', `${today}_${currentMember}`), {
+        photoURL: url,
+        comment,
+        photoMasterURL: p.photoMasterURL || null,
+        photoQualityVersion: p.photoQualityVersion || null,
+        photoMasterWidth: p.photoMasterWidth || null,
+        photoMasterHeight: p.photoMasterHeight || null,
+        photoMasterBytes: p.photoMasterBytes || null,
+        photoPrintMaxCm: p.photoPrintMaxCm || null,
+        photoPrintFormat: p.photoPrintFormat,
+        photoPrintCrop: p.photoPrintCrop
+      }, { merge: true });
     } catch(e) { console.warn('사진 교체 저장 실패', e); }
   }
   todayPings[currentMember] = p;
   if (typeof albumCache !== 'undefined' && albumCache && albumCache[today] && albumCache[today][currentMember]) {
-    albumCache[today][currentMember].photoURL = p.photoURL;
-    albumCache[today][currentMember].comment = comment;
+    Object.assign(albumCache[today][currentMember], {
+      photoURL: p.photoURL,
+      comment,
+      photoMasterURL: p.photoMasterURL,
+      photoQualityVersion: p.photoQualityVersion,
+      photoMasterWidth: p.photoMasterWidth,
+      photoMasterHeight: p.photoMasterHeight,
+      photoMasterBytes: p.photoMasterBytes,
+      photoPrintMaxCm: p.photoPrintMaxCm,
+      photoPrintFormat: p.photoPrintFormat,
+      photoPrintCrop: p.photoPrintCrop
+    });
   }
   renderFeed();
+  return masterSaved;
 }
 
 // ========== REACTIONS ==========
@@ -2676,6 +3282,13 @@ window.calNextMonth = function(){
   calMonth++; if (calMonth > 11){ calMonth = 0; calYear++; }
   renderCalendar();
 };
+function getPhotoPrintInfo(p) {
+  if (!p || !p.photoMasterURL) return null;
+  const cm = Number(p.photoPrintMaxCm);
+  const format = PRINT_FORMATS[formatForCrop(p.photoPrintCrop, p.photoPrintFormat)] || PRINT_FORMATS.square;
+  const sizeInfo = Number.isFinite(cm) && cm > 0 ? `최대 ${cm}cm 인화 권장` : '앨범 원본 저장됨';
+  return `✦ ${sizeInfo} · ${format.label} 구도 선택`;
+}
 window.showDayDetail = function(date, dayPings){
   const [, m, d] = date.split('-').map(Number);
   document.getElementById('dayTitle').textContent = `${m}월 ${d}일`;
@@ -2686,9 +3299,10 @@ window.showDayDetail = function(date, dayPings){
     const mine = mem.id === currentMember;
     const canReplace = mine && date === getToday();
     const cs = (p.comments || []);
+    const printInfo = getPhotoPrintInfo(p);
     const cmtRow = `<div class="di-actions"><button class="di-edit di-cmt-btn" onclick="openComments('${mem.id}','${date}')">${eico('speech','💬')} 댓글${cs.length ? ` ${cs.length}` : ''}</button></div>`;
     const ownRow = mine ? `<div class="di-actions">${canReplace ? `<button class="di-edit" onclick="closeDayDetail(null,true);startEditPhoto()">📷 바꾸기</button>` : ''}<button class="di-edit" onclick="editPhotoCaption('${date}','${mem.id}')">✏️ 수정</button><button class="di-del" onclick="deletePhoto('${date}','${mem.id}')">🗑 삭제</button></div>` : '';
-    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}${cmtRow}${ownRow}`;
+    item.innerHTML = `<img src="${p.photoURL}" alt="${mem.id}"><div class="di-name">${mem.id}</div>${printInfo ? `<div class="di-print">${printInfo}</div>` : ''}${p.comment ? `<div class="di-cmt">${p.comment}</div>` : ''}${cmtRow}${ownRow}`;
     grid.appendChild(item);
   }
   document.getElementById('dayOverlay').classList.add('show');
@@ -3233,7 +3847,8 @@ async function renderAlbum(){
   for (const it of items){
     const cell = document.createElement('div'); cell.className = 'album-cell';
     const badge = it.ping.withDubi ? `<span class="album-badge">${eico('walk','🚶')}</span>` : (it.ping.familyGathering ? `<span class="album-badge">${eico('family','👨‍👩‍👧‍👦')}</span>` : '');
-    cell.innerHTML = `<img src="${it.ping.photoURL}" alt=""><span class="album-day">${it.member}·${it.date.slice(5)}</span>${badge}`;
+    const printBadge = getPhotoPrintInfo(it.ping) ? '<span class="album-print-badge">✦ 인화</span>' : '';
+    cell.innerHTML = `<img src="${it.ping.photoURL}" alt=""><span class="album-day">${it.member}·${it.date.slice(5)}</span>${printBadge}${badge}`;
     cell.onclick = () => showDayDetail(it.date, map[it.date]);
     grid.appendChild(cell);
   }
@@ -3649,10 +4264,6 @@ async function init() {
   initForegroundPush();
   // 홈 화면 설치 안내 (아이폰 등 beforeinstallprompt 미지원 대비)
   setTimeout(maybeShowInstall, 2500);
-  // Request notification permission
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
 
   // Register service worker (+ 새 버전 배포 시 자동 새로고침)
   if ('serviceWorker' in navigator) {
