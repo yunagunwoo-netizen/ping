@@ -1083,7 +1083,7 @@ input,textarea{font-family:inherit;border:none;outline:none}
     <div class="dlg-btns"><button class="dlg-cancel" onclick="closeBonusEdit()">취소</button><button class="dlg-ok" onclick="saveBonusEdit()">저장</button></div>
   </div>
 </div>
-<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v35</div>
+<div id="verStamp" style="position:fixed;top:3px;right:4px;font-size:9px;color:rgba(0,0,0,.28);z-index:300;pointer-events:none;font-weight:700">v36</div>
 <canvas id="captureCanvas" style="display:none"></canvas>
 
 <script type="module">
@@ -2784,6 +2784,8 @@ function weekDates(y, w){
   return out;
 }
 const WEEK_CARD_REQUIRED_ALL_PINGS = 3;
+// 메인 배경 스킨의 파일 교체도 즉시 반영되도록 카드 원화 갱신 단위로 함께 올린다.
+const ACTIVE_DUBI_SKIN_REV = '20260929-sportsday';
 function weekAllPingCount(allData, y, w){ return weekDates(y,w).reduce((count,date)=>{ const dp=allData[date]; return count + (dp&&Object.keys(dp).length>=4 ? 1 : 0); },0); }
 function weekCardTarget(y, w){ return Math.min(WEEK_CARD_REQUIRED_ALL_PINGS, weekDates(y,w).length); }
 function weekAllPing(allData, y, w){ const target=weekCardTarget(y,w); return target>0 && weekAllPingCount(allData,y,w)>=target; }
@@ -2819,7 +2821,7 @@ function renderActiveDubiCard(){
   if(!active){ el.style.display='none'; feed.classList.remove('has-dubi-skin'); feed.style.removeProperty('--active-dubi-skin'); return; }
   // 수집용 원화는 그대로 보존하고, 모든 해금 카드는 홈에서만 같은 이름의 투명 스킨을 사용한다.
   const skinSrc = active.img.replace(/\.png$/i, '-skin.png');
-  feed.style.setProperty('--active-dubi-skin', `url("${skinSrc}")`);
+  feed.style.setProperty('--active-dubi-skin', `url("${skinSrc}?rev=${ACTIVE_DUBI_SKIN_REV}")`);
   feed.classList.add('has-dubi-skin');
   el.setAttribute('aria-label', `${active.name} 카드 자세히 보기`);
   el.style.display='block';

@@ -28,7 +28,13 @@ test('가족앱은 오전 6시부터 자정까지 새 핑을 받는다', () => {
   assert.match(html, /매일 6~24시 한 장/);
 });
 
+test('메인 뚜비 스킨은 배포 때 교체된 파일을 새 주소로 불러온다', () => {
+  assert.match(html, /const ACTIVE_DUBI_SKIN_REV = '20260929-sportsday';/);
+  assert.match(html, /active\.img\.replace\(\/\\\.png\$\/i, '-skin\.png'\)/);
+  assert.match(html, /\$\{skinSrc\}\?rev=\$\{ACTIVE_DUBI_SKIN_REV\}/);
+});
+
 test('가족앱 배포 버전과 서비스워커 캐시 버전이 함께 올라간다', () => {
-  assert.match(html, /id="verStamp"[^>]*>v35</);
-  assert.match(serviceWorker, /CACHE_NAME = 'ping-v35'/);
+  assert.match(html, /id="verStamp"[^>]*>v36</);
+  assert.match(serviceWorker, /CACHE_NAME = 'ping-v36'/);
 });
