@@ -21,7 +21,14 @@ test('촬영 미리보기는 핑 제출에 필요한 항목만 남긴다', () =>
   assert.match(preview[0], /id="withDubiChk"[\s\S]*id="gatherChk"[\s\S]*id="pingBtn"/);
 });
 
+test('가족앱은 오전 6시부터 자정까지 새 핑을 받는다', () => {
+  assert.equal((html.match(/getHours\(\) < 6/g) || []).length, 2);
+  assert.match(html, /오전 6시부터 보낼 수 있어요! \(6시~자정\)/);
+  assert.match(html, /if \(h < 6\)[\s\S]*?setHours\(6, 0, 0, 0\)[\s\S]*?매일 6시 시작/);
+  assert.match(html, /매일 6~24시 한 장/);
+});
+
 test('가족앱 배포 버전과 서비스워커 캐시 버전이 함께 올라간다', () => {
-  assert.match(html, /id="verStamp"[^>]*>v34</);
-  assert.match(serviceWorker, /CACHE_NAME = 'ping-v34'/);
+  assert.match(html, /id="verStamp"[^>]*>v35</);
+  assert.match(serviceWorker, /CACHE_NAME = 'ping-v35'/);
 });
