@@ -1603,15 +1603,68 @@ function updateStreak(memberId) {
   saveLocal('streaks', streaks);
 }
 
-function getFamilyStreak() {
-  streaks = loadLocal('streaks', {});
-  let min = Infinity;
-  for (const m of MEMBERS) {
-    const s = streaks[m.id];
-    if (!s || s.lastPingDate !== getToday()) return 0;
-    min = Math.min(min, s.current);
+// 가족 연속일수는 기기별 localStorage가 아니라 실제 핑 기록을 기준으로 계산한다.
+// 오늘이 아직 진행 중이면, 전날까지 이어진 기록을 유지한다.
+let familyStreakValue = 0;
+let familyStreakRefreshTimer = null;
+let familyStreakRequestId = 0;
+const familyStreakMonthCache = new Map();
+
+function dateBefore(date) {
+  const d = new Date(`${date}T12:00:00`);
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isFamilyComplete(dayPings) {
+  return !!dayPings && MEMBERS.every(m => !!dayPings[m.id]);
+}
+
+async function loadFamilyStreakMonth(year, month) {
+  const key = ymStr(year, month);
+  if (!familyStreakMonthCache.has(key)) {
+    familyStreakMonthCache.set(key, loadMonth(year, month));
   }
-  return min === Infinity ? 0 : min;
+  return familyStreakMonthCache.get(key);
+}
+
+async function calculateFamilyStreak() {
+  const today = getToday();
+  // 전원이 아직 오늘 핑하지 않았다면, 오늘은 연속을 끊는 날이 아니다.
+  let date = isFamilyComplete(todayPings) ? today : dateBefore(today);
+  let count = 0;
+  const months = new Map();
+
+  while (true) {
+    const year = Number(date.slice(0, 4));
+    const month = Number(date.slice(5, 7)) - 1;
+    const key = ymStr(year, month);
+    if (!months.has(key)) months.set(key, await loadFamilyStreakMonth(year, month));
+    const dayPings = date === today ? todayPings : months.get(key)[date];
+    if (!isFamilyComplete(dayPings)) return count;
+    count += 1;
+    date = dateBefore(date);
+  }
+}
+
+function renderFamilyStreak() {
+  const badge = document.getElementById('familyStreak');
+  if (badge) badge.innerHTML = `${eico('flame','🔥')} ${familyStreakValue}일째`;
+}
+
+function scheduleFamilyStreakRefresh() {
+  if (familyStreakRefreshTimer) clearTimeout(familyStreakRefreshTimer);
+  const requestId = ++familyStreakRequestId;
+  familyStreakRefreshTimer = setTimeout(async () => {
+    try {
+      const value = await calculateFamilyStreak();
+      if (requestId !== familyStreakRequestId) return;
+      familyStreakValue = value;
+      renderFamilyStreak();
+    } catch (e) {
+      console.warn('가족 연속일수 계산 실패', e);
+    }
+  }, 80);
 }
 
 // ========== RENDER FEED ==========
@@ -1619,8 +1672,8 @@ function renderFeed() {
   document.getElementById('feedDate').textContent = getTodayKR();
   { const _h = new Date().getHours(); const _g = document.getElementById('fhGreet'); if (_g) _g.innerHTML = `${currentMember || '우리 가족'}님, ${_h < 11 ? '좋은 아침이에요' : _h < 18 ? '오늘도 반가워요' : '편안한 저녁이에요'} ${eico('paw','🐾')}`; }
 
-  const familyStreak = getFamilyStreak();
-  document.getElementById('familyStreak').innerHTML = `${eico('flame','🔥')} ${familyStreak}일째`;
+  renderFamilyStreak();
+  scheduleFamilyStreakRefresh();
 
   const uploadedCount = MEMBERS.filter(m => todayPings[m.id]).length;
   document.getElementById('feedSubtitle').innerHTML =
